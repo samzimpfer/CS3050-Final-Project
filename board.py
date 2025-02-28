@@ -22,7 +22,7 @@ class Board:
         self.height = 0
 
         # tile attributes
-        self.x_spacing
+        self.x_spacing = 0
 
         #board components
         self.nodes = []

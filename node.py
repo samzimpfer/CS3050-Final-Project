@@ -5,7 +5,7 @@ class Node:
     def __init__(self, x=0, y=0):
         self.x = x
         self.y = y
-        self.size = 4
+        self.size = 6
 
     def set_pos(self, x, y):
         self.x = x
