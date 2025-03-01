@@ -53,8 +53,8 @@ class GameView(arcade.View):
         self.clear()
 
         # Call draw() on all your sprite lists below
-
         self.board.draw()
+        
 
 
 def main():

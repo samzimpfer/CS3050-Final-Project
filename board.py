@@ -1,4 +1,6 @@
+import arcade
 from node import Node
+from edge import Edge
 
 # defines a board object that contains nodes representing appropriate positions for settlements
 class Board:
@@ -20,12 +22,15 @@ class Board:
         self.y_pos = 0
         self.width = 0
         self.height = 0
+        self.tiles = arcade.SpriteList()
+        self.tile_nodes = []
 
         # tile attributes
         self.x_spacing = 0
 
         #board components
         self.nodes = []
+        self.edges = []
 
         # setup
         if (width != 0):
@@ -39,11 +44,10 @@ class Board:
     # initializes a list of nodes and assigns each a position within the board
     def reset_nodes(self):
         self.nodes = []
-
         row = 0
         y = self.y_pos
-
         while (row < Board.NUM_ROWS):
+            row_node_list = []
             row_size = Board.ROW_SIZES[row]
             row_width = self.x_spacing * (row_size - 1)
             first_x = self.x_pos + ((self.width - row_width) // 2)
@@ -51,18 +55,80 @@ class Board:
             for col in range(0, Board.ROW_SIZES[row]):
                 x = first_x + (self.x_spacing * col)
 
-                n = Node(x, y)
-                self.nodes.append(n)
+                n = Node(x,y,row=row)
+                row_node_list.append(n)
+            self.nodes.append(row_node_list)
 
             if row % 2 == 0:
                 y += (self.x_spacing * Board.Y_SPACING_FACTOR_A)
             else:
                 y += (self.x_spacing * Board.Y_SPACING_FACTOR_B)
-
+            
             row += 1
+        self.generate_graph()
+    
+    # initializes a list of edges and assigns a start and end node
+    def reset_edges(self):
+        self.edges = []
+        for row in range(Board.NUM_ROWS - 1):
+            for col in range(Board.ROW_SIZES[row]):
+                for n in self.nodes[row][col].get_connections():
+                    if n.get_row() > row:
+                        self.edges.append(Edge(self.nodes[row][col],n))
+    
+    def reset_board(self):
+        self.reset_nodes()
+        self.reset_edges()
+        self.reset_tiles()
 
+    def reset_tiles(self):
+        avg_edge_length = 0
+        for e in self.edges:
+            avg_edge_length += e.edge_length()
+        avg_edge_length = avg_edge_length / len(self.edges)
 
-    # sets the size of the board and defines variables that can be used to track the position of the board
+        for row in range(3,Board.NUM_ROWS):
+            if Board.ROW_SIZES[row] == Board.ROW_SIZES[row-1]:
+                continue
+            for col in range(Board.ROW_SIZES[row]):
+                pos_x = self.nodes[row][col].get_x()
+                pos_y = self.nodes[row][col].get_y() - avg_edge_length
+                if row < 7:
+                    if col == 0 or col == Board.ROW_SIZES[row]-1:
+                        continue
+                    else:
+                        self.tile_nodes.append(Node(pos_x,pos_y))
+                else:
+                    self.tile_nodes.append(Node(pos_x,pos_y))
+        
+        for n in self.tile_nodes:
+            self.tiles.append(arcade.Sprite("sprites/green_tile.jpg",scale=.75,
+                                            center_x=n.get_x(),center_y=n.get_y()))
+                        
+
+            
+    # adds nodes that share an edge to the connections list within each node
+    def generate_graph(self):
+        for row in range(Board.NUM_ROWS-1):
+            for col in range(Board.ROW_SIZES[row]):
+                if len(self.nodes[row+1]) > len(self.nodes[row]):
+                    self.undirected_edge(self.nodes[row][col],self.nodes[row+1][col])
+                    self.undirected_edge(self.nodes[row][col],self.nodes[row+1][col+1])
+                elif len(self.nodes[row+1]) < len(self.nodes[row]):
+                    if col != 0:
+                        self.undirected_edge(self.nodes[row][col],self.nodes[row+1][col-1])
+                    if col != len(self.nodes[row])-1:
+                        self.undirected_edge(self.nodes[row][col],self.nodes[row+1][col])
+                else:
+                    self.undirected_edge(self.nodes[row][col],self.nodes[row+1][col])
+                    
+    # helper function so that edges are symmetric/undirected
+    def undirected_edge(self,n1,n2):
+        n1.add_connection(n2)
+        n2.add_connection(n1)
+    
+    # sets the size of the board and defines variables that can be used to track the 
+    # position of the board
     def set_size(self, w, h):
         self.width = w
         self.height = h
@@ -72,7 +138,7 @@ class Board:
         self.x_pos = self.center_x - (w // 2)
         self.y_pos = self.center_y - (h // 2)
 
-        self.reset_nodes()
+        self.reset_board()
 
     
     # sets the size of the board according to a maximum width
@@ -86,5 +152,13 @@ class Board:
 
 
     def draw(self):
-        for n in self.nodes:
+        self.tiles.draw()
+        for row in self.nodes:
+            for n in row:
+                n.draw()
+        for e in self.edges:
+            e.draw()
+        for n in self.tile_nodes:
             n.draw()
+        
+        
