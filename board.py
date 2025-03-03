@@ -102,8 +102,9 @@ class Board:
                     self.tile_nodes.append(Node(pos_x,pos_y))
         
         for n in self.tile_nodes:
-            self.tiles.append(arcade.Sprite("sprites/green_tile.jpg",scale=.6,
-                                            center_x=n.get_x(),center_y=n.get_y(),angle=30))
+            sprite = arcade.Sprite("sprites/green_tile.png",scale=.6,
+                                            center_x=n.get_x(),center_y=n.get_y(),angle=30)
+            self.tiles.append(sprite)
                         
 
             
@@ -160,5 +161,3 @@ class Board:
             e.draw()
         for n in self.tile_nodes:
             n.draw()
-        
-        
