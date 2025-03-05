@@ -54,7 +54,6 @@ class GameView(arcade.View):
 
         # Call draw() on all your sprite lists below
         self.board.draw()
-        
 
 
 def main():
