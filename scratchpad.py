@@ -55,8 +55,6 @@ class GameView(arcade.View):
         # Call draw() on all your sprite lists below
         self.board.draw()
         
-
-
 def main():
     """ Main function """
     # Create a window class. This is what actually shows up on screen

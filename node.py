@@ -5,7 +5,6 @@ class Node:
     def __init__(self, x=0, y=0, row=0):
         self.x = x
         self.y = y
-        
         # for easy relation to position in board
         self.row = row
         self.connections = []
