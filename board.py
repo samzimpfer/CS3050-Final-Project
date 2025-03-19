@@ -7,7 +7,7 @@ class Board:
 
     BOARD_SCALE_FACTOR = 0.92376 # height:width ratio of entire board
     Y_SPACING_FACTOR_A = 0.28867 # gap:tile-width ratio of first row
-    Y_SPACING_FACTOR_B = 0.57735 # gap:tile-width ratio of second row
+    Y_SPACING_FACTOR_B = 0.57735 # gap:tile-width ratio of second row (also side-length:tile-width ratio)
 
     ROW_SIZES = [3, 4, 4, 5, 5, 6, 6, 5, 5, 4, 4, 3] # number of nodes in each row
     NUM_ROWS = len(ROW_SIZES)
@@ -26,7 +26,7 @@ class Board:
         self.tile_nodes = []
 
         # tile attributes
-        self.x_spacing = 0
+        self.x_spacing = 0 # this is the tile width
 
         #board components
         self.nodes = []
@@ -46,26 +46,30 @@ class Board:
         self.nodes = []
         row = 0
         y = self.y_pos
-        while (row < Board.NUM_ROWS):
+        while (row < Board.NUM_ROWS): # iterates through each row of nodes to be drawn
             row_node_list = []
             row_size = Board.ROW_SIZES[row]
             row_width = self.x_spacing * (row_size - 1)
-            first_x = self.x_pos + ((self.width - row_width) // 2)
+            first_x = self.x_pos + ((self.width - row_width) // 2) # defines the position of the leftmost node in the row
 
-            for col in range(0, Board.ROW_SIZES[row]):
+            for col in range(0, Board.ROW_SIZES[row]): # creates a node at each appropriate column in the row
                 x = first_x + (self.x_spacing * col)
 
                 n = Node(x,y,row=row)
                 row_node_list.append(n)
             self.nodes.append(row_node_list)
 
+            # increments the row spacing according to hexagon geometry
             if row % 2 == 0:
                 y += (self.x_spacing * Board.Y_SPACING_FACTOR_A)
             else:
                 y += (self.x_spacing * Board.Y_SPACING_FACTOR_B)
             
             row += 1
+
+        # generates a graph to keep track of adjacent nodes
         self.generate_graph()
+
     
     # initializes a list of edges and assigns a start and end node
     def reset_edges(self):
