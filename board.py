@@ -111,8 +111,8 @@ class Board:
                     self.tile_nodes.append(Node(pos_x,pos_y))
         # add sprites to the SpriteList at the tile nodes
         for n in self.tile_nodes:
-            sprite = arcade.Sprite("sprites/green_tile.png",scale=.6,
-                                            center_x=n.get_x(),center_y=n.get_y(),angle=30)
+            sprite = arcade.Sprite("sprites/green_tile.png",scale=.7,
+                                            center_x=n.get_x(),center_y=n.get_y()) 
             self.tiles.append(sprite)
                         
 

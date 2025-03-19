@@ -15,6 +15,9 @@ class Edge:
     
     def get_end_node(self):
         return self.end_node
+    
+    def build_road(self,player):
+        return
 
     # helper function for center tile point calculations
     def edge_length(self):

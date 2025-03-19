@@ -31,6 +31,12 @@ class Node:
 
     def get_row(self):
         return self.row
+    
+    def build_town(self,player):
+        return
+    
+    def build_city(self,player):
+        return 
 
     def draw(self):
         arcade.draw_point(self.x, self.y, arcade.color.BLACK, self.size)
