@@ -5,7 +5,6 @@ class Node:
     def __init__(self, x=0, y=0, row=0):
         self.x = x
         self.y = y
-        
         # for easy relation to position in board
         self.row = row
         self.connections = []
@@ -32,6 +31,12 @@ class Node:
 
     def get_row(self):
         return self.row
+    
+    def build_town(self,player):
+        return
+    
+    def build_city(self,player):
+        return 
 
     def draw(self):
         arcade.draw_point(self.x, self.y, arcade.color.BLACK, self.size)

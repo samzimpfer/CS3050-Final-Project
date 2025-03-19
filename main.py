@@ -54,7 +54,7 @@ class GameView(arcade.View):
 
         # Call draw() on all your sprite lists below
         self.board.draw()
-        
+        self.board.draw()
 
 
 def main():
@@ -70,7 +70,6 @@ def main():
 
     # Start the arcade game loop
     arcade.run()
-
 
 
 if __name__ == "__main__":

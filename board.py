@@ -7,7 +7,7 @@ class Board:
 
     BOARD_SCALE_FACTOR = 0.92376 # height:width ratio of entire board
     Y_SPACING_FACTOR_A = 0.28867 # gap:tile-width ratio of first row
-    Y_SPACING_FACTOR_B = 0.57735 # gap:tile-width ratio of second row
+    Y_SPACING_FACTOR_B = 0.57735 # gap:tile-width ratio of second row (also side-length:tile-width ratio)
 
     ROW_SIZES = [3, 4, 4, 5, 5, 6, 6, 5, 5, 4, 4, 3] # number of nodes in each row
     NUM_ROWS = len(ROW_SIZES)
@@ -26,7 +26,7 @@ class Board:
         self.tile_nodes = []
 
         # tile attributes
-        self.x_spacing = 0
+        self.x_spacing = 0 # this is the tile width
 
         #board components
         self.nodes = []
@@ -46,30 +46,35 @@ class Board:
         self.nodes = []
         row = 0
         y = self.y_pos
-        while (row < Board.NUM_ROWS):
+        while (row < Board.NUM_ROWS): # iterates through each row of nodes to be drawn
             row_node_list = []
             row_size = Board.ROW_SIZES[row]
             row_width = self.x_spacing * (row_size - 1)
-            first_x = self.x_pos + ((self.width - row_width) // 2)
+            first_x = self.x_pos + ((self.width - row_width) // 2) # defines the position of the leftmost node in the row
 
-            for col in range(0, Board.ROW_SIZES[row]):
+            for col in range(0, Board.ROW_SIZES[row]): # creates a node at each appropriate column in the row
                 x = first_x + (self.x_spacing * col)
 
                 n = Node(x,y,row=row)
                 row_node_list.append(n)
             self.nodes.append(row_node_list)
 
+            # increments the row spacing according to hexagon geometry
             if row % 2 == 0:
                 y += (self.x_spacing * Board.Y_SPACING_FACTOR_A)
             else:
                 y += (self.x_spacing * Board.Y_SPACING_FACTOR_B)
             
             row += 1
+
+        # generates a graph to keep track of adjacent nodes
         self.generate_graph()
+
     
     # initializes a list of edges and assigns a start and end node
     def reset_edges(self):
         self.edges = []
+        # uses the graph representation to create the edges between nodes
         for row in range(Board.NUM_ROWS - 1):
             for col in range(Board.ROW_SIZES[row]):
                 for n in self.nodes[row][col].get_connections():
@@ -81,45 +86,58 @@ class Board:
         self.reset_edges()
         self.reset_tiles()
 
+    # creates a node that is located in the center of each tile
     def reset_tiles(self):
+        # calculates the avg edge length to then find the center of each hexagon in the board
         avg_edge_length = 0
         for e in self.edges:
             avg_edge_length += e.edge_length()
         avg_edge_length = avg_edge_length / len(self.edges)
 
+        # reference board-graph.pdf for this explanation
+        # start at row index 3 as that is the first row containing the peak node of a tile
         for row in range(3,Board.NUM_ROWS):
+            # same size as the previous row do not contain the top node of a tile so skip
             if Board.ROW_SIZES[row] == Board.ROW_SIZES[row-1]:
                 continue
             for col in range(Board.ROW_SIZES[row]):
+                # the center node is just the top node shifted down by the avg edge length
                 pos_x = self.nodes[row][col].get_x()
                 pos_y = self.nodes[row][col].get_y() - avg_edge_length
+                # if the row index is less than 7 then the first and last nodes are not peaks
                 if row < 7:
                     if col == 0 or col == Board.ROW_SIZES[row]-1:
                         continue
                     else:
                         self.tile_nodes.append(Node(pos_x,pos_y))
+                # otherwise every node is a peak node
                 else:
                     self.tile_nodes.append(Node(pos_x,pos_y))
-        #add sprites to the SpriteList at the tile nodes
+        # add sprites to the SpriteList at the tile nodes
         for n in self.tile_nodes:
-            sprite = arcade.Sprite("sprites/green_tile.png",scale=.6,
-                                            center_x=n.get_x(),center_y=n.get_y(),angle=30)
+            sprite = arcade.Sprite("sprites/green_tile.png",scale=.7,
+                                            center_x=n.get_x(),center_y=n.get_y()) 
             self.tiles.append(sprite)
                         
 
             
     # adds nodes that share an edge to the connections list within each node
+    # reference board-graph.pdf for this explanation
     def generate_graph(self):
         for row in range(Board.NUM_ROWS-1):
             for col in range(Board.ROW_SIZES[row]):
+                # when the number of nodes per row is increasing nodes on the far ends have two edges
                 if len(self.nodes[row+1]) > len(self.nodes[row]):
                     self.undirected_edge(self.nodes[row][col],self.nodes[row+1][col])
                     self.undirected_edge(self.nodes[row][col],self.nodes[row+1][col+1])
+                # when the number of nodes per row is decreasing nodes on the far ends have one edge
+                # and the edge is to the right for the far left and to the left for the far right
                 elif len(self.nodes[row+1]) < len(self.nodes[row]):
                     if col != 0:
                         self.undirected_edge(self.nodes[row][col],self.nodes[row+1][col-1])
                     if col != len(self.nodes[row])-1:
                         self.undirected_edge(self.nodes[row][col],self.nodes[row+1][col])
+                # when the number of nodes per row is the same it is one to one for all nodes
                 else:
                     self.undirected_edge(self.nodes[row][col],self.nodes[row+1][col])
                     
@@ -152,6 +170,7 @@ class Board:
         self.set_size(h / Board.BOARD_SCALE_FACTOR, h)
 
 
+    # draw function for all components of the board 
     def draw(self):
         self.tiles.draw()
         for row in self.nodes:
