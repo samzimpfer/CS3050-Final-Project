@@ -31,6 +31,7 @@ class Board:
         #board components
         self.nodes = []
         self.edges = []
+        self.avg_edge_length = 0
 
         # setup
         if (width != 0):
@@ -70,6 +71,12 @@ class Board:
         # generates a graph to keep track of adjacent nodes
         self.generate_graph()
 
+    # calculates the avg edge length to help with placement of tiles and relating to other objects
+    def calc_avg_edge_length(self):
+        self.avg_edge_length = 0
+        for e in self.edges:
+            self.avg_edge_length += e.edge_length()
+        self.avg_edge_length = self.avg_edge_length / len(self.edges)
     
     # initializes a list of edges and assigns a start and end node
     def reset_edges(self):
@@ -80,6 +87,7 @@ class Board:
                 for n in self.nodes[row][col].get_connections():
                     if n.get_row() > row:
                         self.edges.append(Edge(self.nodes[row][col],n))
+        self.calc_avg_edge_length()
     
     def reset_board(self):
         self.reset_nodes()
@@ -88,12 +96,6 @@ class Board:
 
     # creates a node that is located in the center of each tile
     def reset_tiles(self):
-        # calculates the avg edge length to then find the center of each hexagon in the board
-        avg_edge_length = 0
-        for e in self.edges:
-            avg_edge_length += e.edge_length()
-        avg_edge_length = avg_edge_length / len(self.edges)
-
         # reference board-graph.pdf for this explanation
         # start at row index 3 as that is the first row containing the peak node of a tile
         for row in range(3,Board.NUM_ROWS):
@@ -103,7 +105,7 @@ class Board:
             for col in range(Board.ROW_SIZES[row]):
                 # the center node is just the top node shifted down by the avg edge length
                 pos_x = self.nodes[row][col].get_x()
-                pos_y = self.nodes[row][col].get_y() - avg_edge_length
+                pos_y = self.nodes[row][col].get_y() - self.avg_edge_length
                 # if the row index is less than 7 then the first and last nodes are not peaks
                 if row < 7:
                     if col == 0 or col == Board.ROW_SIZES[row]-1:
@@ -115,9 +117,11 @@ class Board:
                     self.tile_nodes.append(Node(pos_x,pos_y))
         # add sprites to the SpriteList at the tile nodes
         for n in self.tile_nodes:
-            sprite = arcade.Sprite("sprites/green_tile.png",scale=.7,
+            sprite = arcade.Sprite("sprites/green_tile.png",scale=.65,
                                             center_x=n.get_x(),center_y=n.get_y()) 
             self.tiles.append(sprite)
+
+        self.find_touching_tiles()
                         
 
             
@@ -145,6 +149,30 @@ class Board:
     def undirected_edge(self,n1,n2):
         n1.add_connection(n2)
         n2.add_connection(n1)
+
+    # populates the adjacentTiles list in for each node in nodes
+    def find_touching_tiles(self):
+        for row in self.nodes:
+            for node in row:
+                for pos in self.tile_nodes:
+                    # the tile center node(pos) should be within one edge length from any node that is touching the tile
+                    # this makes a range and if pos is in that range that tile is touching the node
+                    node_x_range = [node.get_x() - self.avg_edge_length, node.get_x() + self.avg_edge_length]
+                    node_y_range = [node.get_y() - self.avg_edge_length, node.get_y() + self.avg_edge_length]
+                    if pos.get_x() >= node_x_range[0] and pos.get_x() <= node_x_range[1]:
+                        if pos.get_y() >= node_y_range[0] and pos.get_y() <= node_y_range[1]:
+                            node.add_adjacent_tile(pos)
+                            pos.set_color(arcade.color.WHITE)
+        #self.test_find_touching_tiles()
+        return
+    
+    # most tiles should have 3 adjacent tiles this will print the edges cases need to check manually
+    # using board-graph.pdf
+    def test_find_touching_tiles(self):
+        for x in range(len(self.nodes)):
+            for y in range(len(self.nodes[x])):
+                if len(self.nodes[x][y].get_adjacentTiles()) != 3:
+                    print(f'{[x,y]} has {len(self.nodes[x][y].get_adjacentTiles())} adjacent tiles')
     
     # sets the size of the board and defines variables that can be used to track the 
     # position of the board
@@ -158,6 +186,9 @@ class Board:
         self.y_pos = self.center_y - (h // 2)
 
         self.reset_board()
+
+    def find_longest_road(self):
+        pass
 
     
     # sets the size of the board according to a maximum width

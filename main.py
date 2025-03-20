@@ -56,7 +56,6 @@ class GameView(arcade.View):
         self.board.draw()
         self.board.draw()
 
-
 def main():
     """ Main function """
     # Create a window class. This is what actually shows up on screen
