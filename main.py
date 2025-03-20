@@ -54,7 +54,8 @@ class GameView(arcade.View):
 
         # Call draw() on all your sprite lists below
         self.board.draw()
-        
+        self.board.draw()
+
 def main():
     """ Main function """
     # Create a window class. This is what actually shows up on screen
@@ -68,7 +69,6 @@ def main():
 
     # Start the arcade game loop
     arcade.run()
-
 
 
 if __name__ == "__main__":

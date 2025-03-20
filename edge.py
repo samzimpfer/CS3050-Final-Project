@@ -15,6 +15,14 @@ class Edge:
     
     def get_end_node(self):
         return self.end_node
+    
+    def build_road(self,player):
+        if self.road == "NONE" and player.woodCount > 0 and player.brickCount > 0:
+            self.road = player
+            player.useWood(1)
+            player.useBrick(1)
+            return True
+        return False
 
     # helper function for center tile point calculations
     def edge_length(self):
