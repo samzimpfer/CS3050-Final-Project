@@ -11,6 +11,7 @@ class Node:
         self.adjacentTiles = []
         self.color = arcade.color.BLACK
         self.size = size
+        self.originalSize = size
         self.building = "NONE"
         self.city = False
         
@@ -65,6 +66,12 @@ class Node:
         if self.is_touching(x, y):
             self.build_town(player)
             self.build_city(player)
+
+    def on_mouse_motion(self, x, y):
+        if self.is_touching(x, y) and self.size == self.originalSize:
+            self.size = self.originalSize * 1.5
+        elif not self.is_touching(x, y): 
+            self.size = self.originalSize
 
     def draw(self):
         arcade.draw_circle_filled(self.x, self.y, self.size, self.color)

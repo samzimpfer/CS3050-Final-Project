@@ -32,15 +32,12 @@ class Edge:
         return math.sqrt(math.pow((self.end_node.get_x() - self.start_node.get_x()),2) + 
                          math.pow((self.end_node.get_y() - self.start_node.get_y()),2))
     
+    # determines if the x y coordinate is touching the edge
+    # reduced the size of the area so that the mouse can not hover over a node and edge at the same time
     def is_touching(self, x, y):
-        if self.start_node.get_x == self.end_node.get_x():
-            if (x >= self.start_node.get_x() - self.width and x <= self.start_node.get_x() + self.width and 
-                y >= min(self.start_node.get_y(),self.end_node.get_y()) and 
-                y <= max(self.start_node.get_y(),self.end_node.get_y())):
-                return True
-        elif (x >= min(self.start_node.get_x(),self.end_node.get_x()) and x <= max(self.start_node.get_x(),self.end_node.get_x()) and
-            y >= min(self.start_node.get_y(),self.end_node.get_y()) and 
-            y <= max(self.start_node.get_y(),self.end_node.get_y())):
+        if (x >= min(self.start_node.get_x()+6,self.end_node.get_x()+6) and x <= max(self.start_node.get_x()-6,self.end_node.get_x()-6) and
+            y >= min(self.start_node.get_y()+6,self.end_node.get_y()+6) and 
+            y <= max(self.start_node.get_y()-6,self.end_node.get_y()-6)):
             return True
         return False
     
