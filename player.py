@@ -14,8 +14,9 @@ NOTE: there are still some things to add, but this encompasses the basics
 
 class Player:
 
-    def __init__(self):
+    def __init__(self,color):
         # inventory
+        self.color = color
         self.sheepCount = 0
         self.woodCount = 0
         self.brickCount = 0
