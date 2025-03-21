@@ -1,4 +1,5 @@
 import arcade
+from player import Player
 from node import Node
 from edge import Edge
 
@@ -24,6 +25,7 @@ class Board:
         self.height = 0
         self.tiles = arcade.SpriteList()
         self.tile_nodes = []
+        self.player = Player(arcade.color.RED) # placeholder for player object
 
         # tile attributes
         self.x_spacing = 0 # this is the tile width
@@ -99,7 +101,7 @@ class Board:
         # reference board-graph.pdf for this explanation
         # start at row index 3 as that is the first row containing the peak node of a tile
         for row in range(3,Board.NUM_ROWS):
-            # same size as the previous row do not contain the top node of a tile so skip
+            # rows of the same size as the previous row do not contain the top node of a tile so skip
             if Board.ROW_SIZES[row] == Board.ROW_SIZES[row-1]:
                 continue
             for col in range(Board.ROW_SIZES[row]):
@@ -111,10 +113,10 @@ class Board:
                     if col == 0 or col == Board.ROW_SIZES[row]-1:
                         continue
                     else:
-                        self.tile_nodes.append(Node(pos_x,pos_y))
+                        self.tile_nodes.append(Node(pos_x,pos_y,size=20))
                 # otherwise every node is a peak node
                 else:
-                    self.tile_nodes.append(Node(pos_x,pos_y))
+                    self.tile_nodes.append(Node(pos_x,pos_y,size=20))
         # add sprites to the SpriteList at the tile nodes
         for n in self.tile_nodes:
             sprite = arcade.Sprite("sprites/green_tile.png",scale=.65,
@@ -189,7 +191,7 @@ class Board:
 
     def find_longest_road(self):
         pass
-
+    
     
     # sets the size of the board according to a maximum width
     def set_max_width(self, w):
@@ -200,14 +202,25 @@ class Board:
     def set_max_height(self, h):
         self.set_size(h / Board.BOARD_SCALE_FACTOR, h)
 
+    def on_mouse_press(self, x, y, button, modifiers):
+        for row in self.nodes:
+            for node in row:
+                node.on_mouse_press(x, y, button, modifiers, self.player)
+
+        for edge in self.edges:
+            edge.on_mouse_press(x, y, button, modifiers, self.player)
+
+    def on_mouse_move(self, x, y, dx, dy):
+        for edge in self.edges:
+            edge.on_mouse_motion(x, y, dx, dy)
 
     # draw function for all components of the board 
     def draw(self):
         self.tiles.draw()
+        for e in self.edges:
+            e.draw()
         for row in self.nodes:
             for n in row:
                 n.draw()
-        for e in self.edges:
-            e.draw()
         for n in self.tile_nodes:
             n.draw()
