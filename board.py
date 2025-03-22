@@ -2,6 +2,8 @@ import arcade
 from player import Player
 from node import Node
 from edge import Edge
+from tile import Tile
+import random
 
 # defines a board object that contains nodes representing appropriate positions for settlements
 class Board:
@@ -12,6 +14,8 @@ class Board:
 
     ROW_SIZES = [3, 4, 4, 5, 5, 6, 6, 5, 5, 4, 4, 3] # number of nodes in each row
     NUM_ROWS = len(ROW_SIZES)
+
+
 
 
     # initialize the board centered at the given coordinates with a maximum width or height if specified
@@ -28,6 +32,7 @@ class Board:
         self.player = Player(arcade.color.RED) # placeholder for player object
         self.player.addBrick(2)# road testing
         self.player.addWood(2)
+        self.resources = ['wheat', 'wheat', 'wheat', 'wheat', 'wood', 'wood', 'wood', 'wood', 'sheep', 'sheep', 'sheep', 'sheep', 'ore', 'ore', 'ore', 'brick', 'brick', 'brick', 'desert']
 
         # tile attributes
         self.x_spacing = 0 # this is the tile width
@@ -115,10 +120,13 @@ class Board:
                     if col == 0 or col == Board.ROW_SIZES[row]-1:
                         continue
                     else:
-                        self.tile_nodes.append(Node(pos_x,pos_y,size=20))
+                        self.tile_nodes.append(Tile(pos_x,pos_y,size=20))
                 # otherwise every node is a peak node
                 else:
-                    self.tile_nodes.append(Node(pos_x,pos_y,size=20))
+                    self.tile_nodes.append(Tile(pos_x,pos_y,size=20))
+
+        #assign resources to the tiles
+        random.shuffle(self.resources)
         # add sprites to the SpriteList at the tile nodes
         for n in self.tile_nodes:
             sprite = arcade.Sprite("sprites/green_tile.png",scale=.65,
