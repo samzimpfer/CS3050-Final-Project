@@ -26,6 +26,8 @@ class Board:
         self.tiles = arcade.SpriteList()
         self.tile_nodes = []
         self.player = Player(arcade.color.RED) # placeholder for player object
+        self.player.addBrick(2)# road testing
+        self.player.addWood(2)
 
         # tile attributes
         self.x_spacing = 0 # this is the tile width

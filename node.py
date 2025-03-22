@@ -10,8 +10,8 @@ class Node:
         self.connections = []
         self.adjacentTiles = []
         self.color = arcade.color.BLACK
-        self.size = size
-        self.originalSize = size
+        self.size = size# size of the node that is drawn
+        self.originalSize = size# size of the node with no effects
         self.building = "NONE"
         self.city = False
         
@@ -56,17 +56,20 @@ class Node:
             return True
         return False
     
+    # calculates if the x y point is touching the drawn area of the node
     def is_touching(self, x, y):
         if (x >= self.x - self.size and x <= self.x + self.size and 
             y >= self.y - self.size and y <= self.y + self.size):
             return True
         return False
     
+    # checks if there was a mouse click on the node
     def on_mouse_press(self, x, y, button, modifiers, player):
-        if self.is_touching(x, y):
+        if self.is_touching(x, y) and button == arcade.MOUSE_BUTTON_LEFT:
             self.build_town(player)
             self.build_city(player)
 
+    # checks if the mouse has stopped on the node after moving
     def on_mouse_motion(self, x, y):
         if self.is_touching(x, y) and self.size == self.originalSize:
             self.size = self.originalSize * 1.5

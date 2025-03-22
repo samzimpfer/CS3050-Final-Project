@@ -58,7 +58,6 @@ class GameView(arcade.View):
 
     def on_mouse_press(self, x, y, button, modifiers):
         self.board.on_mouse_press(x, y, button, modifiers)
-        pass
 
     def on_mouse_motion(self, x, y, dx, dy):
         self.board.on_mouse_move(x, y, dx, dy)

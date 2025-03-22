@@ -65,6 +65,9 @@ class Player:
     def useWheat(self, amt):
         self.wheatCount -= amt
 
+    def get_color(self):
+        return self.color
+
 
     # can build functions
     # return True is the player has the resources to build things, and False otherwise
