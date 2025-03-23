@@ -11,8 +11,14 @@ Finally, this class includes functions to handle dev cards and the longest road,
 
 NOTE: there are still some things to add, but this encompasses the basics
 """
+from pygame.examples.music_drop_fade import play_file
+
 
 class Player:
+
+    MAX_SETTLEMENTS = 5
+    MAX_CITIES = 4
+    MAX_ROADS = 15
 
     def __init__(self):
         # inventory
@@ -27,6 +33,7 @@ class Player:
 
         self.settlementCount = 0
         self.cityCount = 0
+        self.roadCount = 0
 
         self.hasLongestRoad = False
 
@@ -66,15 +73,16 @@ class Player:
 
 
     # can build functions
-    # return True is the player has the resources to build things, and False otherwise
+    # return True is the player hasn't exceeded the limit per building and has the resources to build, and False otherwise
+    # TODO: override limitations by resource if dev card owned
     def canBuildRoad(self):
-        return self.brickCount >= 1 and self.woodCount >= 1
+        return self.roadCount < Player.MAX_ROADS and self.brickCount >= 1 and self.woodCount >= 1
 
     def canBuildSettlement(self):
-        return self.brickCount >= 1 and self.woodCount >= 1 and self.sheepCount >= 1 and self.wheatCount >= 1
+        return self.settlementCount < Player.MAX_SETTLEMENTS and self.brickCount >= 1 and self.woodCount >= 1 and self.sheepCount >= 1 and self.wheatCount >= 1
 
     def canBuildCity(self):
-        return self.oreCount >= 3 and self.wheatCount >= 2
+        return self.cityCount < Player.MAX_CITIES and  self.oreCount >= 3 and self.wheatCount >= 2
 
     def canBuyDevCard(self):
         return self.sheepCount >= 1 and self.oreCount >= 1 and self.wheatCount >= 1
@@ -87,6 +95,8 @@ class Player:
         if self.canBuildRoad():
             self.brickCount -= 1
             self.woodCount -= 1
+
+            self.roadCount += 1
             return True
         return False
 

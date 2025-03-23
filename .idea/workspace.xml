@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="9f739c59-69e8-42e6-8bca-a1a8369c7d38" name="Changes" comment="added comments to board class">
+    <list default="true" id="9f739c59-69e8-42e6-8bca-a1a8369c7d38" name="Changes" comment="Implemented game states">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/player.py" beforeDir="false" afterPath="$PROJECT_DIR$/player.py" afterDir="false" />
     </list>
@@ -126,9 +126,11 @@
     <MESSAGE value="initial commit" />
     <MESSAGE value="Unnecessary commit" />
     <MESSAGE value="added comments to board class" />
-    <option name="LAST_COMMIT_MESSAGE" value="added comments to board class" />
+    <MESSAGE value="Implemented game states" />
+    <option name="LAST_COMMIT_MESSAGE" value="Implemented game states" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/CS3050_Final_Project$main.coverage" NAME="main Coverage Results" MODIFIED="1742688113981" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/CS3050_Final_Project$scratchpad.coverage" NAME="scratchpad Coverage Results" MODIFIED="1742413963928" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/CS3050_Final_Project$board.coverage" NAME="board Coverage Results" MODIFIED="1741033716746" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
