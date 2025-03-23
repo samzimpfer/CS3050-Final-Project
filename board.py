@@ -127,11 +127,34 @@ class Board:
 
         #assign resources to the tiles
         random.shuffle(self.resources)
-        # add sprites to the SpriteList at the tile nodes
+        for index, resource in enumerate(self.resources):
+            self.tile_nodes[index].set_resource(resource)
+        # add sprites to the SpriteList at the tile nodes depending on resource
         for n in self.tile_nodes:
-            sprite = arcade.Sprite("sprites/green_tile.png",scale=.65,
-                                            center_x=n.get_x(),center_y=n.get_y()) 
-            self.tiles.append(sprite)
+            if n.get_resource() == 'wood':
+                sprite = arcade.Sprite("sprites/green_tile.png",scale=.65,
+                                                center_x=n.get_x(),center_y=n.get_y())
+                self.tiles.append(sprite)
+            elif n.get_resource() == 'wheat':
+                sprite = arcade.Sprite("sprites/wheat_tile.png", scale=.65,
+                                       center_x=n.get_x(), center_y=n.get_y())
+                self.tiles.append(sprite)
+            elif n.get_resource() == 'sheep':
+                sprite = arcade.Sprite("sprites/sheep_tile.png", scale=.65,
+                                       center_x=n.get_x(), center_y=n.get_y())
+                self.tiles.append(sprite)
+            elif n.get_resource() == 'ore':
+                sprite = arcade.Sprite("sprites/ore_tile.png", scale=.65,
+                                       center_x=n.get_x(), center_y=n.get_y())
+                self.tiles.append(sprite)
+            elif n.get_resource() == 'brick':
+                sprite = arcade.Sprite("sprites/brick_tile.png", scale=.65,
+                                       center_x=n.get_x(), center_y=n.get_y())
+                self.tiles.append(sprite)
+            else:
+                sprite = arcade.Sprite("sprites/desert_tile.png", scale=.65,
+                                       center_x=n.get_x(), center_y=n.get_y())
+                self.tiles.append(sprite)
 
         self.find_touching_tiles()
                         
