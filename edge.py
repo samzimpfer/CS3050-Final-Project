@@ -24,6 +24,7 @@ class Edge:
         if self.road == "NONE" and player.buildRoad():
             self.road = player
             self.color = player.get_color()
+            player.add_road(self)
             
             return True
         return False

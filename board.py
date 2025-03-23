@@ -25,9 +25,9 @@ class Board:
         self.height = 0
         self.tiles = arcade.SpriteList()
         self.tile_nodes = []
-        self.player = Player(arcade.color.RED) # placeholder for player object
-        self.player.addBrick(2)# road testing
-        self.player.addWood(2)
+        self.players = [Player(arcade.color.RED)]# here for testing/writing longest road
+        self.players[0].addBrick(20)# road testing
+        self.players[0].addWood(20)
 
         # tile attributes
         self.x_spacing = 0 # this is the tile width
@@ -192,7 +192,37 @@ class Board:
         self.reset_board()
 
     def find_longest_road(self):
+        longest_road_player = None
+        longest_road_length = 0
+        for p in self.players:
+            p_terminal_nodes = self.find_road_endpoints(p)
+            for start in p_terminal_nodes:
+                for end in p_terminal_nodes:
+                    if start == end:
+                        continue
+                    path = self.find_road_length(start, end, p)
+                    print(len(path))
+        return
+    # finds the endpoints of the players roads 
+    def find_road_endpoints(self, player):
+        terminal_nodes = []
+        roads = player.get_roads()
+        for node in roads:
+            num_adjacent_roads = 0
+            for connected_node in node.get_connections():
+                if connected_node in roads:
+                    num_adjacent_roads += 1
+            if num_adjacent_roads == 1:
+                terminal_nodes.append(node)
+        return terminal_nodes
+    
+    # WIP 
+    def find_road_length(self, start, end, player):
+        queue = []
+        visited = []
         pass
+                
+        
     
     
     # sets the size of the board according to a maximum width
@@ -208,10 +238,12 @@ class Board:
     def on_mouse_press(self, x, y, button, modifiers):
         for row in self.nodes:
             for node in row:
-                node.on_mouse_press(x, y, button, modifiers, self.player)
+                node.on_mouse_press(x, y, button, modifiers, self.players[0])
 
         for edge in self.edges:
-            edge.on_mouse_press(x, y, button, modifiers, self.player)
+            edge.on_mouse_press(x, y, button, modifiers, self.players[0])
+
+        self.find_longest_road()
 
     # calls on_mouse_motion on all objects that should have a hover effect
     def on_mouse_move(self, x, y, dx, dy):

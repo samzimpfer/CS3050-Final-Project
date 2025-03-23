@@ -16,6 +16,7 @@ class Player:
 
     def __init__(self,color):
         # inventory
+        self.roads = []# used for calculating longest road is a list of nodes
         self.color = color
         self.sheepCount = 0
         self.woodCount = 0
@@ -31,6 +32,14 @@ class Player:
 
         self.hasLongestRoad = False
 
+
+    def add_road(self,edge):
+        start_node = edge.get_start_node()
+        end_node = edge.get_end_node()
+        self.roads.append([start_node,end_node])
+    
+    def get_roads(self):
+        return self.roads
 
     # increment resource functions
     def addSheep(self, amt):
