@@ -20,7 +20,7 @@ class Player:
     MAX_CITIES = 4
     MAX_ROADS = 15
 
-    def __init__(self):
+    def __init__(self, color):
         # inventory
         self.roads = []# used for calculating longest road is a list of nodes
         self.color = color
