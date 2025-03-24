@@ -29,13 +29,14 @@ class Player:
         self.wheatCount = 0
 
         self.knightCardCount = 0
-        # add other dev card counters here
+        # add other dev card fields here
 
         self.settlementCount = 0
         self.cityCount = 0
         self.roadCount = 0
 
         self.hasLongestRoad = False
+        self.hasLargestArmy = False
 
 
     # increment resource functions
@@ -142,5 +143,8 @@ class Player:
         total += (self.cityCount * 2)
         if self.hasLongestRoad:
             total += 2
+        if self.hasLargestArmy:
+            total += 2
+        # add in victory card points
 
         return total
