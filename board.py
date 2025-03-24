@@ -2,6 +2,8 @@ import arcade
 from player import Player
 from node import Node
 from edge import Edge
+from tile import Tile
+import random
 
 # defines a board object that contains nodes representing appropriate positions for settlements
 class Board:
@@ -12,6 +14,8 @@ class Board:
 
     ROW_SIZES = [3, 4, 4, 5, 5, 6, 6, 5, 5, 4, 4, 3] # number of nodes in each row
     NUM_ROWS = len(ROW_SIZES)
+
+
 
 
     # initialize the board centered at the given coordinates with a maximum width or height if specified
@@ -25,6 +29,7 @@ class Board:
         self.height = 0
         self.tiles = arcade.SpriteList()
         self.tile_nodes = []
+        self.resources = ['wheat', 'wheat', 'wheat', 'wheat', 'wood', 'wood', 'wood', 'wood', 'sheep', 'sheep', 'sheep', 'sheep', 'ore', 'ore', 'ore', 'brick', 'brick', 'brick', 'desert']
         self.players = [Player(arcade.color.RED)]# here for testing/writing longest road
         self.players[0].addBrick(20)# road testing
         self.players[0].addWood(20)
@@ -118,15 +123,41 @@ class Board:
                     if col == 0 or col == Board.ROW_SIZES[row]-1:
                         continue
                     else:
-                        self.tile_nodes.append(Node(pos_x,pos_y,size=20))
+                        self.tile_nodes.append(Tile(pos_x,pos_y,size=20))
                 # otherwise every node is a peak node
                 else:
-                    self.tile_nodes.append(Node(pos_x,pos_y,size=20))
-        # add sprites to the SpriteList at the tile nodes
+                    self.tile_nodes.append(Tile(pos_x,pos_y,size=20))
+
+        #assign resources to the tiles
+        random.shuffle(self.resources)
+        for index, resource in enumerate(self.resources):
+            self.tile_nodes[index].set_resource(resource)
+        # add sprites to the SpriteList at the tile nodes depending on resource
         for n in self.tile_nodes:
-            sprite = arcade.Sprite("sprites/green_tile.png",scale=.65,
-                                            center_x=n.get_x(),center_y=n.get_y()) 
-            self.tiles.append(sprite)
+            if n.get_resource() == 'wood':
+                sprite = arcade.Sprite("sprites/green_tile.png",scale=.65,
+                                                center_x=n.get_x(),center_y=n.get_y())
+                self.tiles.append(sprite)
+            elif n.get_resource() == 'wheat':
+                sprite = arcade.Sprite("sprites/wheat_tile.png", scale=.65,
+                                       center_x=n.get_x(), center_y=n.get_y())
+                self.tiles.append(sprite)
+            elif n.get_resource() == 'sheep':
+                sprite = arcade.Sprite("sprites/sheep_tile.png", scale=.65,
+                                       center_x=n.get_x(), center_y=n.get_y())
+                self.tiles.append(sprite)
+            elif n.get_resource() == 'ore':
+                sprite = arcade.Sprite("sprites/ore_tile.png", scale=.65,
+                                       center_x=n.get_x(), center_y=n.get_y())
+                self.tiles.append(sprite)
+            elif n.get_resource() == 'brick':
+                sprite = arcade.Sprite("sprites/brick_tile.png", scale=.65,
+                                       center_x=n.get_x(), center_y=n.get_y())
+                self.tiles.append(sprite)
+            else:
+                sprite = arcade.Sprite("sprites/desert_tile.png", scale=.65,
+                                       center_x=n.get_x(), center_y=n.get_y())
+                self.tiles.append(sprite)
 
         self.find_touching_tiles()
                         
