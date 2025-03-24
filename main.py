@@ -10,6 +10,16 @@ python -m arcade.examples.starting_template
 import arcade
 from board import Board
 
+from enum import Enum
+
+class GameState(Enum):
+    SETUP = 0
+    ROLL = 1
+    GET_RESOURCES = 2
+    TRADE = 3
+    BUILD = 4
+    WAITING = 5
+
 WINDOW_WIDTH = 800
 WINDOW_HEIGHT = 600
 WINDOW_TITLE = "Starting Template"
@@ -42,6 +52,9 @@ class GameView(arcade.View):
 
         self.board = Board(center_x, center_y, height=board_height)
 
+        self.players = []
+        self.currentState = GameState.SETUP
+
 
     def on_draw(self):
         """
@@ -54,7 +67,21 @@ class GameView(arcade.View):
 
         # Call draw() on all your sprite lists below
         self.board.draw()
-        self.board.draw()
+
+
+    def on_update(self, delta_time: float):
+        # manage game state
+        if (self.currentState == GameState.ROLL):
+            # roll() ?
+            self.currentState = GameState.WAITING
+        elif (self.currentState == GameState.GET_RESOURCES):
+            # maybe unneeded depending on how roll is handled
+            pass
+        elif (self.currentState == GameState.TRADE):
+            pass
+        elif (self.currentState == GameState.BUILD):
+            # board.build ?
+            self.currentState = GameState.WAITING
 
     def on_mouse_press(self, x, y, button, modifiers):
         self.board.on_mouse_press(x, y, button, modifiers)
