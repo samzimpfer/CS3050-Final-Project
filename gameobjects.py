@@ -1,5 +1,6 @@
 from enum import Enum
 
+# haven't used this yet but whatever
 class Resource(Enum):
     BRICK = 0
     SHEEP = 1
@@ -7,7 +8,9 @@ class Resource(Enum):
     WHEAT = 3
     WOOD = 4
 
-# All dev card types
+# All dev card types, basically structs.  Subclasses of DevCard.  Each has the number of them(amt), name, and description.
+# functions like "show type" and "print description" can be added to the parent DevCard function.  May be best to remove
+# @dataclass decorator if we decide to do this
 @dataclass(frozen=True)
 class DevCard:
     pass
@@ -66,14 +69,19 @@ class Library():
     name = "Library"
     description = "One victory point. Reveal this card on your turn if, with it, you reach the number of points required for victory."
 
+# Resource bank, mostly necessary because resources can and do run out during the game
 class Bank():
+    # when initialized, there are 19 of each resource (95 cards total)
     def __init__(self):
         self.Brick = 19
         self.Sheep = 19
         self.Stone = 19
         self.Wheat = 19
         self.Wood = 19
-
+    
+    # both Take and Return resources take amounts passed in as dictionary form.  This is also the return type for
+    # TakeResources().  Take could be simplified but for now his is just a very true representation of what the process
+    # would look like in game
     def TakeResources(self, amounts) -> dict:
         #amounts passed in as dict with +/- values
         taken = {}
@@ -96,15 +104,20 @@ class Bank():
                 self.r += amount
 
 
-
+# Actual stack of Dev Cards
 class DevCardStack():
+    # when initialized, dev card instances are added to stack list and then shuffled.  the description and name can be
+    # accessed using <Class Instance>.<data field>
     def __init__(self):
         self.stack = []
+        # this iterates over subclasses of DevCard
         for card in DevCard.__subclasses__():
             self.stack += [card()] * card.amt
         self.stack = shuffle(self.stack)
 
-
+    # draw card pops from stack and returns an instance of a dev card.  For example each player class instance can use
+    # "draw_new_dev_card = DevCardStack.DrawCard()" to give the player a new dev card while also updating what's left in
+    # the deck
     def DrawCard(self) -> DevCard:
         return self.stack.pop()
 
