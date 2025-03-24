@@ -20,11 +20,17 @@ class Edge:
     def get_end_node(self):
         return self.end_node
     
+    def get_color(self):
+        return self.color
+    
+    def get_road(self):
+        return self.road
+    
     def build_road(self,player):
-        if self.road == "NONE" and player.buildRoad():
+        if self.road == "NONE" and player.canBuildRoad():
             self.road = player
             self.color = player.get_color()
-            player.add_road(self)
+            player.buildRoad(self.start_node, self.end_node)
             
             return True
         return False

@@ -36,7 +36,10 @@ class Player:
     def add_road(self,edge):
         start_node = edge.get_start_node()
         end_node = edge.get_end_node()
-        self.roads.append([start_node,end_node])
+        if start_node not in self.roads:
+            self.roads.append(start_node)
+        if end_node not in self.roads:
+            self.roads.append(end_node)
     
     def get_roads(self):
         return self.roads
@@ -54,7 +57,7 @@ class Player:
     def addOre(self, amt):
         self.oreCount += amt
 
-    def useWheat(self, amt):
+    def addWheat(self, amt):
         self.wheatCount += amt
 
 
@@ -96,7 +99,7 @@ class Player:
     # build functions
     # update the player's resources in the event that they build
     # return True if build is successful, and False otherwise
-    def buildRoad(self):
+    def buildRoad(self, start_node, end_node):
         if self.canBuildRoad():
             self.brickCount -= 1
             self.woodCount -= 1
