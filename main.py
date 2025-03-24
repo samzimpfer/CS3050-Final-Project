@@ -72,13 +72,16 @@ class GameView(arcade.View):
     def on_update(self, delta_time: float):
         # manage game state
         if (self.currentState == GameState.ROLL):
-            pass
+            # roll() ?
+            self.currentState = GameState.WAITING
         elif (self.currentState == GameState.GET_RESOURCES):
+            # maybe unneeded depending on how roll is handled
             pass
         elif (self.currentState == GameState.TRADE):
             pass
         elif (self.currentState == GameState.BUILD):
-            pass
+            # board.build ?
+            self.currentState = GameState.WAITING
 
 
 def main():
