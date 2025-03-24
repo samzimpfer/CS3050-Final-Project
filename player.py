@@ -52,7 +52,7 @@ class Player:
     def addOre(self, amt):
         self.oreCount += amt
 
-    def useWheat(self, amt):
+    def addWheat(self, amt):
         self.wheatCount += amt
 
 
