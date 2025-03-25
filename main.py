@@ -80,7 +80,7 @@ class GameView(arcade.View):
             p = Player(PLAYER_COLORS[i])
             self.players.append(p)
 
-        self.currentState = GameState.SETUP
+        self.current_state = GameState.SETUP
         self.active_player_index = 0
 
 
@@ -115,17 +115,17 @@ class GameView(arcade.View):
 
     def on_update(self, delta_time: float):
         # manage game state
-        if (self.currentState == GameState.ROLL):
+        if (self.current_state == GameState.ROLL):
             # roll() ?
-            self.currentState = GameState.WAITING
-        elif (self.currentState == GameState.GET_RESOURCES):
+            self.current_state = GameState.WAITING
+        elif (self.current_state == GameState.GET_RESOURCES):
             # maybe unneeded depending on how roll is handled
             pass
-        elif (self.currentState == GameState.TRADE):
+        elif (self.current_state == GameState.TRADE):
             pass
-        elif (self.currentState == GameState.BUILD):
+        elif (self.current_state == GameState.BUILD):
             # board.build ?
-            self.currentState = GameState.WAITING
+            self.current_state = GameState.WAITING
 
     def on_mouse_press(self, x, y, button, modifiers):
         self.board.on_mouse_press(x, y, button, modifiers)

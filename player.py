@@ -23,21 +23,21 @@ class Player:
         # inventory
         self.roads = []# used for calculating longest road is a list of nodes
         self.color = color
-        self.sheepCount = 0
-        self.woodCount = 0
-        self.brickCount = 0
-        self.oreCount = 0
-        self.wheatCount = 0
+        self.sheep_count = 0
+        self.wood_count = 0
+        self.brick_count = 0
+        self.ore_count = 0
+        self.wheat_count = 0
 
-        self.knightCardCount = 0
+        self.knight_card_count = 0
         # add other dev card fields here
 
-        self.settlementCount = 0
-        self.cityCount = 0
-        self.roadCount = 0
+        self.settlement_count = 0
+        self.city_count = 0
+        self.road_count = 0
 
-        self.hasLongestRoad = False
-        self.hasLargestArmy = False
+        self.has_longest_road = False
+        self.has_largest_army = False
 
 
     def add_road(self,edge):
@@ -52,37 +52,37 @@ class Player:
         return self.roads
 
     # increment resource functions
-    def addSheep(self, amt):
-        self.sheepCount += amt
+    def add_sheep(self, amt):
+        self.sheep_count += amt
 
-    def addWood(self, amt):
-        self.woodCount += amt
+    def add_wood(self, amt):
+        self.wood_count += amt
 
-    def addBrick(self, amt):
-        self.brickCount += amt
+    def add_brick(self, amt):
+        self.brick_count += amt
 
-    def addOre(self, amt):
-        self.oreCount += amt
+    def add_ore(self, amt):
+        self.ore_count += amt
 
-    def addWheat(self, amt):
-        self.wheatCount += amt
+    def add_wheat(self, amt):
+        self.wheat_count += amt
 
 
     # decrement resource functions
-    def useSheep(self, amt):
-        self.sheepCount -= amt
+    def use_sheep(self, amt):
+        self.sheep_count -= amt
 
-    def useWood(self, amt):
-        self.woodCount -= amt
+    def use_wood(self, amt):
+        self.wood_count -= amt
 
-    def useBrick(self, amt):
-        self.brickCount -= amt
+    def use_brick(self, amt):
+        self.brick_count -= amt
 
-    def useOre(self, amt):
-        self.oreCount -= amt
+    def use_ore(self, amt):
+        self.ore_count -= amt
 
-    def useWheat(self, amt):
-        self.wheatCount -= amt
+    def use_wheat(self, amt):
+        self.wheat_count -= amt
 
     def get_color(self):
         return self.color
@@ -91,74 +91,74 @@ class Player:
     # can build functions
     # return True is the player hasn't exceeded the limit per building and has the resources to build, and False otherwise
     # TODO: override limitations by resource if dev card owned
-    def canBuildRoad(self):
-        return self.roadCount < Player.MAX_ROADS and self.brickCount >= 1 and self.woodCount >= 1
+    def can_build_road(self):
+        return self.road_count < Player.MAX_ROADS and self.brick_count >= 1 and self.wood_count >= 1
 
-    def canBuildSettlement(self):
-        return self.settlementCount < Player.MAX_SETTLEMENTS and self.brickCount >= 1 and self.woodCount >= 1 and self.sheepCount >= 1 and self.wheatCount >= 1
+    def can_build_settlement(self):
+        return self.settlement_count < Player.MAX_SETTLEMENTS and self.brick_count >= 1 and self.wood_count >= 1 and self.sheep_count >= 1 and self.wheat_count >= 1
 
-    def canBuildCity(self):
-        return self.cityCount < Player.MAX_CITIES and  self.oreCount >= 3 and self.wheatCount >= 2
+    def can_build_city(self):
+        return self.city_count < Player.MAX_CITIES and  self.ore_count >= 3 and self.wheat_count >= 2
 
-    def canBuyDevCard(self):
-        return self.sheepCount >= 1 and self.oreCount >= 1 and self.wheatCount >= 1
+    def can_buy_dev_card(self):
+        return self.sheep_count >= 1 and self.ore_count >= 1 and self.wheat_count >= 1
 
 
     # build functions
     # update the player's resources in the event that they build
     # return True if build is successful, and False otherwise
-    def buildRoad(self, start_node, end_node):
-        if self.canBuildRoad():
-            self.brickCount -= 1
-            self.woodCount -= 1
+    def build_road(self, start_node, end_node):
+        if self.can_build_road():
+            self.brick_count -= 1
+            self.wood_count -= 1
 
-            self.roadCount += 1
+            self.road_count += 1
             return True
         return False
 
-    def buildSettlement(self):
-        if self.canBuildSettlement():
-            self.brickCount -= 1
-            self.woodCount -= 1
-            self.sheepCount -= 1
-            self.wheatCount -= 1
+    def build_settlement(self):
+        if self.can_build_settlement():
+            self.brick_count -= 1
+            self.wood_count -= 1
+            self.sheep_count -= 1
+            self.wheat_count -= 1
 
-            self.settlementCount += 1
+            self.settlement_count += 1
             return True
         return False
 
-    def buildCity(self):
-        if self.canBuildCity():
-            self.oreCount -= 3
-            self.wheatCount -= 2
+    def build_city(self):
+        if self.can_build_city():
+            self.ore_count -= 3
+            self.wheat_count -= 2
 
-            self.cityCount += 1
-            self.settlementCount -= 1
+            self.city_count += 1
+            self.settlement_count -= 1
             return True
         return False
 
-    def buyDevCard(self):
-        if self.canBuyDevCard():
-            self.sheepCount -= 1
-            self.oreCount -= 1
-            self.wheatCount -= 1
+    def buy_dev_card(self):
+        if self.can_buy_dev_card():
+            self.sheep_count -= 1
+            self.ore_count -= 1
+            self.wheat_count -= 1
             return True
         return False
 
 
-    # sets the value of hasLongestRoad for this player
-    def setLongestRoad(self, value):
-        self.hasLongestRoad = value
+    # sets the value of has_longest_road for this player
+    def set_longest_road(self, value):
+        self.has_longest_road = value
 
 
     # returns the number of points the player has based on settlements, cities, and longest road
-    def getPoints(self):
+    def get_points(self):
         total = 0
-        total += self.settlementCount
-        total += (self.cityCount * 2)
-        if self.hasLongestRoad:
+        total += self.settlement_count
+        total += (self.city_count * 2)
+        if self.has_longest_road:
             total += 2
-        if self.hasLargestArmy:
+        if self.has_largest_army:
             total += 2
         # add in victory card points
 
