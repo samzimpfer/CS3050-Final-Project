@@ -28,7 +28,6 @@ WINDOW_TITLE = "Settlers of Catan"
 
 PLAYER_COLORS = [arcade.color.BLUE, arcade.color.GREEN, arcade.color.RED, arcade.color.YELLOW]
 
-
 class GameView(arcade.View):
     """
     Main application class.
@@ -82,6 +81,7 @@ class GameView(arcade.View):
             self.players.append(p)
 
         self.currentState = GameState.SETUP
+        self.active_player_index = 0
 
 
     def on_draw(self):
@@ -94,11 +94,23 @@ class GameView(arcade.View):
         self.board.draw()
 
         # component placeholders TODO: replace these with actual component on_draw() functions
+        # bank
         arcade.draw_lrbt_rectangle_filled(WINDOW_WIDTH - self.component_width, WINDOW_WIDTH, WINDOW_HEIGHT - self.component_height, WINDOW_HEIGHT, arcade.color.GRAY)
-        arcade.draw_lrbt_rectangle_filled(0, self.component_width, WINDOW_HEIGHT - self.component_height, WINDOW_HEIGHT - self.margin, arcade.color.GRAY)
 
-        for i in range(self.num_players - 1):
-            arcade.draw_lrbt_rectangle_filled(0, self.other_player_width, self.margin + (i * (self.margin + self.other_player_height)), (i + 1) * (self.margin + self.other_player_height), arcade.color.GRAY)
+        # active player
+        self.players[self.active_player_index].on_draw(True, 0, self.component_width, WINDOW_HEIGHT - self.component_height, WINDOW_HEIGHT - self.margin)
+
+        i = 2 # iterate through inactive player positions
+        p = self.active_player_index + 1 # iterate through inactive players
+        if p >= self.num_players:
+            p = 0
+        while (p != self.active_player_index):
+            self.players[p].on_draw(False, 0, self.other_player_width, self.margin + (i * (self.margin + self.other_player_height)), (i + 1) * (self.margin + self.other_player_height))
+
+            i -= 1
+            p += 1
+            if p >= self.num_players:
+                p = 0
 
 
     def on_update(self, delta_time: float):

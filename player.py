@@ -11,8 +11,7 @@ Finally, this class includes functions to handle dev cards and the longest road,
 
 NOTE: there are still some things to add, but this encompasses the basics
 """
-from pygame.examples.music_drop_fade import play_file
-
+import arcade
 
 class Player:
 
@@ -164,3 +163,11 @@ class Player:
         # add in victory card points
 
         return total
+
+    def on_draw(self, active_player, l, r, b, t):
+        arcade.draw_lrbt_rectangle_filled(l, r, b, t, arcade.color.WHITE)
+        arcade.draw_lrbt_rectangle_filled(r - 30, r, b, t, self.color)
+        if active_player:
+            pass
+        else:
+            pass
