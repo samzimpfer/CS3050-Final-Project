@@ -8,9 +8,10 @@ If Python and Arcade are installed, this example can be run from the command lin
 python -m arcade.examples.starting_template
 """
 import arcade
-from board import Board
-
 from enum import Enum
+
+from board import Board
+from player import Player
 
 class GameState(Enum):
     SETUP = 0
@@ -20,9 +21,12 @@ class GameState(Enum):
     BUILD = 4
     WAITING = 5
 
-WINDOW_WIDTH = 800
-WINDOW_HEIGHT = 600
-WINDOW_TITLE = "Starting Template"
+screen_width, screen_height = arcade.get_display_size()
+WINDOW_WIDTH = screen_width - 100
+WINDOW_HEIGHT = screen_height - 100
+WINDOW_TITLE = "Settlers of Catan"
+
+PLAYER_COLORS = [arcade.color.BLUE, arcade.color.GREEN, arcade.color.RED, arcade.color.YELLOW]
 
 
 class GameView(arcade.View):
@@ -37,22 +41,38 @@ class GameView(arcade.View):
     def __init__(self):
         super().__init__()
 
-        self.background_color = arcade.color.WHITE
+        self.sprites = arcade.SpriteList()
 
-        # If you have sprite lists, you should create them here,
-        # and set them to None
+        self.background = arcade.Sprite("sprites/background.png")
+        self.background.width = WINDOW_WIDTH
+        self.background.height = WINDOW_HEIGHT
+        self.background.center_x = WINDOW_WIDTH // 2
+        self.background.center_y = WINDOW_HEIGHT // 2
+        self.sprites.append(self.background)
 
-        # centers the board on the canvas with a 20px margin
-        # change these for a different positioning method
-        margin = 20
+        self.margin = 20
+        self.logo_space = WINDOW_HEIGHT * 0.2
+        self.board_space = WINDOW_HEIGHT - self.logo_space - self.margin
 
-        center_x = WINDOW_WIDTH // 2
-        center_y = WINDOW_HEIGHT // 2
-        board_height = WINDOW_HEIGHT - (margin * 2)
+        self.logo = arcade.Sprite("sprites/logo.png")
+        scale = self.logo_space / self.logo.height
+        self.logo.scale = (scale, scale)
+        self.logo.center_x = WINDOW_WIDTH // 2
+        self.logo.center_y = WINDOW_HEIGHT - (self.logo_space // 2)
+        self.sprites.append(self.logo)
 
-        self.board = Board(center_x, center_y, height=board_height)
+        board_center_x = WINDOW_WIDTH // 2
+        board_center_y = (self.board_space // 2) + self.margin
+        self.board = Board(board_center_x, board_center_y, height=self.board_space)
+        # TODO: initialize bank
 
+        self.num_players = 4
         self.players = []
+        for i in range(self.num_players):
+            # TODO: also pass bank into Player constructors
+            p = Player(PLAYER_COLORS[i])
+            self.players.append(p)
+
         self.currentState = GameState.SETUP
 
 
@@ -61,11 +81,8 @@ class GameView(arcade.View):
         Render the screen.
         """
 
-        # This command should happen before we start drawing. It will clear
-        # the screen to the background color, and erase what we drew last frame.
         self.clear()
-
-        # Call draw() on all your sprite lists below
+        self.sprites.draw()
         self.board.draw()
 
 
