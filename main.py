@@ -41,6 +41,12 @@ class GameView(arcade.View):
     def __init__(self):
         super().__init__()
 
+        self.margin = 20
+        self.logo_space = WINDOW_HEIGHT * 0.18 - self.margin
+        self.board_space = WINDOW_HEIGHT - self.logo_space - (self.margin * 3)
+
+        self.num_players = 4
+
         self.sprites = arcade.SpriteList()
 
         self.background = arcade.Sprite("sprites/background.png")
@@ -50,23 +56,25 @@ class GameView(arcade.View):
         self.background.center_y = WINDOW_HEIGHT // 2
         self.sprites.append(self.background)
 
-        self.margin = 20
-        self.logo_space = WINDOW_HEIGHT * 0.2
-        self.board_space = WINDOW_HEIGHT - self.logo_space - self.margin
-
         self.logo = arcade.Sprite("sprites/logo.png")
         scale = self.logo_space / self.logo.height
         self.logo.scale = (scale, scale)
         self.logo.center_x = WINDOW_WIDTH // 2
-        self.logo.center_y = WINDOW_HEIGHT - (self.logo_space // 2)
+        self.logo.center_y = WINDOW_HEIGHT - self.margin - (self.logo_space // 2)
         self.sprites.append(self.logo)
 
         board_center_x = WINDOW_WIDTH // 2
         board_center_y = (self.board_space // 2) + self.margin
         self.board = Board(board_center_x, board_center_y, height=self.board_space)
+
+        # used for sizing bank and active player representation
+        self.component_width = (WINDOW_WIDTH - self.board.width + self.board.x_spacing) // 2
+        self.component_height = self.logo_space + self.margin + (self.board.x_spacing * 1)
+        self.other_player_width = (WINDOW_WIDTH - self.board.width) // 4
+        self.other_player_height = (WINDOW_HEIGHT - self.component_height - (self.margin * 5)) // (self.num_players - 1)
+
         # TODO: initialize bank
 
-        self.num_players = 4
         self.players = []
         for i in range(self.num_players):
             # TODO: also pass bank into Player constructors
@@ -84,6 +92,13 @@ class GameView(arcade.View):
         self.clear()
         self.sprites.draw()
         self.board.draw()
+
+        # component placeholders TODO: replace these with actual component on_draw() functions
+        arcade.draw_lrbt_rectangle_filled(WINDOW_WIDTH - self.component_width, WINDOW_WIDTH, WINDOW_HEIGHT - self.component_height, WINDOW_HEIGHT, arcade.color.GRAY)
+        arcade.draw_lrbt_rectangle_filled(0, self.component_width, WINDOW_HEIGHT - self.component_height, WINDOW_HEIGHT - self.margin, arcade.color.GRAY)
+
+        for i in range(self.num_players - 1):
+            arcade.draw_lrbt_rectangle_filled(0, self.other_player_width, self.margin + (i * (self.margin + self.other_player_height)), (i + 1) * (self.margin + self.other_player_height), arcade.color.GRAY)
 
 
     def on_update(self, delta_time: float):
