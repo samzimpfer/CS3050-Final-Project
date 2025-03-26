@@ -73,7 +73,10 @@ class GameView(arcade.View):
         self.other_player_width = (WINDOW_WIDTH - self.board.width) // 4
         self.other_player_height = (WINDOW_HEIGHT - self.component_height - (self.margin * 5)) // (self.num_players - 1)
 
-        # TODO: initialize bank
+        self.bank = Bank()
+        self.dev_card_stack = DevCardStack()
+        Player.bank = self.bank
+        Player.dev_card_stack = self.dev_card_stack
 
         self.players = []
         for i in range(self.num_players):

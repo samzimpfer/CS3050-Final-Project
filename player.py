@@ -11,7 +11,6 @@ Finally, this class includes functions to handle dev cards and the longest road,
 
 NOTE: there are still some things to add, but this encompasses the basics
 """
-from pygame.examples.music_drop_fade import play_file
 from gameobjects import *
 
 import arcade
@@ -24,8 +23,16 @@ class Player:
     MAX_ROADS = 15
 
     #testing this out, not even sure if it works
-    global Bank
-    global GameDevCards
+    # global Bank
+    # global GameDevCards
+
+    # edit from Sam
+    # these are class variables that are shared for each instance if the class
+    # global is not needed here (keeps the bank encapsulated in the Player class, theoretically better for security)
+    # these are being set to the same instance that was created in main.__init__() in that function
+    # reference from inside player functions as Player.bank
+    bank = None
+    game_dev_cards = None
 
     ROAD_COST = {
         Resource.BRICK:1,
