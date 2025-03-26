@@ -16,12 +16,12 @@ from gameobjects import *
 
 import arcade
 
+# TODO: convert all camelcase to snakecase for pep 8 purposes
 class Player:
 
     MAX_SETTLEMENTS = 5
     MAX_CITIES = 4
     MAX_ROADS = 15
-
 
     #testing this out, not even sure if it works
     global Bank
@@ -240,7 +240,7 @@ class Player:
             match drawn_dev_card:
                 case Knight():
                     #TODO: add move robber
-                    self.knightCardCount += 1
+                    self.knight_card_count += 1
                 case YearOfPlenty():
                     #TODO: not sure if we're doing UI display for resource and stuff so leaving this blank for now
                     pass
@@ -252,7 +252,7 @@ class Player:
                     pass
                 case _:
                     pass
-            self.playerDevCards.append(GameDevCards.DrawCard())
+            self.player_dev_cards.append(GameDevCards.DrawCard())
 
 
     # sets the value of has_longest_road for this player
