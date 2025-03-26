@@ -11,6 +11,7 @@ class Tile:
         self.originalSize = size  # size of the node with no effects
         self.resource = None
         self.robber = False
+        self.number = None
 
     def set_pos(self, x, y):
         self.x = x
@@ -24,6 +25,10 @@ class Tile:
 
     def set_robber(self, has_robber):
         self.robber = has_robber
+
+    def set_number(self, number):
+        self.number = number
+
 
     def get_x(self):
         return self.x
@@ -45,6 +50,9 @@ class Tile:
 
     def get_robber(self):
         return self.robber
+
+    def get_number(self):
+        return self.number
 
     def draw(self):
         arcade.draw_circle_filled(self.x, self.y, self.size, self.color)
