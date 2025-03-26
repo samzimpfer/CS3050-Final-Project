@@ -31,11 +31,11 @@ class Board:
         self.tile_nodes = []
         self.resources = ['wheat', 'wheat', 'wheat', 'wheat', 'wood', 'wood', 'wood', 'wood', 'sheep', 'sheep', 'sheep', 'sheep', 'ore', 'ore', 'ore', 'brick', 'brick', 'brick', 'desert']
         self.players = [Player(arcade.color.RED)]# here for testing/writing longest road
-        self.players[0].addBrick(20)# road testing
-        self.players[0].addWood(20)
-        self.players[0].addSheep(20)
-        self.players[0].addBrick(20)
-        self.players[0].addWheat(20)
+        self.players[0].add_brick(20)# road testing
+        self.players[0].add_wood(20)
+        self.players[0].add_sheep(20)
+        self.players[0].add_brick(20)
+        self.players[0].add_wheat(20)
 
         # tile attributes
         self.x_spacing = 0 # this is the tile width
