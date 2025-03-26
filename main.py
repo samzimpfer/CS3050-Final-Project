@@ -8,10 +8,11 @@ If Python and Arcade are installed, this example can be run from the command lin
 python -m arcade.examples.starting_template
 """
 import arcade
-from board import Board
-
 from enum import Enum
 from gameobjects import *
+
+from board import Board
+from player import Player
 
 class GameState(Enum):
     SETUP = 0
@@ -21,10 +22,12 @@ class GameState(Enum):
     BUILD = 4
     WAITING = 5
 
-WINDOW_WIDTH = 800
-WINDOW_HEIGHT = 600
-WINDOW_TITLE = "Starting Template"
+screen_width, screen_height = arcade.get_display_size()
+WINDOW_WIDTH = screen_width - 100
+WINDOW_HEIGHT = screen_height - 100
+WINDOW_TITLE = "Settlers of Catan"
 
+PLAYER_COLORS = [arcade.color.BLUE, arcade.color.GREEN, arcade.color.RED, arcade.color.YELLOW]
 
 class GameView(arcade.View):
     """
@@ -38,23 +41,48 @@ class GameView(arcade.View):
     def __init__(self):
         super().__init__()
 
-        self.background_color = arcade.color.WHITE
+        self.margin = 20
+        self.logo_space = WINDOW_HEIGHT * 0.18 - self.margin
+        self.board_space = WINDOW_HEIGHT - self.logo_space - (self.margin * 3)
 
-        # If you have sprite lists, you should create them here,
-        # and set them to None
+        self.num_players = 4
 
-        # centers the board on the canvas with a 20px margin
-        # change these for a different positioning method
-        margin = 20
+        self.sprites = arcade.SpriteList()
 
-        center_x = WINDOW_WIDTH // 2
-        center_y = WINDOW_HEIGHT // 2
-        board_height = WINDOW_HEIGHT - (margin * 2)
+        self.background = arcade.Sprite("sprites/background.png")
+        self.background.width = WINDOW_WIDTH
+        self.background.height = WINDOW_HEIGHT
+        self.background.center_x = WINDOW_WIDTH // 2
+        self.background.center_y = WINDOW_HEIGHT // 2
+        self.sprites.append(self.background)
 
-        self.board = Board(center_x, center_y, height=board_height)
+        self.logo = arcade.Sprite("sprites/logo.png")
+        scale = self.logo_space / self.logo.height
+        self.logo.scale = (scale, scale)
+        self.logo.center_x = WINDOW_WIDTH // 2
+        self.logo.center_y = WINDOW_HEIGHT - self.margin - (self.logo_space // 2)
+        self.sprites.append(self.logo)
+
+        board_center_x = WINDOW_WIDTH // 2
+        board_center_y = (self.board_space // 2) + self.margin
+        self.board = Board(board_center_x, board_center_y, height=self.board_space)
+
+        # used for sizing bank and active player representation
+        self.component_width = (WINDOW_WIDTH - self.board.width + self.board.x_spacing) // 2
+        self.component_height = self.logo_space + self.margin + (self.board.x_spacing * 1)
+        self.other_player_width = (WINDOW_WIDTH - self.board.width) // 4
+        self.other_player_height = (WINDOW_HEIGHT - self.component_height - (self.margin * 5)) // (self.num_players - 1)
+
+        # TODO: initialize bank
 
         self.players = []
-        self.currentState = GameState.SETUP
+        for i in range(self.num_players):
+            # TODO: also pass bank into Player constructors
+            p = Player(PLAYER_COLORS[i])
+            self.players.append(p)
+
+        self.current_state = GameState.SETUP
+        self.active_player_index = 0
 
 
     def on_draw(self):
@@ -62,27 +90,43 @@ class GameView(arcade.View):
         Render the screen.
         """
 
-        # This command should happen before we start drawing. It will clear
-        # the screen to the background color, and erase what we drew last frame.
         self.clear()
-
-        # Call draw() on all your sprite lists below
+        self.sprites.draw()
         self.board.draw()
+
+        # component placeholders TODO: replace these with actual component on_draw() functions
+        # bank
+        arcade.draw_lrbt_rectangle_filled(WINDOW_WIDTH - self.component_width, WINDOW_WIDTH, WINDOW_HEIGHT - self.component_height, WINDOW_HEIGHT, arcade.color.GRAY)
+
+        # active player
+        self.players[self.active_player_index].on_draw(True, 0, self.component_width, WINDOW_HEIGHT - self.component_height, WINDOW_HEIGHT - self.margin)
+
+        i = 2 # iterate through inactive player positions
+        p = self.active_player_index + 1 # iterate through inactive players
+        if p >= self.num_players:
+            p = 0
+        while (p != self.active_player_index):
+            self.players[p].on_draw(False, 0, self.other_player_width, self.margin + (i * (self.margin + self.other_player_height)), (i + 1) * (self.margin + self.other_player_height))
+
+            i -= 1
+            p += 1
+            if p >= self.num_players:
+                p = 0
 
 
     def on_update(self, delta_time: float):
         # manage game state
-        if (self.currentState == GameState.ROLL):
+        if (self.current_state == GameState.ROLL):
             # roll() ?
-            self.currentState = GameState.WAITING
-        elif (self.currentState == GameState.GET_RESOURCES):
+            self.current_state = GameState.WAITING
+        elif (self.current_state == GameState.GET_RESOURCES):
             # maybe unneeded depending on how roll is handled
             pass
-        elif (self.currentState == GameState.TRADE):
+        elif (self.current_state == GameState.TRADE):
             pass
-        elif (self.currentState == GameState.BUILD):
+        elif (self.current_state == GameState.BUILD):
             # board.build ?
-            self.currentState = GameState.WAITING
+            self.current_state = GameState.WAITING
 
     def on_mouse_press(self, x, y, button, modifiers):
         self.board.on_mouse_press(x, y, button, modifiers)
