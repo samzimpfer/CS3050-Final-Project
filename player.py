@@ -12,6 +12,7 @@ Finally, this class includes functions to handle dev cards and the longest road,
 NOTE: there are still some things to add, but this encompasses the basics
 """
 from pygame.examples.music_drop_fade import play_file
+from gameobjects import *
 
 
 class Player:
@@ -19,6 +20,35 @@ class Player:
     MAX_SETTLEMENTS = 5
     MAX_CITIES = 4
     MAX_ROADS = 15
+
+
+    #testing this out, not even sure if it works
+    global Bank
+    global GameDevCards
+
+    ROAD_COST = {
+        Resource.BRICK:1,
+        Resource.WOOD:1
+    }
+
+    SETTLEMENT_COST = {
+        Resource.BRICK:1,
+        Resource.SHEEP:1,
+        Resource.WHEAT:1,
+        Resource.WOOD:1
+    }
+
+    CITY_COST = {
+        Resource.WHEAT:2,
+        Resource.STONE:3
+    }
+
+    DEV_CARD_COST = {
+        Resource.WHEAT:1,
+        Resource.STONE:1,
+        Resource.SHEEP:1,
+    }
+
 
     def __init__(self, color):
         # inventory
@@ -30,8 +60,19 @@ class Player:
         self.oreCount = 0
         self.wheatCount = 0
 
+        self.resources = {
+            Resource.BRICK:0,
+            Resource.SHEEP:0,
+            Resource.STONE:0,
+            Resource.WHEAT:0,
+            Resource.WOOD:0,
+        }
+
         self.knightCardCount = 0
         # add other dev card fields here
+
+        self.playerDevCards = []
+
 
         self.settlementCount = 0
         self.cityCount = 0
@@ -39,6 +80,15 @@ class Player:
 
         self.hasLongestRoad = False
         self.hasLargestArmy = False
+
+        self.victoryPoints = 0
+
+        #adding these so player class can consult bank and dev cards
+        #TODO: right now these are separate instances for each player.  We will need to create bank instance in main
+        # and pass the same instance to each player, or create a global bank instance.
+        # easily done in main gameBank = Bank(), then in player global gameBank
+        #self.bank = Bank()
+        #self.devCardStack = DevCardStack()
 
 
     def add_road(self,edge):
@@ -68,6 +118,10 @@ class Player:
     def addWheat(self, amt):
         self.wheatCount += amt
 
+    def AddResources(self, amts: dict):
+        taken_from_bank = self.Bank.TakeResources(amts)
+        for r, val in taken_from_bank.items():
+            self.resources[r] += val
 
     # decrement resource functions
     def useSheep(self, amt):
@@ -84,6 +138,17 @@ class Player:
 
     def useWheat(self, amt):
         self.wheatCount -= amt
+
+    #decrements resources if possible and returns true, else returns false
+    def UseResources(self, amts: dict):
+        for r, val in amts.items():
+            if self.resources[r] - val < 0:
+                return False
+        for r, val in amts.items():
+            self.resources[r] -= val
+        self.Bank.ReturnResources(amts)
+        return True
+
 
     def get_color(self):
         return self.color
@@ -117,6 +182,16 @@ class Player:
             return True
         return False
 
+    # TODO: connect board logic for valid build move
+    def BuildRoad2(self, start_node, end_node):
+        if self.UseResources(self.ROAD_COST):
+            #build the road
+            print("Road built")
+        else:
+            print("Not enough resources")
+
+
+
     def buildSettlement(self):
         if self.canBuildSettlement():
             self.brickCount -= 1
@@ -128,6 +203,13 @@ class Player:
             return True
         return False
 
+    def BuildSettlement2(self):
+        if self.UseResources(self.SETTLEMENT_COST):
+            #build the settlement
+            print("Settlement built")
+        else:
+            print("Not enough resources")
+
     def buildCity(self):
         if self.canBuildCity():
             self.oreCount -= 3
@@ -138,6 +220,12 @@ class Player:
             return True
         return False
 
+    def BuildCity2(self):
+        if self.UseResources(self.CITY_COST):
+            print("City built")
+        else:
+            print("Not enough resources")
+
     def buyDevCard(self):
         if self.canBuyDevCard():
             self.sheepCount -= 1
@@ -145,6 +233,27 @@ class Player:
             self.wheatCount -= 1
             return True
         return False
+
+    def BuyDevCard(self):
+        if self.UseResources(self.DEV_CARD_COST):
+            drawn_dev_card = GameDevCards.DrawCard()
+            print(f"{drawn_dev_card.name}: {drawn_dev_card.description}")
+            match drawn_dev_card:
+                case Knight():
+                    #TODO: add move robber
+                    self.knightCardCount += 1
+                case YearOfPlenty():
+                    #TODO: not sure if we're doing UI display for resource and stuff so leaving this blank for now
+                    pass
+                case RoadBuilding():
+                    #adding resources for roads, will need to add edge case for not enough resources as the card doesn't
+                    # actually use resources
+                    self.AddResources({Resource.WOOD:2, Resource.BRICK:2})
+                case Monopoly():
+                    pass
+                case _:
+                    pass
+            self.playerDevCards.append(GameDevCards.DrawCard())
 
 
     # sets the value of hasLongestRoad for this player

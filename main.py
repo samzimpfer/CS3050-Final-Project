@@ -11,6 +11,7 @@ import arcade
 from board import Board
 
 from enum import Enum
+from gameobjects import *
 
 class GameState(Enum):
     SETUP = 0
@@ -103,6 +104,11 @@ def main():
     # Start the arcade game loop
     arcade.run()
 
+    global Bank
+    global GameDevCards
+
+    Bank = Bank()
+    GameDevCards = DevCardStack()
 
 if __name__ == "__main__":
     main()

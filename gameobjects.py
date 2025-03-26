@@ -1,4 +1,7 @@
 from enum import Enum
+import random
+from dataclasses import *
+
 
 # haven't used this yet but whatever
 class Resource(Enum):
@@ -8,11 +11,15 @@ class Resource(Enum):
     WHEAT = 3
     WOOD = 4
 
+
 # All dev card types, basically structs.  Subclasses of DevCard.  Each has the number of them(amt), name, and description.
 # functions like "show type" and "print description" can be added to the parent DevCard function.  May be best to remove
 # @dataclass decorator if we decide to do this
 @dataclass(frozen=True)
 class DevCard:
+    amt: int
+    name: str
+    description: str
     pass
 
 @dataclass(frozen=True)
@@ -73,35 +80,42 @@ class Library():
 class Bank():
     # when initialized, there are 19 of each resource (95 cards total)
     def __init__(self):
-        self.Brick = 19
-        self.Sheep = 19
-        self.Stone = 19
-        self.Wheat = 19
-        self.Wood = 19
+        self.resourceDict = {
+            Resource.BRICK:19,
+            Resource.SHEEP:19,
+            Resource.STONE:19,
+            Resource.WHEAT:19,
+            Resource.WOOD:19,
+        }
+        # self.Brick = 19
+        # self.Sheep = 19
+        # self.Stone = 19
+        # self.Wheat = 19
+        # self.Wood = 19
     
     # both Take and Return resources take amounts passed in as dictionary form.  This is also the return type for
     # TakeResources().  Take could be simplified but for now his is just a very true representation of what the process
     # would look like in game
-    def TakeResources(self, amounts) -> dict:
+    def TakeResources(self, amounts: dict) -> dict:
         #amounts passed in as dict with +/- values
         taken = {}
         for r, amount in amounts.items():
             #if a player tries to take more than what's available, the player only receives what's actually there and
             # the amount is set to 0
-            if self.r >= amount:
+            if self.resourceDict[r] >= amount:
                 amt = amount
-                self.r -= amount
+                self.resourceDict[r] -= amount
                 taken[r] = amt
             else:
-                amt = self.r
-                self.r = 0
+                amt = self.resourceDict[r]
+                self.resourceDict[r] = 0
                 taken[r] = amt
         return taken
 
-    def ReturnResources(self, amounts):
+    def ReturnResources(self, amounts: dict):
         for r, amount in amounts.items():
-            for r, amount in amounts.items():
-                self.r += amount
+            self.resourceDict[r] += amount
+
 
 
 # Actual stack of Dev Cards
@@ -113,7 +127,7 @@ class DevCardStack():
         # this iterates over subclasses of DevCard
         for card in DevCard.__subclasses__():
             self.stack += [card()] * card.amt
-        self.stack = shuffle(self.stack)
+        random.shuffle(self.stack)
 
     # draw card pops from stack and returns an instance of a dev card.  For example each player class instance can use
     # "draw_new_dev_card = DevCardStack.DrawCard()" to give the player a new dev card while also updating what's left in
