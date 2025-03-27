@@ -13,6 +13,7 @@ from gameobjects import *
 
 from board import Board
 from player import Player
+from dice import Dice
 
 class GameState(Enum):
     SETUP = 0
@@ -69,7 +70,7 @@ class GameView(arcade.View):
 
         # used for sizing bank and active player representation
         self.component_width = (WINDOW_WIDTH - self.board.width + self.board.x_spacing) // 2
-        self.component_height = self.logo_space + self.margin + (self.board.x_spacing * 1)
+        self.component_height = self.logo_space + self.margin + self.board.x_spacing
         self.other_player_width = (WINDOW_WIDTH - self.board.width) // 4
         self.other_player_height = (WINDOW_HEIGHT - self.component_height - (self.margin * 5)) // (self.num_players - 1)
 
@@ -78,24 +79,30 @@ class GameView(arcade.View):
         Player.bank = self.bank
         Player.dev_card_stack = self.dev_card_stack
 
+        dice_width = (WINDOW_WIDTH - self.board.width - (self.margin * 2)) // 2
+        dice_height = dice_width * 0.52
+        dice_x = WINDOW_WIDTH - (self.margin * 2) - (dice_width // 2)
+        dice_y = (self.margin * 2) + (dice_height // 2)
+        self.dice = Dice(dice_x, dice_y, dice_width, dice_height)
+
         self.players = []
         for i in range(self.num_players):
             # TODO: also pass bank into Player constructors
             p = Player(PLAYER_COLORS[i])
             self.players.append(p)
 
-        self.current_state = GameState.SETUP
+        mouse_size = 5
+        self.mouse_sprite = arcade.SpriteSolidColor(mouse_size, mouse_size, color=(0, 0, 0, 150))
+
+        # start game
+        self.current_state = GameState.ROLL
         self.active_player_index = 0
 
-
     def on_draw(self):
-        """
-        Render the screen.
-        """
-
         self.clear()
         self.sprites.draw()
         self.board.draw()
+        self.dice.on_draw()
 
         # component placeholders TODO: replace these with actual component on_draw() functions
         # bank
@@ -120,8 +127,14 @@ class GameView(arcade.View):
     def on_update(self, delta_time: float):
         # manage game state
         if (self.current_state == GameState.ROLL):
-            # roll() ?
-            self.current_state = GameState.WAITING
+            self.dice.on_update(delta_time)
+
+            if (self.dice.ready):
+                # handle roll sum
+                print(self.dice.sum)
+                self.dice.ready = False
+                self.current_state = GameState.GET_RESOURCES
+
         elif (self.current_state == GameState.GET_RESOURCES):
             # maybe unneeded depending on how roll is handled
             pass
@@ -132,6 +145,12 @@ class GameView(arcade.View):
             self.current_state = GameState.WAITING
 
     def on_mouse_press(self, x, y, button, modifiers):
+        self.mouse_sprite.center_x = x
+        self.mouse_sprite.center_y = y
+
+        if self.current_state == GameState.ROLL:
+            self.dice.on_mouse_press(self.mouse_sprite)
+
         self.board.on_mouse_press(x, y, button, modifiers)
 
     def on_mouse_motion(self, x, y, dx, dy):
@@ -150,12 +169,6 @@ def main():
 
     # Start the arcade game loop
     arcade.run()
-
-    global Bank
-    global GameDevCards
-
-    Bank = Bank()
-    GameDevCards = DevCardStack()
 
 if __name__ == "__main__":
     main()
