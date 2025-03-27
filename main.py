@@ -42,11 +42,10 @@ class GameView(arcade.View):
     def __init__(self):
         super().__init__()
 
+        # general sizing fields for components
         self.margin = 20
         self.logo_space = WINDOW_HEIGHT * 0.18 - self.margin
         self.board_space = WINDOW_HEIGHT - self.logo_space - (self.margin * 3)
-
-        self.num_players = 4
 
         self.sprites = arcade.SpriteList()
 
@@ -68,33 +67,42 @@ class GameView(arcade.View):
         board_center_y = (self.board_space // 2) + self.margin
         self.board = Board(board_center_x, board_center_y, height=self.board_space)
 
-        # used for sizing bank and active player representation
+        # more sizing fields used for bank, dice, and player representations
+        self.num_players = 4
+
         self.component_width = (WINDOW_WIDTH - self.board.width + self.board.x_spacing) // 2
         self.component_height = self.logo_space + self.margin + self.board.x_spacing
         self.other_player_width = (WINDOW_WIDTH - self.board.width) // 4
         self.other_player_height = (WINDOW_HEIGHT - self.component_height - (self.margin * 5)) // (self.num_players - 1)
-
-        self.bank = Bank()
-        self.dev_card_stack = DevCardStack()
-        Player.bank = self.bank
-        Player.dev_card_stack = self.dev_card_stack
-
         dice_width = (WINDOW_WIDTH - self.board.width - (self.margin * 2)) // 2
         dice_height = dice_width * 0.52
         dice_x = WINDOW_WIDTH - (self.margin * 2) - (dice_width // 2)
         dice_y = (self.margin * 2) + (dice_height // 2)
+
+        # initialize game objects
+        self.bank = Bank()
+        self.dev_card_stack = DevCardStack()
         self.dice = Dice(dice_x, dice_y, dice_width, dice_height)
 
         self.players = []
         for i in range(self.num_players):
-            # TODO: also pass bank into Player constructors
             p = Player(PLAYER_COLORS[i])
             self.players.append(p)
+
+        Player.bank = self.bank
+        Player.dev_card_stack = self.dev_card_stack
 
         mouse_size = 5
         self.mouse_sprite = arcade.SpriteSolidColor(mouse_size, mouse_size, color=(0, 0, 0, 150))
 
+        # gameplay fields
+        self.current_state = None
+        self.active_player_index = 0
+
         # start game
+        self.reset()
+
+    def reset(self):
         self.current_state = GameState.ROLL
         self.active_player_index = 0
 
@@ -131,8 +139,8 @@ class GameView(arcade.View):
 
             if (self.dice.ready):
                 # handle roll sum
-                print(self.dice.sum)
-                self.dice.ready = False
+                # TODO: call board function to distribute resources based on dice roll
+                print(self.dice.sum) # replace with board.distribute_resources(self.dice.sum)
                 self.current_state = GameState.GET_RESOURCES
 
         elif (self.current_state == GameState.GET_RESOURCES):
