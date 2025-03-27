@@ -27,7 +27,7 @@ class Player:
     # global GameDevCards
 
     # edit from Sam
-    # these are class variables that are shared for each instance if the class
+    # these are class variables that are shared for each instance of the class
     # global is not needed here (keeps the bank encapsulated in the Player class, theoretically better for security)
     # these are being set to the same instance that was created in main.__init__() in that function
     # reference from inside player functions as Player.bank
@@ -57,30 +57,23 @@ class Player:
         Resource.SHEEP:1,
     }
 
-
     def __init__(self, color):
         # inventory
-        self.roads = []# used for calculating longest road is a list of nodes
+        self.roads = []  # used for calculating longest road is a list of nodes
         self.color = color
-        self.sheep_count = 0
-        self.wood_count = 0
-        self.brick_count = 0
-        self.ore_count = 0
-        self.wheat_count = 0
 
         self.resources = {
             Resource.BRICK:0,
             Resource.SHEEP:0,
             Resource.STONE:0,
             Resource.WHEAT:0,
-            Resource.WOOD:0,
+            Resource.WOOD:0
         }
 
         self.knight_card_count = 0
         # add other dev card fields here
 
         self.player_dev_cards = []
-
 
         self.settlement_count = 0
         self.city_count = 0
@@ -110,82 +103,56 @@ class Player:
     def get_roads(self):
         return self.roads
 
-    # increment resource functions
-    def add_sheep(self, amt):
-        self.sheep_count += amt
-
-    def add_wood(self, amt):
-        self.wood_count += amt
-
-    def add_brick(self, amt):
-        self.brick_count += amt
-
-    def add_ore(self, amt):
-        self.ore_count += amt
-
-    def add_wheat(self, amt):
-        self.wheat_count += amt
-
-    def AddResources(self, amts: dict):
-        taken_from_bank = self.Bank.TakeResources(amts)
+    def add_resources(self, amts: dict):
+        taken_from_bank = Player.bank.TakeResources(amts)
         for r, val in taken_from_bank.items():
             self.resources[r] += val
 
-    # decrement resource functions
-    def use_sheep(self, amt):
-        self.sheep_count -= amt
-
-    def use_wood(self, amt):
-        self.wood_count -= amt
-
-    def use_brick(self, amt):
-        self.brick_count -= amt
-
-    def use_ore(self, amt):
-        self.ore_count -= amt
-
-    def use_wheat(self, amt):
-        self.wheat_count -= amt
-
     #decrements resources if possible and returns true, else returns false
-    def UseResources(self, amts: dict):
+    def use_resources(self, amts: dict):
         for r, val in amts.items():
             if self.resources[r] - val < 0:
                 return False
         for r, val in amts.items():
             self.resources[r] -= val
-        self.Bank.ReturnResources(amts)
+        Player.bank.ReturnResources(amts)
         return True
 
+    # returns True if the player owns at least a certain set of resources, and False otherwise
+    def has_resources(self, amts: dict):
+        for r, req in amts.items():
+            if self.resources[r] < req:
+                return False
+        return True
 
     def get_color(self):
         return self.color
-
 
     # can build functions
     # return True is the player hasn't exceeded the limit per building and has the resources to build, and False otherwise
     # TODO: override limitations by resource if dev card owned
     def can_build_road(self):
-        return self.road_count < Player.MAX_ROADS and self.brick_count >= 1 and self.wood_count >= 1
+        return (self.has_resources(self.ROAD_COST) and
+                self.road_count < self.MAX_ROADS)
 
     def can_build_settlement(self):
-        return self.settlement_count < Player.MAX_SETTLEMENTS and self.brick_count >= 1 and self.wood_count >= 1 and self.sheep_count >= 1 and self.wheat_count >= 1
+        return (self.has_resources(self.SETTLEMENT_COST) and
+                self.settlement_count < self.MAX_SETTLEMENTS)
 
     def can_build_city(self):
-        return self.city_count < Player.MAX_CITIES and  self.ore_count >= 3 and self.wheat_count >= 2
+        return (self.has_resources(self.CITY_COST) and
+                self.city_count < self.MAX_CITIES)
 
     def can_buy_dev_card(self):
-        return self.sheep_count >= 1 and self.ore_count >= 1 and self.wheat_count >= 1
-
+        return self.has_resources(self.DEV_CARD_COST)
 
     # build functions
     # update the player's resources in the event that they build
     # return True if build is successful, and False otherwise
+    # NOTE: these functions should not actually build things, they just update the player's resources
     def build_road(self, start_node, end_node):
         if self.can_build_road():
-            self.brick_count -= 1
-            self.wood_count -= 1
-
+            self.use_resources(self.ROAD_COST)
             self.road_count += 1
             return True
         return False
@@ -200,11 +167,7 @@ class Player:
 
     def build_settlement(self):
         if self.can_build_settlement():
-            self.brick_count -= 1
-            self.wood_count -= 1
-            self.sheep_count -= 1
-            self.wheat_count -= 1
-
+            self.use_resources(self.SETTLEMENT_COST)
             self.settlement_count += 1
             return True
         return False
@@ -218,9 +181,7 @@ class Player:
 
     def build_city(self):
         if self.can_build_city():
-            self.ore_count -= 3
-            self.wheat_count -= 2
-
+            self.use_resources(self.CITY_COST)
             self.city_count += 1
             self.settlement_count -= 1
             return True
@@ -234,9 +195,7 @@ class Player:
 
     def buy_dev_card(self):
         if self.can_buy_dev_card():
-            self.sheep_count -= 1
-            self.ore_count -= 1
-            self.wheat_count -= 1
+            self.use_resources(self.DEV_CARD_COST)
             return True
         return False
 
