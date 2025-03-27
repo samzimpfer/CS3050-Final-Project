@@ -9,6 +9,7 @@ python -m arcade.examples.starting_template
 """
 import arcade
 from enum import Enum
+
 from gameobjects import *
 
 from board import Board
@@ -31,13 +32,6 @@ WINDOW_TITLE = "Settlers of Catan"
 PLAYER_COLORS = [arcade.color.BLUE, arcade.color.GREEN, arcade.color.RED, arcade.color.YELLOW]
 
 class GameView(arcade.View):
-    """
-    Main application class.
-
-    NOTE: Go ahead and delete the methods you don't need.
-    If you do need a method, delete the 'pass' and replace it
-    with your own code. Don't leave 'pass' in this program.
-    """
 
     def __init__(self):
         super().__init__()
@@ -141,11 +135,8 @@ class GameView(arcade.View):
                 # handle roll sum
                 # TODO: call board function to distribute resources based on dice roll
                 print(self.dice.sum) # replace with board.distribute_resources(self.dice.sum)
-                self.current_state = GameState.GET_RESOURCES
+                self.current_state = GameState.BUILD # TODO: change to GameState.TRADE once trading is developed
 
-        elif (self.current_state == GameState.GET_RESOURCES):
-            # maybe unneeded depending on how roll is handled
-            pass
         elif (self.current_state == GameState.TRADE):
             pass
         elif (self.current_state == GameState.BUILD):
@@ -159,7 +150,8 @@ class GameView(arcade.View):
         if self.current_state == GameState.ROLL:
             self.dice.on_mouse_press(self.mouse_sprite)
 
-        self.board.on_mouse_press(x, y, button, modifiers)
+        if self.current_state == GameState.BUILD:
+            self.board.on_mouse_press(x, y, button, modifiers, self.players[self.active_player_index])
 
     def on_mouse_motion(self, x, y, dx, dy):
         self.board.on_mouse_move(x, y, dx, dy)

@@ -246,13 +246,13 @@ class Board:
         self.set_size(h / Board.BOARD_SCALE_FACTOR, h)
 
     # calls on_mouse_press on all objects that are on the board and interactable
-    def on_mouse_press(self, x, y, button, modifiers):
+    def on_mouse_press(self, x, y, button, modifiers, player):
         for row in self.nodes:
             for node in row:
-                node.on_mouse_press(x, y, button, modifiers, self.players[0], self)
+                node.on_mouse_press(x, y, button, modifiers, player, self)
 
         for edge in self.edges:
-            edge.on_mouse_press(x, y, button, modifiers, self.players[0])
+            edge.on_mouse_press(x, y, button, modifiers, player)
 
     # calls on_mouse_motion on all objects that should have a hover effect
     def on_mouse_move(self, x, y, dx, dy):
