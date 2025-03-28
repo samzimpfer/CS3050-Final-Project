@@ -81,9 +81,9 @@ class Node:
 
     
     def build_city(self,player):
-        if (player.canBuildCity() and self.building == player and not self.city):
+        if (player.can_build_city() and self.building == player and not self.city):
             self.city = True
-            player.buildCity()
+            player.build_city()
             return True
         return False
     
