@@ -184,12 +184,9 @@ class Player:
             self.brick_count -= 1
             self.wood_count -= 1
 
-<<<<<<< HEAD
             self.road_count += 1
-=======
             self.roadCount += 1
             self.add_road(start_node, end_node)
->>>>>>> board-dev
             return True
         return False
 
