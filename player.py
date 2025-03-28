@@ -14,6 +14,7 @@ NOTE: there are still some things to add, but this encompasses the basics
 from gameobjects import *
 
 import arcade
+from button import Button
 
 # TODO: convert all camelcase to snakecase for pep 8 purposes
 class Player:
@@ -27,12 +28,13 @@ class Player:
     # global GameDevCards
 
     # edit from Sam
-    # these are class variables that are shared for each instance if the class
+    # these are class variables that are shared for each instance of the class
     # global is not needed here (keeps the bank encapsulated in the Player class, theoretically better for security)
     # these are being set to the same instance that was created in main.__init__() in that function
     # reference from inside player functions as Player.bank
     bank = None
     game_dev_cards = None
+    finish_turn_function = None
 
     ROAD_COST = {
         Resource.BRICK:1,
@@ -57,30 +59,23 @@ class Player:
         Resource.SHEEP:1,
     }
 
-
     def __init__(self, color):
         # inventory
-        self.roads = []# used for calculating longest road is a list of nodes
+        self.roads = []  # used for calculating longest road is a list of nodes
         self.color = color
-        self.sheep_count = 0
-        self.wood_count = 0
-        self.brick_count = 0
-        self.ore_count = 0
-        self.wheat_count = 0
 
         self.resources = {
-            Resource.BRICK:0,
+            Resource.BRICK:1,
             Resource.SHEEP:0,
             Resource.STONE:0,
             Resource.WHEAT:0,
-            Resource.WOOD:0,
+            Resource.WOOD:1
         }
 
         self.knight_card_count = 0
         # add other dev card fields here
 
         self.player_dev_cards = []
-
 
         self.settlement_count = 0
         self.city_count = 0
@@ -98,6 +93,30 @@ class Player:
         #self.bank = Bank()
         #self.devCardStack = DevCardStack()
 
+        # UI positional fields
+        self.left = 0
+        self.right = 0
+        self.bottom = 0
+        self.top = 0
+        self.color_tab_width = 30
+        self.resource_sprite_width = 0
+
+        self.active_player = False
+
+        # UI elements
+        self.sprites = arcade.SpriteList()
+        self.resource_sprites = {
+            Resource.BRICK: arcade.Sprite("sprites/resources/brick.png"),
+            Resource.SHEEP: arcade.Sprite("sprites/resources/sheep.png"),
+            Resource.STONE: arcade.Sprite("sprites/resources/stone.png"),
+            Resource.WHEAT: arcade.Sprite("sprites/resources/wheat.png"),
+            Resource.WOOD: arcade.Sprite("sprites/resources/wood.png")
+        }
+        for s in self.resource_sprites.values():
+            self.sprites.append(s)
+
+        self.finish_turn_button = Button("Finish turn", (40, 80, 140))
+        self.finish_turn_button.on_click = Player.finish_turn_function
 
     def add_road(self,edge):
         start_node = edge.get_start_node()
@@ -110,82 +129,56 @@ class Player:
     def get_roads(self):
         return self.roads
 
-    # increment resource functions
-    def add_sheep(self, amt):
-        self.sheep_count += amt
-
-    def add_wood(self, amt):
-        self.wood_count += amt
-
-    def add_brick(self, amt):
-        self.brick_count += amt
-
-    def add_ore(self, amt):
-        self.ore_count += amt
-
-    def add_wheat(self, amt):
-        self.wheat_count += amt
-
-    def AddResources(self, amts: dict):
-        taken_from_bank = self.Bank.TakeResources(amts)
+    def add_resources(self, amts: dict):
+        taken_from_bank = Player.bank.TakeResources(amts)
         for r, val in taken_from_bank.items():
             self.resources[r] += val
 
-    # decrement resource functions
-    def use_sheep(self, amt):
-        self.sheep_count -= amt
-
-    def use_wood(self, amt):
-        self.wood_count -= amt
-
-    def use_brick(self, amt):
-        self.brick_count -= amt
-
-    def use_ore(self, amt):
-        self.ore_count -= amt
-
-    def use_wheat(self, amt):
-        self.wheat_count -= amt
-
     #decrements resources if possible and returns true, else returns false
-    def UseResources(self, amts: dict):
+    def use_resources(self, amts: dict):
         for r, val in amts.items():
             if self.resources[r] - val < 0:
                 return False
         for r, val in amts.items():
             self.resources[r] -= val
-        self.Bank.ReturnResources(amts)
+        Player.bank.ReturnResources(amts)
         return True
 
+    # returns True if the player owns at least a certain set of resources, and False otherwise
+    def has_resources(self, amts: dict):
+        for r, req in amts.items():
+            if self.resources[r] < req:
+                return False
+        return True
 
     def get_color(self):
         return self.color
-
 
     # can build functions
     # return True is the player hasn't exceeded the limit per building and has the resources to build, and False otherwise
     # TODO: override limitations by resource if dev card owned
     def can_build_road(self):
-        return self.road_count < Player.MAX_ROADS and self.brick_count >= 1 and self.wood_count >= 1
+        return (self.has_resources(self.ROAD_COST) and
+                self.road_count < self.MAX_ROADS)
 
     def can_build_settlement(self):
-        return self.settlement_count < Player.MAX_SETTLEMENTS and self.brick_count >= 1 and self.wood_count >= 1 and self.sheep_count >= 1 and self.wheat_count >= 1
+        return (self.has_resources(self.SETTLEMENT_COST) and
+                self.settlement_count < self.MAX_SETTLEMENTS)
 
     def can_build_city(self):
-        return self.city_count < Player.MAX_CITIES and  self.ore_count >= 3 and self.wheat_count >= 2
+        return (self.has_resources(self.CITY_COST) and
+                self.city_count < self.MAX_CITIES)
 
     def can_buy_dev_card(self):
-        return self.sheep_count >= 1 and self.ore_count >= 1 and self.wheat_count >= 1
-
+        return self.has_resources(self.DEV_CARD_COST)
 
     # build functions
     # update the player's resources in the event that they build
     # return True if build is successful, and False otherwise
+    # NOTE: these functions should not actually build things, they just update the player's resources
     def build_road(self, start_node, end_node):
         if self.can_build_road():
-            self.brick_count -= 1
-            self.wood_count -= 1
-
+            self.use_resources(self.ROAD_COST)
             self.road_count += 1
             return True
         return False
@@ -200,11 +193,7 @@ class Player:
 
     def build_settlement(self):
         if self.can_build_settlement():
-            self.brick_count -= 1
-            self.wood_count -= 1
-            self.sheep_count -= 1
-            self.wheat_count -= 1
-
+            self.use_resources(self.SETTLEMENT_COST)
             self.settlement_count += 1
             return True
         return False
@@ -218,9 +207,7 @@ class Player:
 
     def build_city(self):
         if self.can_build_city():
-            self.ore_count -= 3
-            self.wheat_count -= 2
-
+            self.use_resources(self.CITY_COST)
             self.city_count += 1
             self.settlement_count -= 1
             return True
@@ -234,9 +221,7 @@ class Player:
 
     def buy_dev_card(self):
         if self.can_buy_dev_card():
-            self.sheep_count -= 1
-            self.ore_count -= 1
-            self.wheat_count -= 1
+            self.use_resources(self.DEV_CARD_COST)
             return True
         return False
 
@@ -280,10 +265,60 @@ class Player:
 
         return total
 
-    def on_draw(self, active_player, l, r, b, t):
-        arcade.draw_lrbt_rectangle_filled(l, r, b, t, arcade.color.WHITE)
-        arcade.draw_lrbt_rectangle_filled(r - 30, r, b, t, self.color)
-        if active_player:
-            pass
+    def set_active_player(self, ap):
+        self.active_player = ap
+
+    # positions the player representation UI and it's components on the screen
+    def set_pos(self, l, r, b, t):
+        self.left = l
+        self.right = r
+        self.bottom = b
+        self.top = t
+
+        if self.active_player:
+            self.resource_sprite_width = (self.right - self.left - self.color_tab_width) / 8
+            spacing = self.resource_sprite_width * 1.5
+
+            x = self.left + self.resource_sprite_width
+            y = self.top - self.resource_sprite_width
+            for res, n in self.resources.items():
+                self.resource_sprites[res].center_x = x
+                self.resource_sprites[res].center_y = y
+                self.resource_sprites[res].width = self.resource_sprite_width
+                self.resource_sprites[res].height = self.resource_sprite_width
+                x += spacing
+
+            button_height = (self.top - self.bottom) // 8
+            button_width = button_height * 4
+            x = (self.right - self.left - self.color_tab_width) // 2
+            y = self.bottom + (button_height * 0.8)
+            self.finish_turn_button.set_pos(x, y, button_width, button_height)
+
+    def on_draw(self):
+        # draw player representation
+        arcade.draw_lrbt_rectangle_filled(self.left, self.right, self.bottom, self.top,
+                                          (75, 110, 150))
+        arcade.draw_lrbt_rectangle_outline(self.left, self.right, self.bottom, self.top,
+                                           (40, 80, 140), 6)
+        arcade.draw_lrbt_rectangle_filled(self.right - self.color_tab_width, self.right + 3,
+                                          self.bottom + 3, self.top - 3, self.color)
+
+        if self.active_player:
+            # draw resources
+            for res, n in self.resources.items():
+                arcade.draw_text(f"x{n}", self.resource_sprites[res].center_x,
+                                 self.resource_sprites[res].center_y - self.resource_sprite_width,
+                                 arcade.color.BLACK, font_size=(self.resource_sprite_width / 3),
+                                 anchor_x="center")
+
+            self.sprites.draw()
+
+            self.finish_turn_button.on_draw()
         else:
             pass
+
+    def on_mouse_press(self, mouse_sprite):
+        self.finish_turn_button.on_mouse_press(mouse_sprite)
+
+    def on_mouse_motion(self, mouse_sprite):
+        self.finish_turn_button.on_mouse_motion(mouse_sprite)

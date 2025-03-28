@@ -3,6 +3,7 @@ from player import Player
 from node import Node
 from edge import Edge
 from tile import Tile
+from gameobjects import *
 import random
 
 # defines a board object that contains nodes representing appropriate positions for settlements
@@ -32,11 +33,13 @@ class Board:
         self.resources = ['wheat', 'wheat', 'wheat', 'wheat', 'wood', 'wood', 'wood', 'wood', 'sheep', 'sheep', 'sheep', 'sheep', 'ore', 'ore', 'ore', 'brick', 'brick', 'brick', 'desert']
         self.numbers = [5, 2, 6, 8, 10, 9, 3, 3, 11, 4, 8, 4, 6, 5, 10, 11, 12, 9]
         self.players = [Player(arcade.color.RED)]# here for testing/writing longest road
-        self.players[0].add_brick(20)# road testing
-        self.players[0].add_wood(20)
-        self.players[0].add_sheep(20)
-        self.players[0].add_brick(20)
-        self.players[0].add_wheat(20)
+        self.players[0].add_resources({
+            Resource.BRICK:1,
+            Resource.SHEEP:0,
+            Resource.STONE:0,
+            Resource.WHEAT:0,
+            Resource.WOOD:1
+        })
 
         # tile attributes
         self.x_spacing = 0 # this is the tile width
@@ -257,13 +260,13 @@ class Board:
         self.set_size(h / Board.BOARD_SCALE_FACTOR, h)
 
     # calls on_mouse_press on all objects that are on the board and interactable
-    def on_mouse_press(self, x, y, button, modifiers):
+    def on_mouse_press(self, x, y, button, modifiers, player):
         for row in self.nodes:
             for node in row:
-                node.on_mouse_press(x, y, button, modifiers, self.players[0], self)
+                node.on_mouse_press(x, y, button, modifiers, player, self)
 
         for edge in self.edges:
-            edge.on_mouse_press(x, y, button, modifiers, self.players[0])
+            edge.on_mouse_press(x, y, button, modifiers, player)
 
     # calls on_mouse_motion on all objects that should have a hover effect
     def on_mouse_move(self, x, y, dx, dy):

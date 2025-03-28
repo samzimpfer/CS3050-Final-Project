@@ -74,17 +74,17 @@ class Node:
         
     # builds a town 
     def build_settlement(self, player, board):
-        if self.has_space() and self.is_touching_road(board, player) and player.canBuildSettlement():
+        if self.has_space() and self.is_touching_road(board, player) and player.can_build_settlement():
             print(self.color)
             self.color = player.get_color()
             print(self.color)
-            player.buildSettlement()
+            player.build_settlement()
 
     
     def build_city(self,player):
-        if (player.canBuildCity() and self.building == player and not self.city):
+        if (player.can_build_city() and self.building == player and not self.city):
             self.city = True
-            player.buildCity()
+            player.build_city()
             return True
         return False
     
