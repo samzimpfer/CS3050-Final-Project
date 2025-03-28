@@ -156,7 +156,6 @@ class GameView(arcade.View):
         for p in self.players:
             p.on_draw()
 
-
     def on_update(self, delta_time: float):
         # manage game state
         if self.current_state == GameState.ROLL:

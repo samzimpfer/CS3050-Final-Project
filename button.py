@@ -17,7 +17,7 @@ class Button:
 
         self.text = text
 
-        self.on_click = lambda: None
+        self.on_click = None
 
     def set_pos(self, x, y, width, height):
         self.x = x

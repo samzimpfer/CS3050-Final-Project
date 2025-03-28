@@ -34,7 +34,7 @@ class Player:
     # reference from inside player functions as Player.bank
     bank = None
     game_dev_cards = None
-    finish_turn_function = lambda: None
+    finish_turn_function = None
 
     ROAD_COST = {
         Resource.BRICK:1,
@@ -268,6 +268,7 @@ class Player:
     def set_active_player(self, ap):
         self.active_player = ap
 
+    # positions the player representation UI and it's components on the screen
     def set_pos(self, l, r, b, t):
         self.left = l
         self.right = r
