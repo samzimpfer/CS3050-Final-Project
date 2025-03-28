@@ -91,6 +91,19 @@ class Player:
         #self.bank = Bank()
         #self.devCardStack = DevCardStack()
 
+        self.sprites = arcade.SpriteList()
+
+        self.resource_sprites = {
+            Resource.BRICK: arcade.Sprite("sprites/resources/brick.png"),
+            Resource.SHEEP: arcade.Sprite("sprites/resources/sheep.png"),
+            Resource.STONE: arcade.Sprite("sprites/resources/stone.png"),
+            Resource.WHEAT: arcade.Sprite("sprites/resources/wheat.png"),
+            Resource.WOOD: arcade.Sprite("sprites/resources/wood.png")
+        }
+
+        for s in self.resource_sprites.values():
+            self.sprites.append(s)
+
 
     def add_road(self,edge):
         start_node = edge.get_start_node()
@@ -240,9 +253,26 @@ class Player:
         return total
 
     def on_draw(self, active_player, l, r, b, t):
-        arcade.draw_lrbt_rectangle_filled(l, r, b, t, arcade.color.WHITE)
-        arcade.draw_lrbt_rectangle_filled(r - 30, r, b, t, self.color)
+        color_width = 30
+        arcade.draw_lrbt_rectangle_filled(l, r, b, t, (75, 110, 150))
+        arcade.draw_lrbt_rectangle_outline(l, r, b, t, (40, 80, 140), 6)
+        arcade.draw_lrbt_rectangle_filled(r - color_width, r+3, b+3, t-3, self.color)
+
         if active_player:
-            pass
+            width = (r - l - color_width) / 8
+            spacing = width * 1.5
+            x = l + width
+            y = t - width
+            for r, n in self.resources.items():
+                self.resource_sprites[r].center_x = x
+                self.resource_sprites[r].center_y = y
+                self.resource_sprites[r].width = width
+                self.resource_sprites[r].height = width
+
+                arcade.draw_text(f"x{n}", x, y - width, arcade.color.BLACK, font_size=(width/3), anchor_x="center")
+
+                x += spacing
+
+            self.sprites.draw()
         else:
             pass

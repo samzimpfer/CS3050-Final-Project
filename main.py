@@ -73,7 +73,7 @@ class GameView(arcade.View):
 
         self.component_width = (WINDOW_WIDTH - self.board.width + self.board.x_spacing) // 2
         self.component_height = self.logo_space + self.margin + self.board.x_spacing
-        self.other_player_width = (WINDOW_WIDTH - self.board.width) // 4
+        self.other_player_width = (WINDOW_WIDTH - self.board.width) * 0.4
         self.other_player_height = (WINDOW_HEIGHT - self.component_height - (self.margin * 5)) // (self.num_players - 1)
         dice_width = (WINDOW_WIDTH - self.board.width - (self.margin * 2)) // 2
         dice_height = dice_width * 0.52
