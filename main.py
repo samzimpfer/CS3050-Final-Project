@@ -58,7 +58,7 @@ class GameView(arcade.View):
         self.sprites.append(self.logo)
 
         # TODO: take these out
-        # these are here only so board can create a player class. More organized to have them below
+        # these are here only so board can create a player class for testing. More organized to have them below
         self.bank = Bank()
         self.dev_card_stack = DevCardStack()
         Player.bank = self.bank
@@ -154,27 +154,26 @@ class GameView(arcade.View):
         self.mouse_sprite.center_x = x
         self.mouse_sprite.center_y = y
 
+        self.players[self.active_player_index].on_mouse_press(self.mouse_sprite)
+
         if self.current_state == GameState.ROLL:
             self.dice.on_mouse_press(self.mouse_sprite)
 
-        if self.current_state == GameState.BUILD:
+        elif self.current_state == GameState.BUILD:
             self.board.on_mouse_press(x, y, button, modifiers, self.players[self.active_player_index])
 
     def on_mouse_motion(self, x, y, dx, dy):
+        self.mouse_sprite.center_x = x
+        self.mouse_sprite.center_y = y
+
         self.board.on_mouse_move(x, y, dx, dy)
 
+        self.players[self.active_player_index].on_mouse_motion(self.mouse_sprite)
+
 def main():
-    """ Main function """
-    # Create a window class. This is what actually shows up on screen
     window = arcade.Window(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE)
-
-    # Create and setup the GameView
     game = GameView()
-
-    # Show GameView on screen
     window.show_view(game)
-
-    # Start the arcade game loop
     arcade.run()
 
 if __name__ == "__main__":

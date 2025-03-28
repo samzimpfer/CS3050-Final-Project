@@ -14,6 +14,7 @@ NOTE: there are still some things to add, but this encompasses the basics
 from gameobjects import *
 
 import arcade
+from button import Button
 
 # TODO: convert all camelcase to snakecase for pep 8 purposes
 class Player:
@@ -103,6 +104,8 @@ class Player:
 
         for s in self.resource_sprites.values():
             self.sprites.append(s)
+
+        self.finish_turn_button = Button("Finish turn", (40, 80, 140))
 
 
     def add_road(self,edge):
@@ -253,26 +256,41 @@ class Player:
         return total
 
     def on_draw(self, active_player, l, r, b, t):
+        # draw player representation
         color_width = 30
         arcade.draw_lrbt_rectangle_filled(l, r, b, t, (75, 110, 150))
         arcade.draw_lrbt_rectangle_outline(l, r, b, t, (40, 80, 140), 6)
         arcade.draw_lrbt_rectangle_filled(r - color_width, r+3, b+3, t-3, self.color)
 
         if active_player:
+            # draw resources
             width = (r - l - color_width) / 8
             spacing = width * 1.5
             x = l + width
             y = t - width
-            for r, n in self.resources.items():
-                self.resource_sprites[r].center_x = x
-                self.resource_sprites[r].center_y = y
-                self.resource_sprites[r].width = width
-                self.resource_sprites[r].height = width
+            for res, n in self.resources.items():
+                self.resource_sprites[res].center_x = x
+                self.resource_sprites[res].center_y = y
+                self.resource_sprites[res].width = width
+                self.resource_sprites[res].height = width
 
                 arcade.draw_text(f"x{n}", x, y - width, arcade.color.BLACK, font_size=(width/3), anchor_x="center")
 
                 x += spacing
 
             self.sprites.draw()
+
+            height = (t - b) // 8
+            width = height * 4
+            x = (r - l - color_width) // 2
+            y = b + (height * 0.8)
+            self.finish_turn_button.set_pos(x, y, width, height)
+            self.finish_turn_button.on_draw()
         else:
             pass
+
+    def on_mouse_press(self, mouse_sprite):
+        self.finish_turn_button.on_mouse_press(mouse_sprite)
+
+    def on_mouse_motion(self, mouse_sprite):
+        self.finish_turn_button.on_mouse_motion(mouse_sprite)
