@@ -138,6 +138,11 @@ class GameView(arcade.View):
 
         self.current_state = GameState.ROLL
 
+    def check_winner(self):
+        for p in self.players:
+            if p.get_points() >= 11:
+                print(f"{p.get_color()} player wins!")
+
     def on_draw(self):
         self.clear()
         self.sprites.draw()
@@ -168,6 +173,8 @@ class GameView(arcade.View):
         elif self.current_state == GameState.BUILD:
             # board.build ?
             pass
+
+        self.check_winner()
 
     def on_mouse_press(self, x, y, button, modifiers):
         self.mouse_sprite.center_x = x
