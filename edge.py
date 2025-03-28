@@ -7,7 +7,7 @@ class Edge:
     def __init__(self,start_node=Node(),end_node=Node()):
         self.start_node = start_node
         self.end_node = end_node
-        self.road = "NONE"
+        self.road = False
         self.color = arcade.color.BLACK
         self.width = 6
 
@@ -27,8 +27,8 @@ class Edge:
         return self.road
     
     def build_road(self,player):
-        if self.road == "NONE" and player.canBuildRoad():
-            self.road = player
+        if not self.road and player.canBuildRoad():
+            self.road = True
             self.color = player.get_color()
             player.buildRoad(self.start_node, self.end_node)
             
