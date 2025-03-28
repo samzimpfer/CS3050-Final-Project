@@ -11,7 +11,6 @@ import arcade
 from enum import Enum
 
 from gameobjects import *
-import tkinter as tk
 
 from board import Board
 from player import Player
@@ -26,13 +25,8 @@ class GameState(Enum):
     WAITING = 5
 
 screen_width, screen_height = arcade.get_display_size()
-root = tk.Tk()
-root.withdraw()
-usable_width = root.winfo_screenwidth()
-usable_height = root.winfo_screenheight()
-print(usable_width, usable_height)
-WINDOW_WIDTH = 1500
-WINDOW_HEIGHT = 1000
+WINDOW_WIDTH = screen_width - 100
+WINDOW_HEIGHT = screen_height - 100
 WINDOW_TITLE = "Settlers of Catan"
 
 PLAYER_COLORS = [arcade.color.BLUE, arcade.color.GREEN, arcade.color.RED, arcade.color.YELLOW]
