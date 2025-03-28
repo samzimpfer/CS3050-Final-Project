@@ -300,7 +300,7 @@ class Board:
                 node.on_mouse_press(x, y, button, modifiers, player, self)
 
         for edge in self.edges:
-            edge.on_mouse_press(x, y, button, modifiers, self.players[0])
+            edge.on_mouse_press(x, y, button, modifiers, player)
         self.find_longest_road()
 
     # calls on_mouse_motion on all objects that should have a hover effect

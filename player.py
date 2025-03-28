@@ -178,7 +178,6 @@ class Player:
         if self.can_build_road():
             self.use_resources(self.ROAD_COST)
             self.road_count += 1
-            self.roadCount += 1
             self.add_road(start_node, end_node)
             return True
         return False
