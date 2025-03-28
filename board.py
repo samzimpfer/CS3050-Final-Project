@@ -144,27 +144,28 @@ class Board:
                 else:
                     n.set_number(self.numbers[self.tile_nodes.index(n) - 1])
             if n.get_resource() == 'wood':
-                sprite = arcade.Sprite("sprites/green_tile.png",scale=.65,
+                #testing scale, old value .65
+                sprite = arcade.Sprite("sprites/green_tile.png",scale=self.x_spacing/180,
                                                 center_x=n.get_x(),center_y=n.get_y())
                 self.tiles.append(sprite)
             elif n.get_resource() == 'wheat':
-                sprite = arcade.Sprite("sprites/wheat_tile.png", scale=.65,
+                sprite = arcade.Sprite("sprites/wheat_tile.png", scale=self.x_spacing/180,
                                        center_x=n.get_x(), center_y=n.get_y())
                 self.tiles.append(sprite)
             elif n.get_resource() == 'sheep':
-                sprite = arcade.Sprite("sprites/sheep_tile.png", scale=.65,
+                sprite = arcade.Sprite("sprites/sheep_tile.png", scale=self.x_spacing/180,
                                        center_x=n.get_x(), center_y=n.get_y())
                 self.tiles.append(sprite)
             elif n.get_resource() == 'ore':
-                sprite = arcade.Sprite("sprites/ore_tile.png", scale=.65,
+                sprite = arcade.Sprite("sprites/ore_tile.png", scale=self.x_spacing/180,
                                        center_x=n.get_x(), center_y=n.get_y())
                 self.tiles.append(sprite)
             elif n.get_resource() == 'brick':
-                sprite = arcade.Sprite("sprites/brick_tile.png", scale=.65,
+                sprite = arcade.Sprite("sprites/brick_tile.png", scale=self.x_spacing/180,
                                        center_x=n.get_x(), center_y=n.get_y())
                 self.tiles.append(sprite)
             else:
-                sprite = arcade.Sprite("sprites/desert_tile.png", scale=.65,
+                sprite = arcade.Sprite("sprites/desert_tile.png", scale=self.x_spacing/180,
                                        center_x=n.get_x(), center_y=n.get_y())
                 self.tiles.append(sprite)
                 seen_desert = True
