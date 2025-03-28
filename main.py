@@ -99,13 +99,41 @@ class GameView(arcade.View):
         # gameplay fields
         self.current_state = None
         self.active_player_index = 0
+        self.active_player = None
 
         # start game
         self.reset()
 
     def reset(self):
         self.current_state = GameState.ROLL
-        self.active_player_index = 0
+        self.active_player_index = -1
+        self.next_player_turn()
+
+    def next_player_turn(self):
+        # cycle active player
+        self.active_player_index += 1
+        if self.active_player_index >= self.num_players:
+            self.active_player_index = 0
+        self.active_player = self.players[self.active_player_index]
+
+        # set active player position
+        self.active_player.set_active_player(True)
+        self.active_player.set_pos(0, self.component_width,
+                                   WINDOW_HEIGHT - self.component_height,
+                                   WINDOW_HEIGHT - self.margin)
+
+        # set inactive player positions
+        i = 2  # iterate through inactive player positions
+        p = self.active_player_index + 1  # iterate through inactive players
+        while (i >= 0):
+            if p >= self.num_players:
+                p = 0
+            self.players[p].set_active_player(False)
+            self.players[p].set_pos(0, self.other_player_width,
+                                    self.margin + (i * (self.margin + self.other_player_height)),
+                                    (i + 1) * (self.margin + self.other_player_height))
+            p += 1
+            i -= 1
 
     def on_draw(self):
         self.clear()
@@ -117,20 +145,8 @@ class GameView(arcade.View):
         # bank
         arcade.draw_lrbt_rectangle_filled(WINDOW_WIDTH - self.component_width, WINDOW_WIDTH, WINDOW_HEIGHT - self.component_height, WINDOW_HEIGHT, arcade.color.GRAY)
 
-        # active player
-        self.players[self.active_player_index].on_draw(True, 0, self.component_width, WINDOW_HEIGHT - self.component_height, WINDOW_HEIGHT - self.margin)
-
-        i = 2 # iterate through inactive player positions
-        p = self.active_player_index + 1 # iterate through inactive players
-        if p >= self.num_players:
-            p = 0
-        while (p != self.active_player_index):
-            self.players[p].on_draw(False, 0, self.other_player_width, self.margin + (i * (self.margin + self.other_player_height)), (i + 1) * (self.margin + self.other_player_height))
-
-            i -= 1
-            p += 1
-            if p >= self.num_players:
-                p = 0
+        for p in self.players:
+            p.on_draw()
 
 
     def on_update(self, delta_time: float):
@@ -154,13 +170,13 @@ class GameView(arcade.View):
         self.mouse_sprite.center_x = x
         self.mouse_sprite.center_y = y
 
-        self.players[self.active_player_index].on_mouse_press(self.mouse_sprite)
+        self.active_player.on_mouse_press(self.mouse_sprite)
 
         if self.current_state == GameState.ROLL:
             self.dice.on_mouse_press(self.mouse_sprite)
 
         elif self.current_state == GameState.BUILD:
-            self.board.on_mouse_press(x, y, button, modifiers, self.players[self.active_player_index])
+            self.board.on_mouse_press(x, y, button, modifiers, self.active_player)
 
     def on_mouse_motion(self, x, y, dx, dy):
         self.mouse_sprite.center_x = x
@@ -168,7 +184,7 @@ class GameView(arcade.View):
 
         self.board.on_mouse_move(x, y, dx, dy)
 
-        self.players[self.active_player_index].on_mouse_motion(self.mouse_sprite)
+        self.active_player.on_mouse_motion(self.mouse_sprite)
 
 def main():
     window = arcade.Window(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE)

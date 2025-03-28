@@ -7,10 +7,9 @@ class Button:
         self.y = 0
         self.width = 0
         self.height = 0
-
-        self.main_color = color
-        hover_color_amt = 20
-        self.hover_color = (color[0] - hover_color_amt, color[1] - hover_color_amt, color[2] - hover_color_amt)
+        self.hover_width = 0
+        self.hover_height = 0
+        self.hover_expand_amt = 3
 
         self.sprites = arcade.SpriteList()
         self.box = arcade.SpriteSolidColor(10, 10, 0, 0, color)
@@ -25,6 +24,8 @@ class Button:
         self.y = y
         self.width = width
         self.height = height
+        self.hover_width = width + self.hover_expand_amt
+        self.hover_height = height + self.hover_expand_amt
 
         self.box.center_x = x
         self.box.center_y = y
@@ -33,7 +34,7 @@ class Button:
 
     def on_draw(self):
         self.sprites.draw()
-        arcade.draw_text(self.text, self.x, self.y, arcade.color.BLACK, font_size=(self.height * 0.5), anchor_x="center", anchor_y="center")
+        arcade.draw_text(self.text, self.x, self.y, arcade.color.BLACK, font_size=(self.box.height * 0.5), anchor_x="center", anchor_y="center")
 
     def on_mouse_press(self, mouse_sprite):
         if arcade.check_for_collision(mouse_sprite, self.box):
@@ -41,6 +42,8 @@ class Button:
 
     def on_mouse_motion(self, mouse_sprite):
         if arcade.check_for_collision(mouse_sprite, self.box):
-            self.box.color = self.hover_color
+            self.box.width = self.hover_width
+            self.box.height = self.hover_height
         else:
-            self.box.color = self.main_color
+            self.box.width = self.width
+            self.box.height = self.height

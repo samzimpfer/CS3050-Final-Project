@@ -92,8 +92,18 @@ class Player:
         #self.bank = Bank()
         #self.devCardStack = DevCardStack()
 
-        self.sprites = arcade.SpriteList()
+        # UI positional fields
+        self.left = 0
+        self.right = 0
+        self.bottom = 0
+        self.top = 0
+        self.color_tab_width = 30
+        self.resource_sprite_width = 0
 
+        self.active_player = False
+
+        # UI elements
+        self.sprites = arcade.SpriteList()
         self.resource_sprites = {
             Resource.BRICK: arcade.Sprite("sprites/resources/brick.png"),
             Resource.SHEEP: arcade.Sprite("sprites/resources/sheep.png"),
@@ -101,7 +111,6 @@ class Player:
             Resource.WHEAT: arcade.Sprite("sprites/resources/wheat.png"),
             Resource.WOOD: arcade.Sprite("sprites/resources/wood.png")
         }
-
         for s in self.resource_sprites.values():
             self.sprites.append(s)
 
@@ -255,36 +264,53 @@ class Player:
 
         return total
 
-    def on_draw(self, active_player, l, r, b, t):
-        # draw player representation
-        color_width = 30
-        arcade.draw_lrbt_rectangle_filled(l, r, b, t, (75, 110, 150))
-        arcade.draw_lrbt_rectangle_outline(l, r, b, t, (40, 80, 140), 6)
-        arcade.draw_lrbt_rectangle_filled(r - color_width, r+3, b+3, t-3, self.color)
+    def set_active_player(self, ap):
+        self.active_player = ap
 
-        if active_player:
-            # draw resources
-            width = (r - l - color_width) / 8
-            spacing = width * 1.5
-            x = l + width
-            y = t - width
+    def set_pos(self, l, r, b, t):
+        self.left = l
+        self.right = r
+        self.bottom = b
+        self.top = t
+
+        if self.active_player:
+            self.resource_sprite_width = (self.right - self.left - self.color_tab_width) / 8
+            spacing = self.resource_sprite_width * 1.5
+
+            x = self.left + self.resource_sprite_width
+            y = self.top - self.resource_sprite_width
             for res, n in self.resources.items():
                 self.resource_sprites[res].center_x = x
                 self.resource_sprites[res].center_y = y
-                self.resource_sprites[res].width = width
-                self.resource_sprites[res].height = width
-
-                arcade.draw_text(f"x{n}", x, y - width, arcade.color.BLACK, font_size=(width/3), anchor_x="center")
-
+                self.resource_sprites[res].width = self.resource_sprite_width
+                self.resource_sprites[res].height = self.resource_sprite_width
                 x += spacing
+
+            button_height = (self.top - self.bottom) // 8
+            button_width = button_height * 4
+            x = (self.right - self.left - self.color_tab_width) // 2
+            y = self.bottom + (button_height * 0.8)
+            self.finish_turn_button.set_pos(x, y, button_width, button_height)
+
+    def on_draw(self):
+        # draw player representation
+        arcade.draw_lrbt_rectangle_filled(self.left, self.right, self.bottom, self.top,
+                                          (75, 110, 150))
+        arcade.draw_lrbt_rectangle_outline(self.left, self.right, self.bottom, self.top,
+                                           (40, 80, 140), 6)
+        arcade.draw_lrbt_rectangle_filled(self.right - self.color_tab_width, self.right + 3,
+                                          self.bottom + 3, self.top - 3, self.color)
+
+        if self.active_player:
+            # draw resources
+            for res, n in self.resources.items():
+                arcade.draw_text(f"x{n}", self.resource_sprites[res].center_x,
+                                 self.resource_sprites[res].center_y - self.resource_sprite_width,
+                                 arcade.color.BLACK, font_size=(self.resource_sprite_width / 3),
+                                 anchor_x="center")
 
             self.sprites.draw()
 
-            height = (t - b) // 8
-            width = height * 4
-            x = (r - l - color_width) // 2
-            y = b + (height * 0.8)
-            self.finish_turn_button.set_pos(x, y, width, height)
             self.finish_turn_button.on_draw()
         else:
             pass
