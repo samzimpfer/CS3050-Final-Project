@@ -4,6 +4,7 @@ class Tile:
     def __init__(self, x=0, y=0, size=6):
         self.x = x
         self.y = y
+        self.number = 0
         self.connections = []
         self.adjacentTiles = []
         self.color = arcade.color.BLACK

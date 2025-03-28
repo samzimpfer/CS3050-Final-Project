@@ -237,8 +237,42 @@ class Board:
         self.reset_board()
 
     def find_longest_road(self):
+      for player in self.players:
+          self.find_segment_lengths(self.find_nodes_of_intrest(player), player.get_roads())
       pass
-                
+
+    def find_nodes_of_intrest(self, player):
+        nodes_of_intrest = []
+        roads = player.get_roads()
+        for node in roads:
+            count = len([connection for connection in node.get_connections() if connection in roads])
+            if count != 2:
+                nodes_of_intrest.append(node)
+        return nodes_of_intrest
+    
+    def find_segment_lengths(self, nodes_of_importance, roads):
+        checked_segments = []
+        for node in nodes_of_importance:
+            connections = [connection for connection in node.get_connections() if connection in roads]
+            for connection in connections:
+                print("-----")
+                path = self.path_length(node, connection, nodes_of_importance, roads)
+                print("-----")
+                checked_segments.append([path[0],len(path),path[-1]])
+
+    def path_length(self, start, next, nodes_of_importance, roads, path=[]):
+        if next in nodes_of_importance:
+            path.append(next)
+            print(len(path))
+            return path
+        else:
+            path.append(start)
+            new_next = None
+            for node in next.get_connections():
+                if node in roads and node != start:
+                    new_next = node
+            print(len(path))
+            return self.path_length(next, new_next, nodes_of_importance, roads, path=path) 
         
     def get_edge(self, start_node, end_node):
         for edge in self.edges:
@@ -264,6 +298,7 @@ class Board:
 
         for edge in self.edges:
             edge.on_mouse_press(x, y, button, modifiers, self.players[0])
+        self.find_longest_road()
 
     # calls on_mouse_motion on all objects that should have a hover effect
     def on_mouse_move(self, x, y, dx, dy):
