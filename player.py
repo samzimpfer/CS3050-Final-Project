@@ -15,6 +15,7 @@ from gameobjects import *
 
 import arcade
 from button import Button
+from gameobjects import *
 
 # TODO: convert all camelcase to snakecase for pep 8 purposes
 class Player:
