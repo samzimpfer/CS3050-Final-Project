@@ -34,6 +34,7 @@ class Player:
     # reference from inside player functions as Player.bank
     bank = None
     game_dev_cards = None
+    finish_turn_function = lambda: None
 
     ROAD_COST = {
         Resource.BRICK:1,
@@ -115,7 +116,7 @@ class Player:
             self.sprites.append(s)
 
         self.finish_turn_button = Button("Finish turn", (40, 80, 140))
-
+        self.finish_turn_button.on_click = Player.finish_turn_function
 
     def add_road(self,edge):
         start_node = edge.get_start_node()

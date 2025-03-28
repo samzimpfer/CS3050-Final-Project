@@ -63,6 +63,7 @@ class GameView(arcade.View):
         self.dev_card_stack = DevCardStack()
         Player.bank = self.bank
         Player.dev_card_stack = self.dev_card_stack
+        Player.finish_turn_function = self.next_player_turn
 
         board_center_x = WINDOW_WIDTH // 2
         board_center_y = (self.board_space // 2) + self.margin
@@ -135,6 +136,8 @@ class GameView(arcade.View):
             p += 1
             i -= 1
 
+        self.current_state = GameState.ROLL
+
     def on_draw(self):
         self.clear()
         self.sprites.draw()
@@ -157,7 +160,7 @@ class GameView(arcade.View):
             if self.dice.ready:
                 # handle roll sum
                 # TODO: call board function to distribute resources based on dice roll
-                print(self.dice.sum) # replace with board.distribute_resources(self.dice.sum)
+                print(f"Roll: {self.dice.get_sum_and_reset()}") # replace with board.distribute_resources(self.dice.sum)
                 self.current_state = GameState.BUILD # TODO: change to GameState.TRADE once trading is developed
 
         elif self.current_state == GameState.TRADE:

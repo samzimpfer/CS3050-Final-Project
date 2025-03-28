@@ -5,6 +5,7 @@ import arcade
 # This class consists of two dice sprites, which are contained in a clickable box.
 # Upon clicking, the dice are animated to "roll" for a few frames.
 # When the dice settle, self.sum is set to their sum, and self.ready is set to True.
+# NOTE: always use dice.get_sum_and_reset() to retrieve the sum, never dice.sum
 class Dice:
     def __init__(self, x, y, w, h):
         # positional fields
@@ -66,7 +67,10 @@ class Dice:
 
     def roll(self):
         self.rolling = True
+
+    def get_sum_and_reset(self):
         self.ready = False
+        return self.sum
 
     def on_draw(self):
         self.sprites.draw()
