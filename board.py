@@ -3,6 +3,7 @@ from player import Player
 from node import Node
 from edge import Edge
 from tile import Tile
+from gameobjects import *
 import random
 
 # defines a board object that contains nodes representing appropriate positions for settlements
@@ -31,11 +32,13 @@ class Board:
         self.tile_nodes = []
         self.resources = ['wheat', 'wheat', 'wheat', 'wheat', 'wood', 'wood', 'wood', 'wood', 'sheep', 'sheep', 'sheep', 'sheep', 'ore', 'ore', 'ore', 'brick', 'brick', 'brick', 'desert']
         self.players = [Player(arcade.color.RED)]# here for testing/writing longest road
-        self.players[0].add_brick(20)# road testing
-        self.players[0].add_wood(20)
-        self.players[0].add_sheep(20)
-        self.players[0].add_brick(20)
-        self.players[0].add_wheat(20)
+        self.players[0].add_resources({
+            Resource.BRICK:1,
+            Resource.SHEEP:0,
+            Resource.STONE:0,
+            Resource.WHEAT:0,
+            Resource.WOOD:1
+        })
 
         # tile attributes
         self.x_spacing = 0 # this is the tile width

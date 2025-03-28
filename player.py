@@ -63,11 +63,11 @@ class Player:
         self.color = color
 
         self.resources = {
-            Resource.BRICK:0,
+            Resource.BRICK:1,
             Resource.SHEEP:0,
             Resource.STONE:0,
             Resource.WHEAT:0,
-            Resource.WOOD:0
+            Resource.WOOD:1
         }
 
         self.knight_card_count = 0

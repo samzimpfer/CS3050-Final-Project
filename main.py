@@ -57,6 +57,13 @@ class GameView(arcade.View):
         self.logo.center_y = WINDOW_HEIGHT - self.margin - (self.logo_space // 2)
         self.sprites.append(self.logo)
 
+        # TODO: take these out
+        # these are here only so board can create a player class. More organized to have them below
+        self.bank = Bank()
+        self.dev_card_stack = DevCardStack()
+        Player.bank = self.bank
+        Player.dev_card_stack = self.dev_card_stack
+
         board_center_x = WINDOW_WIDTH // 2
         board_center_y = (self.board_space // 2) + self.margin
         self.board = Board(board_center_x, board_center_y, height=self.board_space)
@@ -74,8 +81,8 @@ class GameView(arcade.View):
         dice_y = (self.margin * 2) + (dice_height // 2)
 
         # initialize game objects
-        self.bank = Bank()
-        self.dev_card_stack = DevCardStack()
+        #self.bank = Bank()
+        #self.dev_card_stack = DevCardStack()
         self.dice = Dice(dice_x, dice_y, dice_width, dice_height)
 
         self.players = []
@@ -83,8 +90,8 @@ class GameView(arcade.View):
             p = Player(PLAYER_COLORS[i])
             self.players.append(p)
 
-        Player.bank = self.bank
-        Player.dev_card_stack = self.dev_card_stack
+        #Player.bank = self.bank
+        #Player.dev_card_stack = self.dev_card_stack
 
         mouse_size = 5
         self.mouse_sprite = arcade.SpriteSolidColor(mouse_size, mouse_size, color=(0, 0, 0, 150))
@@ -128,20 +135,20 @@ class GameView(arcade.View):
 
     def on_update(self, delta_time: float):
         # manage game state
-        if (self.current_state == GameState.ROLL):
+        if self.current_state == GameState.ROLL:
             self.dice.on_update(delta_time)
 
-            if (self.dice.ready):
+            if self.dice.ready:
                 # handle roll sum
                 # TODO: call board function to distribute resources based on dice roll
                 print(self.dice.sum) # replace with board.distribute_resources(self.dice.sum)
                 self.current_state = GameState.BUILD # TODO: change to GameState.TRADE once trading is developed
 
-        elif (self.current_state == GameState.TRADE):
+        elif self.current_state == GameState.TRADE:
             pass
-        elif (self.current_state == GameState.BUILD):
+        elif self.current_state == GameState.BUILD:
             # board.build ?
-            self.current_state = GameState.WAITING
+            pass
 
     def on_mouse_press(self, x, y, button, modifiers):
         self.mouse_sprite.center_x = x
