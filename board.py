@@ -30,6 +30,7 @@ class Board:
         self.tiles = arcade.SpriteList()
         self.tile_nodes = []
         self.resources = ['wheat', 'wheat', 'wheat', 'wheat', 'wood', 'wood', 'wood', 'wood', 'sheep', 'sheep', 'sheep', 'sheep', 'ore', 'ore', 'ore', 'brick', 'brick', 'brick', 'desert']
+        self.numbers = [5, 2, 6, 8, 10, 9, 3, 3, 11, 4, 8, 4, 6, 5, 10, 11, 12, 9]
         self.players = [Player(arcade.color.RED)]# here for testing/writing longest road
         self.players[0].add_brick(20)# road testing
         self.players[0].add_wood(20)
@@ -133,31 +134,41 @@ class Board:
         for index, resource in enumerate(self.resources):
             self.tile_nodes[index].set_resource(resource)
         # add sprites to the SpriteList at the tile nodes depending on resource
+        #also set numbers
+        seen_desert = False
         for n in self.tile_nodes:
+
+            if n.get_resource() != 'desert':
+                if not seen_desert:
+                    n.set_number(self.numbers[self.tile_nodes.index(n)])
+                else:
+                    n.set_number(self.numbers[self.tile_nodes.index(n) - 1])
             if n.get_resource() == 'wood':
-                sprite = arcade.Sprite("sprites/green_tile.png",scale=.65,
+                #testing scale, old value .65
+                sprite = arcade.Sprite("sprites/green_tile.png",scale=self.x_spacing/180,
                                                 center_x=n.get_x(),center_y=n.get_y())
                 self.tiles.append(sprite)
             elif n.get_resource() == 'wheat':
-                sprite = arcade.Sprite("sprites/wheat_tile.png", scale=.65,
+                sprite = arcade.Sprite("sprites/wheat_tile.png", scale=self.x_spacing/180,
                                        center_x=n.get_x(), center_y=n.get_y())
                 self.tiles.append(sprite)
             elif n.get_resource() == 'sheep':
-                sprite = arcade.Sprite("sprites/sheep_tile.png", scale=.65,
+                sprite = arcade.Sprite("sprites/sheep_tile.png", scale=self.x_spacing/180,
                                        center_x=n.get_x(), center_y=n.get_y())
                 self.tiles.append(sprite)
             elif n.get_resource() == 'ore':
-                sprite = arcade.Sprite("sprites/ore_tile.png", scale=.65,
+                sprite = arcade.Sprite("sprites/ore_tile.png", scale=self.x_spacing/180,
                                        center_x=n.get_x(), center_y=n.get_y())
                 self.tiles.append(sprite)
             elif n.get_resource() == 'brick':
-                sprite = arcade.Sprite("sprites/brick_tile.png", scale=.65,
+                sprite = arcade.Sprite("sprites/brick_tile.png", scale=self.x_spacing/180,
                                        center_x=n.get_x(), center_y=n.get_y())
                 self.tiles.append(sprite)
             else:
-                sprite = arcade.Sprite("sprites/desert_tile.png", scale=.65,
+                sprite = arcade.Sprite("sprites/desert_tile.png", scale=self.x_spacing/180,
                                        center_x=n.get_x(), center_y=n.get_y())
                 self.tiles.append(sprite)
+                seen_desert = True
 
         self.find_touching_tiles()
                         
@@ -272,3 +283,5 @@ class Board:
                 n.draw()
         for n in self.tile_nodes:
             n.draw()
+            if n.get_resource() != 'desert':
+                arcade.draw_text(str(n.get_number()), n.get_x() - 10, n.get_y() - 10,arcade.color.BLACK, 20)
