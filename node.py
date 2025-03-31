@@ -74,7 +74,7 @@ class Node:
         
     # builds a town 
     def build_settlement(self, player, board):
-        if self.has_space() and self.is_touching_road(board, player) and player.canBuildSettlement():
+        if self.has_space() and self.is_touching_road(board, player) and player.can_build_settlement():
             self.color = player.get_color()
             self.building = True
             player.buildSettlement()
