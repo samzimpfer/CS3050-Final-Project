@@ -239,20 +239,25 @@ class Board:
 
         self.reset_board()
 
+    # main function that calls the sub functions on all players
+    # TODO: Fix the path_length function recursion is not work right 
     def find_longest_road(self):
       for player in self.players:
           self.find_segment_lengths(self.find_nodes_of_intrest(player), player.get_roads())
       pass
 
+    #finds all nodes that are either an endpoint or an intersection
     def find_nodes_of_intrest(self, player):
         nodes_of_intrest = []
         roads = player.get_roads()
         for node in roads:
             count = len([connection for connection in node.get_connections() if connection in roads])
+            # if a node does not have two road connections then it is either an endpoint or an intersection
             if count != 2:
                 nodes_of_intrest.append(node)
         return nodes_of_intrest
     
+    # finds the lengths of all segments which is just a path between two nodes_of_intrest
     def find_segment_lengths(self, nodes_of_importance, roads):
         checked_segments = []
         for node in nodes_of_importance:
@@ -263,6 +268,8 @@ class Board:
                 print("-----")
                 checked_segments.append([path[0],len(path),path[-1]])
 
+    # finds the length of a path given a direction(the next param) until the next node_of_intrest
+    # still WIP
     def path_length(self, start, next, nodes_of_importance, roads, path=[]):
         if next in nodes_of_importance:
             path.append(next)
@@ -276,7 +283,8 @@ class Board:
                     new_next = node
             print(len(path))
             return self.path_length(next, new_next, nodes_of_importance, roads, path=path) 
-        
+    
+    # returns the edge with the matching start_node and end_node
     def get_edge(self, start_node, end_node):
         for edge in self.edges:
             if edge.get_start_node() == start_node or edge.get_start_node() == end_node:
