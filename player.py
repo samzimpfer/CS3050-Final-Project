@@ -20,6 +20,7 @@ class PlayerState(Enum):
     DEFAULT = 1
     ROLL = 2
     ABLE_TO_TRADE = 3
+    # OPEN_TRADE = 4
     TRADING = 4
 
 # TODO: convert all camelcase to snakecase for pep 8 purposes
@@ -76,11 +77,11 @@ class Player:
         self.color = color
 
         self.resources = {
-            Resource.BRICK:1,
-            Resource.SHEEP:0,
-            Resource.STONE:0,
-            Resource.WHEAT:0,
-            Resource.WOOD:1
+            Resource.BRICK:2,
+            Resource.SHEEP:1,
+            Resource.STONE:1,
+            Resource.WHEAT:1,
+            Resource.WOOD:2
         }
 
         self.knight_card_count = 0
@@ -117,6 +118,7 @@ class Player:
         self.player_state = PlayerState.DEFAULT
 
         # UI elements
+        self.show_resources = True # TODO: change this to False when done testing
         self.sprites = arcade.SpriteList()
         self.resource_sprites = {
             Resource.BRICK: arcade.Sprite("sprites/resources/brick.png"),
@@ -175,19 +177,19 @@ class Player:
 
         usable_width = self.right - self.left - self.color_tab_width
 
+        self.resource_sprite_width = usable_width / 8
+        spacing = self.resource_sprite_width * 1.5
+
+        x = self.left + self.resource_sprite_width
+        y = self.top - self.resource_sprite_width
+        for res, n in self.resources.items():
+            self.resource_sprites[res].center_x = x
+            self.resource_sprites[res].center_y = y
+            self.resource_sprites[res].width = self.resource_sprite_width
+            self.resource_sprites[res].height = self.resource_sprite_width
+            x += spacing
+
         if self.active_player:
-            self.resource_sprite_width = usable_width / 8
-            spacing = self.resource_sprite_width * 1.5
-
-            x = self.left + self.resource_sprite_width
-            y = self.top - self.resource_sprite_width
-            for res, n in self.resources.items():
-                self.resource_sprites[res].center_x = x
-                self.resource_sprites[res].center_y = y
-                self.resource_sprites[res].width = self.resource_sprite_width
-                self.resource_sprites[res].height = self.resource_sprite_width
-                x += spacing
-
             button_height = (self.top - self.bottom) // 8
             button_width = usable_width * 0.4
             x1 = usable_width * 0.25
@@ -356,8 +358,8 @@ class Player:
         arcade.draw_lrbt_rectangle_filled(self.right - self.color_tab_width, self.right + 3,
                                           self.bottom + 3, self.top - 3, self.color)
 
-        if self.active_player:
-            # draw resources
+        # draw resources
+        if self.show_resources:
             for res, n in self.resources.items():
                 arcade.draw_text(f"x{n}", self.resource_sprites[res].center_x,
                                  self.resource_sprites[res].center_y - self.resource_sprite_width,
@@ -366,6 +368,7 @@ class Player:
 
             self.sprites.draw()
 
+        if self.active_player:
             self.finish_turn_button.on_draw()
             self.trade_button.on_draw()
             self.reject_trade_button.on_draw()
