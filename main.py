@@ -59,10 +59,24 @@ class GameView(arcade.View):
 
         board_center_x = WINDOW_WIDTH // 2
         board_center_y = (self.board_space // 2) + self.margin
-        self.board = Board(board_center_x, board_center_y, height=self.board_space)
+
 
         # more sizing fields used for bank, dice, and player representations
         self.num_players = 4
+
+
+
+        # initialize game objects
+        #self.bank = Bank()
+        #self.dev_card_stack = DevCardStack()
+
+
+        self.players = []
+        for i in range(self.num_players):
+            p = Player(PLAYER_COLORS[i])
+            self.players.append(p)
+
+        self.board = Board(board_center_x, board_center_y, self.players, height=self.board_space)
 
         self.component_width = (WINDOW_WIDTH - self.board.width + self.board.x_spacing) // 2
         self.component_height = self.logo_space + self.margin + self.board.x_spacing
@@ -72,16 +86,7 @@ class GameView(arcade.View):
         dice_height = dice_width * 0.52
         dice_x = WINDOW_WIDTH - (self.margin * 2) - (dice_width // 2)
         dice_y = (self.margin * 2) + (dice_height // 2)
-
-        # initialize game objects
-        #self.bank = Bank()
-        #self.dev_card_stack = DevCardStack()
         self.dice = Dice(dice_x, dice_y, dice_width, dice_height)
-
-        self.players = []
-        for i in range(self.num_players):
-            p = Player(PLAYER_COLORS[i])
-            self.players.append(p)
 
         #Player.bank = self.bank
         #Player.dev_card_stack = self.dev_card_stack

@@ -20,7 +20,7 @@ class Board:
 
 
     # initialize the board centered at the given coordinates with a maximum width or height if specified
-    def __init__(self, center_x, center_y, width=0, height=0):
+    def __init__(self, center_x, center_y, players, width=0, height=0):
         # board attributes
         self.center_x = center_x
         self.center_y = center_y
@@ -32,14 +32,7 @@ class Board:
         self.tile_nodes = []
         self.resources = ['wheat', 'wheat', 'wheat', 'wheat', 'wood', 'wood', 'wood', 'wood', 'sheep', 'sheep', 'sheep', 'sheep', 'ore', 'ore', 'ore', 'brick', 'brick', 'brick', 'desert']
         self.numbers = [5, 2, 6, 8, 10, 9, 3, 3, 11, 4, 8, 4, 6, 5, 10, 11, 12, 9]
-        self.players = [Player(arcade.color.RED)]# here for testing/writing longest road
-        self.players[0].add_resources({
-            Resource.BRICK:1,
-            Resource.SHEEP:0,
-            Resource.STONE:0,
-            Resource.WHEAT:0,
-            Resource.WOOD:1
-        })
+        self.players = [players]#players list
 
         # tile attributes
         self.x_spacing = 0 # this is the tile width
