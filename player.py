@@ -16,8 +16,18 @@ from gameobjects import *
 import arcade
 from button import Button
 
+class PlayerState(Enum):
+    DEFAULT = 1
+    ROLL = 2
+    ABLE_TO_TRADE = 3
+    TRADING = 4
+
 # TODO: convert all camelcase to snakecase for pep 8 purposes
 class Player:
+
+    UI_COLOR = (75, 110, 150)
+    UI_OUTLINE_COLOR = (40, 80, 140)
+    BUTTON_COLOR = (40, 80, 140)
 
     MAX_SETTLEMENTS = 5
     MAX_CITIES = 4
@@ -34,6 +44,7 @@ class Player:
     # reference from inside player functions as Player.bank
     bank = None
     game_dev_cards = None
+    trade_function = None
     finish_turn_function = None
 
     ROAD_COST = {
@@ -102,6 +113,8 @@ class Player:
         self.resource_sprite_width = 0
 
         self.active_player = False
+        self.game_state = None
+        self.player_state = PlayerState.DEFAULT
 
         # UI elements
         self.sprites = arcade.SpriteList()
@@ -115,8 +128,75 @@ class Player:
         for s in self.resource_sprites.values():
             self.sprites.append(s)
 
-        self.finish_turn_button = Button("Finish turn", (40, 80, 140))
+        self.finish_turn_button = Button("Finish turn", Player.BUTTON_COLOR)
+        self.trade_button = Button("Trade", Player.BUTTON_COLOR)
+        self.reject_trade_button = Button("Reject", Player.BUTTON_COLOR)
+        self.accept_trade_button = Button("Accept", Player.BUTTON_COLOR)
+
         self.finish_turn_button.on_click = Player.finish_turn_function
+        self.trade_button.on_click = Player.trade_function
+
+
+    def set_active_player(self, ap):
+        self.active_player = ap
+
+
+    def set_state(self, game_state):
+        if game_state == GameState.ROLL:
+            self.player_state = PlayerState.ROLL
+        elif game_state == GameState.BUILD:
+            self.player_state = PlayerState.ABLE_TO_TRADE
+
+        self.finish_turn_button.set_visible(False)
+        self.trade_button.set_visible(False)
+        self.reject_trade_button.set_visible(False)
+        self.accept_trade_button.set_visible(False)
+
+        if self.player_state == PlayerState.ABLE_TO_TRADE:
+            self.trade_button.set_visible(True)
+            self.finish_turn_button.set_visible(True)
+
+        elif self.player_state == PlayerState.TRADING:
+            self.reject_trade_button.set_visible(True)
+            self.accept_trade_button.set_visible(True)
+
+        elif self.player_state == PlayerState.DEFAULT:
+            self.finish_turn_button.set_visible(True)
+
+
+    # positions the player representation UI and it's components on the screen
+    def set_pos(self, l, r, b, t):
+        self.left = l
+        self.right = r
+        self.bottom = b
+        self.top = t
+
+        usable_width = self.right - self.left - self.color_tab_width
+
+        if self.active_player:
+            self.resource_sprite_width = usable_width / 8
+            spacing = self.resource_sprite_width * 1.5
+
+            x = self.left + self.resource_sprite_width
+            y = self.top - self.resource_sprite_width
+            for res, n in self.resources.items():
+                self.resource_sprites[res].center_x = x
+                self.resource_sprites[res].center_y = y
+                self.resource_sprites[res].width = self.resource_sprite_width
+                self.resource_sprites[res].height = self.resource_sprite_width
+                x += spacing
+
+            button_height = (self.top - self.bottom) // 8
+            button_width = usable_width * 0.4
+            x1 = usable_width * 0.25
+            x2 = usable_width * 0.75
+            y = self.bottom + (button_height * 0.8)
+
+            self.trade_button.set_pos(x1, y, button_width, button_height)
+            self.reject_trade_button.set_pos(x1, y, button_width, button_height)
+            self.finish_turn_button.set_pos(x2, y, button_width, button_height)
+            self.accept_trade_button.set_pos(x2, y, button_width, button_height)
+
 
     def add_road(self,start_node, end_node):
         if start_node not in self.roads:
@@ -264,41 +344,13 @@ class Player:
 
         return total
 
-    def set_active_player(self, ap):
-        self.active_player = ap
-
-    # positions the player representation UI and it's components on the screen
-    def set_pos(self, l, r, b, t):
-        self.left = l
-        self.right = r
-        self.bottom = b
-        self.top = t
-
-        if self.active_player:
-            self.resource_sprite_width = (self.right - self.left - self.color_tab_width) / 8
-            spacing = self.resource_sprite_width * 1.5
-
-            x = self.left + self.resource_sprite_width
-            y = self.top - self.resource_sprite_width
-            for res, n in self.resources.items():
-                self.resource_sprites[res].center_x = x
-                self.resource_sprites[res].center_y = y
-                self.resource_sprites[res].width = self.resource_sprite_width
-                self.resource_sprites[res].height = self.resource_sprite_width
-                x += spacing
-
-            button_height = (self.top - self.bottom) // 8
-            button_width = button_height * 4
-            x = (self.right - self.left - self.color_tab_width) // 2
-            y = self.bottom + (button_height * 0.8)
-            self.finish_turn_button.set_pos(x, y, button_width, button_height)
 
     def on_draw(self):
         # draw player representation
         arcade.draw_lrbt_rectangle_filled(self.left, self.right, self.bottom, self.top,
-                                          (75, 110, 150))
+                                          Player.UI_COLOR)
         arcade.draw_lrbt_rectangle_outline(self.left, self.right, self.bottom, self.top,
-                                           (40, 80, 140), 6)
+                                           Player.UI_OUTLINE_COLOR, 6)
         arcade.draw_lrbt_rectangle_filled(self.right - self.color_tab_width, self.right + 3,
                                           self.bottom + 3, self.top - 3, self.color)
 
@@ -313,11 +365,20 @@ class Player:
             self.sprites.draw()
 
             self.finish_turn_button.on_draw()
+            self.trade_button.on_draw()
+            self.reject_trade_button.on_draw()
+            self.accept_trade_button.on_draw()
         else:
             pass
 
     def on_mouse_press(self, mouse_sprite):
         self.finish_turn_button.on_mouse_press(mouse_sprite)
+        self.trade_button.on_mouse_press(mouse_sprite)
+        self.reject_trade_button.on_mouse_press(mouse_sprite)
+        self.accept_trade_button.on_mouse_press(mouse_sprite)
 
     def on_mouse_motion(self, mouse_sprite):
         self.finish_turn_button.on_mouse_motion(mouse_sprite)
+        self.trade_button.on_mouse_motion(mouse_sprite)
+        self.reject_trade_button.on_mouse_motion(mouse_sprite)
+        self.accept_trade_button.on_mouse_motion(mouse_sprite)

@@ -16,14 +16,6 @@ from board import Board
 from player import Player
 from dice import Dice
 
-class GameState(Enum):
-    SETUP = 0
-    ROLL = 1
-    GET_RESOURCES = 2
-    TRADE = 3
-    BUILD = 4
-    WAITING = 5
-
 screen_width, screen_height = arcade.get_display_size()
 WINDOW_WIDTH = screen_width - 100
 WINDOW_HEIGHT = screen_height - 100
@@ -157,6 +149,9 @@ class GameView(arcade.View):
             p.on_draw()
 
     def on_update(self, delta_time: float):
+        for p in self.players:
+            p.set_state(self.current_state)
+
         # manage game state
         if self.current_state == GameState.ROLL:
             self.dice.on_update(delta_time)
@@ -166,12 +161,6 @@ class GameView(arcade.View):
                 # TODO: call board function to distribute resources based on dice roll
                 print(f"Roll: {self.dice.get_sum_and_reset()}") # replace with board.distribute_resources(self.dice.sum)
                 self.current_state = GameState.BUILD # TODO: change to GameState.TRADE once trading is developed
-
-        elif self.current_state == GameState.TRADE:
-            pass
-        elif self.current_state == GameState.BUILD:
-            # board.build ?
-            pass
 
         self.check_winner()
 
