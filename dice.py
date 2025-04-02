@@ -87,6 +87,6 @@ class Dice:
 
             self.roll_timer += 1
 
-    def on_mouse_press(self, mouse_sprite):
-        if arcade.check_for_collision(mouse_sprite, self.box):
+    def on_mouse_press(self, x, y):
+        if self.box.collides_with_point((x, y)):
             self.roll()

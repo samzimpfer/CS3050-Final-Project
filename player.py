@@ -15,6 +15,8 @@ from gameobjects import *
 
 import arcade
 from button import Button
+from inventory import Inventory
+
 
 class PlayerState(Enum):
     DEFAULT = 1
@@ -75,6 +77,8 @@ class Player:
         # inventory
         self.roads = []  # used for calculating longest road is a list of nodes
         self.color = color
+
+        self.main_inventory = Inventory(True)
 
         self.resources = {
             Resource.BRICK:2,
@@ -169,15 +173,19 @@ class Player:
 
 
     # positions the player representation UI and it's components on the screen
-    def set_pos(self, l, r, b, t):
+    def set_position_and_size(self, l, r, b, t):
         self.left = l
         self.right = r
         self.bottom = b
         self.top = t
 
         usable_width = self.right - self.left - self.color_tab_width
-
         self.resource_sprite_width = usable_width / 8
+        self.main_inventory.set_position_and_size(usable_width / 2,
+                                                  self.top - self.resource_sprite_width,
+                                                  usable_width)
+
+        """self.resource_sprite_width = usable_width / 8
         spacing = self.resource_sprite_width * 1.5
 
         x = self.left + self.resource_sprite_width
@@ -187,7 +195,7 @@ class Player:
             self.resource_sprites[res].center_y = y
             self.resource_sprites[res].width = self.resource_sprite_width
             self.resource_sprites[res].height = self.resource_sprite_width
-            x += spacing
+            x += spacing"""
 
         if self.active_player:
             button_height = (self.top - self.bottom) // 8
@@ -196,10 +204,10 @@ class Player:
             x2 = usable_width * 0.75
             y = self.bottom + (button_height * 0.8)
 
-            self.trade_button.set_pos(x1, y, button_width, button_height)
-            self.reject_trade_button.set_pos(x1, y, button_width, button_height)
-            self.finish_turn_button.set_pos(x2, y, button_width, button_height)
-            self.accept_trade_button.set_pos(x2, y, button_width, button_height)
+            self.trade_button.set_position_and_size(x1, y, button_width, button_height)
+            self.reject_trade_button.set_position_and_size(x1, y, button_width, button_height)
+            self.finish_turn_button.set_position_and_size(x2, y, button_width, button_height)
+            self.accept_trade_button.set_position_and_size(x2, y, button_width, button_height)
 
 
     def add_road(self,start_node, end_node):
@@ -339,13 +347,14 @@ class Player:
 
         # draw resources
         if self.show_resources:
-            for res, n in self.resources.items():
+            self.main_inventory.on_draw()
+            """for res, n in self.resources.items():
                 arcade.draw_text(f"x{n}", self.resource_sprites[res].center_x,
                                  self.resource_sprites[res].center_y - self.resource_sprite_width,
                                  arcade.color.BLACK, font_size=(self.resource_sprite_width / 3),
                                  anchor_x="center")
 
-            self.sprites.draw()
+            self.sprites.draw()"""
 
         if self.active_player:
             self.finish_turn_button.on_draw()
@@ -355,14 +364,18 @@ class Player:
         else:
             pass
 
-    def on_mouse_press(self, mouse_sprite):
-        self.finish_turn_button.on_mouse_press(mouse_sprite)
-        self.trade_button.on_mouse_press(mouse_sprite)
-        self.reject_trade_button.on_mouse_press(mouse_sprite)
-        self.accept_trade_button.on_mouse_press(mouse_sprite)
+    def on_mouse_press(self, x, y):
+        self.finish_turn_button.on_mouse_press(x, y)
+        self.trade_button.on_mouse_press(x, y)
+        self.reject_trade_button.on_mouse_press(x, y)
+        self.accept_trade_button.on_mouse_press(x, y)
 
-    def on_mouse_motion(self, mouse_sprite):
-        self.finish_turn_button.on_mouse_motion(mouse_sprite)
-        self.trade_button.on_mouse_motion(mouse_sprite)
-        self.reject_trade_button.on_mouse_motion(mouse_sprite)
-        self.accept_trade_button.on_mouse_motion(mouse_sprite)
+        self.main_inventory.on_mouse_press(x, y)
+
+    def on_mouse_motion(self, x, y):
+        self.finish_turn_button.on_mouse_motion(x, y)
+        self.trade_button.on_mouse_motion(x, y)
+        self.reject_trade_button.on_mouse_motion(x, y)
+        self.accept_trade_button.on_mouse_motion(x, y)
+
+        self.main_inventory.on_mouse_motion(x, y)

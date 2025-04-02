@@ -2,6 +2,9 @@ from enum import Enum
 import random
 from dataclasses import *
 
+# various constants
+# BUTTON_COLOR = (40, 80, 140)
+
 class GameState(Enum):
     SETUP = 0
     ROLL = 1

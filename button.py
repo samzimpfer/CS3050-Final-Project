@@ -24,7 +24,7 @@ class Button:
     def set_visible(self, visible):
         self.show = visible
 
-    def set_pos(self, x, y, width, height):
+    def set_position_and_size(self, x, y, width, height):
         self.x = x
         self.y = y
         self.width = width
@@ -42,12 +42,12 @@ class Button:
             self.sprites.draw()
             arcade.draw_text(self.text, self.x, self.y, arcade.color.BLACK, font_size=(self.box.height * 0.5), anchor_x="center", anchor_y="center")
 
-    def on_mouse_press(self, mouse_sprite):
-        if self.show and arcade.check_for_collision(mouse_sprite, self.box):
+    def on_mouse_press(self, x, y):
+        if self.show and self.box.collides_with_point((x, y)):
             self.on_click()
 
-    def on_mouse_motion(self, mouse_sprite):
-        if self.show and arcade.check_for_collision(mouse_sprite, self.box):
+    def on_mouse_motion(self, x, y):
+        if self.show and self.box.collides_with_point((x, y)):
             self.box.width = self.hover_width
             self.box.height = self.hover_height
         else:

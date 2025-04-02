@@ -86,9 +86,6 @@ class GameView(arcade.View):
         #Player.bank = self.bank
         #Player.dev_card_stack = self.dev_card_stack
 
-        mouse_size = 5
-        self.mouse_sprite = arcade.SpriteSolidColor(mouse_size, mouse_size, color=(0, 0, 0, 150))
-
         # gameplay fields
         self.current_state = None
         self.active_player_index = 0
@@ -111,9 +108,9 @@ class GameView(arcade.View):
 
         # set active player position
         self.active_player.set_active_player(True)
-        self.active_player.set_pos(0, self.component_width,
-                                   WINDOW_HEIGHT - self.component_height,
-                                   WINDOW_HEIGHT - self.margin)
+        self.active_player.set_position_and_size(0, self.component_width,
+                                                 WINDOW_HEIGHT - self.component_height,
+                                                 WINDOW_HEIGHT - self.margin)
 
         # set inactive player positions
         i = 2  # iterate through inactive player positions
@@ -122,9 +119,9 @@ class GameView(arcade.View):
             if p >= self.num_players:
                 p = 0
             self.players[p].set_active_player(False)
-            self.players[p].set_pos(0, self.other_player_width,
-                                    self.margin + (i * (self.margin + self.other_player_height)),
-                                    (i + 1) * (self.margin + self.other_player_height))
+            self.players[p].set_position_and_size(0, self.other_player_width,
+                                                  self.margin + (i * (self.margin + self.other_player_height)),
+                                                  (i + 1) * (self.margin + self.other_player_height))
             p += 1
             i -= 1
 
@@ -165,25 +162,17 @@ class GameView(arcade.View):
         self.check_winner()
 
     def on_mouse_press(self, x, y, button, modifiers):
-        self.mouse_sprite.center_x = x
-        self.mouse_sprite.center_y = y
-
-        self.active_player.on_mouse_press(self.mouse_sprite)
+        self.active_player.on_mouse_press(x, y)
 
         if self.current_state == GameState.ROLL:
-            self.dice.on_mouse_press(self.mouse_sprite)
+            self.dice.on_mouse_press(x, y)
 
         elif self.current_state == GameState.TRADE or self.current_state == GameState.BUILD:
             if self.board.on_mouse_press(x, y, button, modifiers, self.active_player):
                 self.current_state = GameState.BUILD
 
     def on_mouse_motion(self, x, y, dx, dy):
-        self.mouse_sprite.center_x = x
-        self.mouse_sprite.center_y = y
-
-        self.board.on_mouse_move(x, y, dx, dy)
-
-        self.active_player.on_mouse_motion(self.mouse_sprite)
+        self.active_player.on_mouse_motion(x, y)
 
 def main():
     window = arcade.Window(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE)
