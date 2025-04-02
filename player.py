@@ -240,8 +240,8 @@ class Player:
     # return True is the player hasn't exceeded the limit per building and has the resources to build, and False otherwise
     # TODO: override limitations by resource if dev card owned
     def can_build_road(self):
-        return (self.has_resources(self.ROAD_COST) and
-                self.road_count < self.MAX_ROADS)
+        return ((self.has_resources(self.ROAD_COST) and
+                self.road_count < self.MAX_ROADS)) # or self.has_road_building_dev_card
 
     def can_build_settlement(self):
         return (self.has_resources(self.SETTLEMENT_COST) and
@@ -266,27 +266,12 @@ class Player:
             return True
         return False
 
-    # TODO: connect board logic for valid build move
-    def BuildRoad2(self, start_node, end_node):
-        if self.UseResources(self.ROAD_COST):
-            #build the road
-            print("Road built")
-        else:
-            print("Not enough resources")
-
     def build_settlement(self):
         if self.can_build_settlement():
             self.use_resources(self.SETTLEMENT_COST)
             self.settlement_count += 1
             return True
         return False
-
-    def BuildSettlement2(self):
-        if self.UseResources(self.SETTLEMENT_COST):
-            #build the settlement
-            print("Settlement built")
-        else:
-            print("Not enough resources")
 
     def build_city(self):
         if self.can_build_city():
@@ -295,12 +280,6 @@ class Player:
             self.settlement_count -= 1
             return True
         return False
-
-    def BuildCity2(self):
-        if self.UseResources(self.CITY_COST):
-            print("City built")
-        else:
-            print("Not enough resources")
 
     def buy_dev_card(self):
         if self.can_buy_dev_card():
