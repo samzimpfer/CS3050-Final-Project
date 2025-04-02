@@ -242,19 +242,23 @@ class Board:
     # main function that calls the sub functions on all players
     # TODO: Fix the path_length function recursion is not work right 
     def find_longest_road(self):
-      for player in self.players:
-          self.find_segment_lengths(self.find_nodes_of_intrest(player), player.get_roads())
-      pass
+        print("longest road")
+        print(self.players)
+        for player in self.players:
+            self.find_segment_lengths(self.find_nodes_of_intrest(player), player.get_roads())
+        pass
 
     #finds all nodes that are either an endpoint or an intersection
     def find_nodes_of_intrest(self, player):
         nodes_of_intrest = []
         roads = player.get_roads()
+        print(roads)
         for node in roads:
             count = len([connection for connection in node.get_connections() if connection in roads])
             # if a node does not have two road connections then it is either an endpoint or an intersection
             if count != 2:
                 nodes_of_intrest.append(node)
+        print(f'nodes_of_intrest: {nodes_of_intrest}')
         return nodes_of_intrest
     
     # finds the lengths of all segments which is just a path between two nodes_of_intrest
