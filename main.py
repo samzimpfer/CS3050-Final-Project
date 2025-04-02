@@ -160,7 +160,7 @@ class GameView(arcade.View):
                 # handle roll sum
                 # TODO: call board function to distribute resources based on dice roll
                 print(f"Roll: {self.dice.get_sum_and_reset()}") # replace with board.distribute_resources(self.dice.sum)
-                self.current_state = GameState.BUILD # TODO: change to GameState.TRADE once trading is developed
+                self.current_state = GameState.TRADE # TODO: change to GameState.TRADE once trading is developed
 
         self.check_winner()
 
@@ -173,8 +173,9 @@ class GameView(arcade.View):
         if self.current_state == GameState.ROLL:
             self.dice.on_mouse_press(self.mouse_sprite)
 
-        elif self.current_state == GameState.BUILD:
-            self.board.on_mouse_press(x, y, button, modifiers, self.active_player)
+        elif self.current_state == GameState.TRADE or self.current_state == GameState.BUILD:
+            if self.board.on_mouse_press(x, y, button, modifiers, self.active_player):
+                self.current_state = GameState.BUILD
 
     def on_mouse_motion(self, x, y, dx, dy):
         self.mouse_sprite.center_x = x

@@ -144,8 +144,10 @@ class Player:
     def set_state(self, game_state):
         if game_state == GameState.ROLL:
             self.player_state = PlayerState.ROLL
-        elif game_state == GameState.BUILD:
+        elif game_state == GameState.TRADE:
             self.player_state = PlayerState.ABLE_TO_TRADE
+        elif game_state == GameState.BUILD:
+            self.player_state = PlayerState.DEFAULT
 
         self.finish_turn_button.set_visible(False)
         self.trade_button.set_visible(False)
