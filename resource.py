@@ -7,6 +7,7 @@ class ResourceGraphic:
     def __init__(self, resource, show_buttons):
         self.resource_type = resource
         self.amount = 0
+        self.limit = 100
 
         self.x = 0
         self.y = 0
@@ -37,16 +38,22 @@ class ResourceGraphic:
             self.inc_button.on_click = self.increment
 
 
+    def set_limit(self, limit):
+        self.limit = limit
+
+
     def change_amount(self, change):
         if change < 0:
             for _ in range(-change):
                 self.decrement()
         else:
-            self.amount += change
+            for _ in range(change):
+                self.increment()
 
 
     def increment(self):
-        self.amount += 1
+        if self.amount < self.limit:
+            self.amount += 1
 
 
     def decrement(self):

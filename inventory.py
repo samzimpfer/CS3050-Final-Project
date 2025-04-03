@@ -18,6 +18,14 @@ class Inventory:
             Resource.WOOD: ResourceGraphic(Resource.WOOD, show_buttons)
         }
 
+        self.limits = {
+            Resource.BRICK: ResourceGraphic(Resource.BRICK, show_buttons),
+            Resource.SHEEP: ResourceGraphic(Resource.SHEEP, show_buttons),
+            Resource.STONE: ResourceGraphic(Resource.STONE, show_buttons),
+            Resource.WHEAT: ResourceGraphic(Resource.WHEAT, show_buttons),
+            Resource.WOOD: ResourceGraphic(Resource.WOOD, show_buttons)
+        }
+
 
     def set_position_and_size(self, x, y, width):
         resource_sprite_width = width / 8
@@ -28,6 +36,13 @@ class Inventory:
             x += spacing
 
 
+    # returns dictionary of the amounts of each resource currently held in the inventory
+    def get_amounts(self):
+        amts = {}
+        for t, r in self.inventory.items():
+            amts[t] = r.amount
+        return amts
+
     # checks if this inventory contains a certain set of resources specified
     # by dictionary in form { Resource.TYPE: integer_amount }
     def contains(self, need):
@@ -35,6 +50,23 @@ class Inventory:
             if self.inventory[r].amount < req:
                 return False
         return True
+
+
+    # resets limits to "infinity" (100)
+    def reset_limits(self):
+        self.set_limits({
+            Resource.BRICK: 100,
+            Resource.SHEEP: 100,
+            Resource.STONE: 100,
+            Resource.WHEAT: 100,
+            Resource.WOOD: 100
+        })
+
+
+    # sets limits for each resource
+    def set_limits(self, limits):
+        for r, l in limits.items():
+            self.inventory[r].set_limit(l)
 
 
     # change amounts based on dictionary in form { Resource.TYPE: integer_amount }

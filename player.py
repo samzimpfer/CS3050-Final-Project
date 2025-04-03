@@ -121,7 +121,7 @@ class Player:
             self.finish_turn_button.set_visible(True)
 
         elif self.player_state == PlayerState.OPEN_TRADE:
-            pass
+            self.give_inventory.set_limits(self.main_inventory.get_amounts())
 
         elif self.player_state == PlayerState.DEFAULT:
             self.finish_turn_button.set_visible(True)
@@ -168,12 +168,15 @@ class Player:
         if end_node not in self.roads:
             self.roads.append(end_node)
 
+
     def get_roads(self):
         return self.roads
+
 
     def add_resources(self, amts):
         Player.bank.TakeResources(amts)
         self.main_inventory.change_amounts(amts)
+
 
     #decrements resources if possible and returns true, else returns false
     def use_resources(self, amts):
@@ -182,12 +185,15 @@ class Player:
             amts[r] = -a
         self.main_inventory.change_amounts(amts)
 
+
     # returns True if the player owns at least a certain set of resources, and False otherwise
     def has_resources(self, amts):
         return self.main_inventory.contains(amts)
 
+
     def get_color(self):
         return self.color
+
 
     # can build functions
     # return True is the player hasn't exceeded the limit per building and has the resources to build, and False otherwise
@@ -196,16 +202,20 @@ class Player:
         return ((self.has_resources(ROAD_COST) and
                 self.road_count < self.MAX_ROADS)) # or self.has_road_building_dev_card
 
+
     def can_build_settlement(self):
         return (self.has_resources(SETTLEMENT_COST) and
                 self.settlement_count < self.MAX_SETTLEMENTS)
+
 
     def can_build_city(self):
         return (self.has_resources(CITY_COST) and
                 self.city_count < self.MAX_CITIES)
 
+
     def can_buy_dev_card(self):
         return self.has_resources(DEV_CARD_COST)
+
 
     # build functions
     # update the player's resources in the event that they build
@@ -219,12 +229,14 @@ class Player:
             return True
         return False
 
+
     def build_settlement(self):
         if self.can_build_settlement():
             self.use_resources(SETTLEMENT_COST)
             self.settlement_count += 1
             return True
         return False
+
 
     def build_city(self):
         if self.can_build_city():
@@ -234,11 +246,13 @@ class Player:
             return True
         return False
 
+
     def buy_dev_card(self):
         if self.can_buy_dev_card():
             self.use_resources(DEV_CARD_COST)
             return True
         return False
+
 
     def BuyDevCard(self):
         if self.UseResources(self.DEV_CARD_COST):
@@ -320,6 +334,7 @@ class Player:
         else:
             self.accept_trade_button.on_draw()
 
+
     def on_mouse_press(self, x, y):
         self.finish_turn_button.on_mouse_press(x, y)
         self.trade_button.on_mouse_press(x, y)
@@ -327,6 +342,9 @@ class Player:
         self.accept_trade_button.on_mouse_press(x, y)
 
         self.main_inventory.on_mouse_press(x, y)
+        self.give_inventory.on_mouse_press(x, y)
+        self.get_inventory.on_mouse_press(x, y)
+
 
     def on_mouse_motion(self, x, y):
         self.finish_turn_button.on_mouse_motion(x, y)
@@ -335,3 +353,5 @@ class Player:
         self.accept_trade_button.on_mouse_motion(x, y)
 
         self.main_inventory.on_mouse_motion(x, y)
+        self.give_inventory.on_mouse_motion(x, y)
+        self.get_inventory.on_mouse_motion(x, y)
