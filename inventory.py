@@ -1,4 +1,5 @@
-from resource import *
+from gameobjects import *
+from resource import ResourceGraphic
 
 class Inventory:
 
@@ -28,12 +29,15 @@ class Inventory:
     # checks if this inventory contains a certain set of resources specified
     # by dictionary in form { Resource.TYPE: integer_amount }
     def contains(self, need):
-        pass
+        for r, req in need.items():
+            if self.inventory[r].amount < req:
+                return False
+        return True
 
     # change amounts based on dictionary in form { Resource.TYPE: integer_amount }
     def change_amounts(self, change):
-        for t, r in self.inventory.items():
-            r.change_amount(change[t])
+        for r, c in change.items():
+            self.inventory[r].change_amount(c)
 
     # change amounts based on adding another inventory to this inventory
     def combine_with_inventory(self, inv2):

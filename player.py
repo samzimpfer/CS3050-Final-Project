@@ -12,11 +12,9 @@ Finally, this class includes functions to handle dev cards and the longest road,
 NOTE: there are still some things to add, but this encompasses the basics
 """
 from gameobjects import *
-
 import arcade
 from button import Button
 from inventory import Inventory
-
 
 class PlayerState(Enum):
     DEFAULT = 1
@@ -36,18 +34,8 @@ class Player:
     MAX_CITIES = 4
     MAX_ROADS = 15
 
-    #testing this out, not even sure if it works
-    # global Bank
-    # global GameDevCards
-
-    # edit from Sam
-    # these are class variables that are shared for each instance of the class
-    # global is not needed here (keeps the bank encapsulated in the Player class, theoretically better for security)
-    # these are being set to the same instance that was created in main.__init__() in that function
-    # reference from inside player functions as Player.bank
     bank = None
     game_dev_cards = None
-    trade_function = None
     finish_turn_function = None
 
     ROAD_COST = {
@@ -77,16 +65,6 @@ class Player:
         # inventory
         self.roads = []  # used for calculating longest road is a list of nodes
         self.color = color
-
-        self.main_inventory = Inventory(True)
-
-        self.resources = {
-            Resource.BRICK:2,
-            Resource.SHEEP:1,
-            Resource.STONE:1,
-            Resource.WHEAT:1,
-            Resource.WOOD:2
-        }
 
         self.knight_card_count = 0
         # add other dev card fields here
@@ -123,16 +101,16 @@ class Player:
 
         # UI elements
         self.show_resources = True # TODO: change this to False when done testing
-        self.sprites = arcade.SpriteList()
-        self.resource_sprites = {
-            Resource.BRICK: arcade.Sprite("sprites/resources/brick.png"),
-            Resource.SHEEP: arcade.Sprite("sprites/resources/sheep.png"),
-            Resource.STONE: arcade.Sprite("sprites/resources/stone.png"),
-            Resource.WHEAT: arcade.Sprite("sprites/resources/wheat.png"),
-            Resource.WOOD: arcade.Sprite("sprites/resources/wood.png")
-        }
-        for s in self.resource_sprites.values():
-            self.sprites.append(s)
+        self.main_inventory = Inventory(False)
+        self.main_inventory.change_amounts({
+            Resource.BRICK: 1,
+            Resource.SHEEP: 1,
+            Resource.STONE: 1,
+            Resource.WHEAT: 1,
+            Resource.WOOD: 1
+        })
+        self.give_inventory = Inventory(True)
+        self.get_inventory = Inventory(True)
 
         self.finish_turn_button = Button("Finish turn", Player.BUTTON_COLOR)
         self.trade_button = Button("Trade", Player.BUTTON_COLOR)
@@ -140,7 +118,6 @@ class Player:
         self.accept_trade_button = Button("Accept", Player.BUTTON_COLOR)
 
         self.finish_turn_button.on_click = Player.finish_turn_function
-        self.trade_button.on_click = Player.trade_function
 
 
     def set_active_player(self, ap):
@@ -180,22 +157,9 @@ class Player:
         self.top = t
 
         usable_width = self.right - self.left - self.color_tab_width
-        self.resource_sprite_width = usable_width / 8
         self.main_inventory.set_position_and_size(usable_width / 2,
-                                                  self.top - self.resource_sprite_width,
+                                                  self.top - usable_width / 8,
                                                   usable_width)
-
-        """self.resource_sprite_width = usable_width / 8
-        spacing = self.resource_sprite_width * 1.5
-
-        x = self.left + self.resource_sprite_width
-        y = self.top - self.resource_sprite_width
-        for res, n in self.resources.items():
-            self.resource_sprites[res].center_x = x
-            self.resource_sprites[res].center_y = y
-            self.resource_sprites[res].width = self.resource_sprite_width
-            self.resource_sprites[res].height = self.resource_sprite_width
-            x += spacing"""
 
         if self.active_player:
             button_height = (self.top - self.bottom) // 8
@@ -219,27 +183,20 @@ class Player:
     def get_roads(self):
         return self.roads
 
-    def add_resources(self, amts: dict):
-        taken_from_bank = Player.bank.TakeResources(amts)
-        for r, val in taken_from_bank.items():
-            self.resources[r] += val
+    def add_resources(self, amts):
+        Player.bank.TakeResources(amts)
+        self.main_inventory.change_amounts(amts)
 
     #decrements resources if possible and returns true, else returns false
-    def use_resources(self, amts: dict):
-        for r, val in amts.items():
-            if self.resources[r] - val < 0:
-                return False
-        for r, val in amts.items():
-            self.resources[r] -= val
+    def use_resources(self, amts):
         Player.bank.ReturnResources(amts)
-        return True
+        for r, a in amts.items():
+            amts[r] = -a
+        self.main_inventory.change_amounts(amts)
 
     # returns True if the player owns at least a certain set of resources, and False otherwise
-    def has_resources(self, amts: dict):
-        for r, req in amts.items():
-            if self.resources[r] < req:
-                return False
-        return True
+    def has_resources(self, amts):
+        return self.main_inventory.contains(amts)
 
     def get_color(self):
         return self.color

@@ -1,14 +1,6 @@
+from gameobjects import *
 import arcade
-from enum import Enum
-
 from button import Button
-
-class Resource(Enum):
-    BRICK = 0
-    SHEEP = 1
-    STONE = 2
-    WHEAT = 3
-    WOOD = 4
 
 class ResourceGraphic:
 

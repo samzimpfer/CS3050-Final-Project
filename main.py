@@ -173,6 +173,7 @@ class GameView(arcade.View):
 
     def on_mouse_motion(self, x, y, dx, dy):
         self.active_player.on_mouse_motion(x, y)
+        self.board.on_mouse_move(x, y, dx, dy)
 
 def main():
     window = arcade.Window(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE)

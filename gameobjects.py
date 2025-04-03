@@ -11,7 +11,6 @@ class GameState(Enum):
     TRADE = 2
     BUILD = 3
 
-# haven't used this yet but whatever
 class Resource(Enum):
     BRICK = 0
     SHEEP = 1
