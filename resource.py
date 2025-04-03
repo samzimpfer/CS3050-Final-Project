@@ -39,33 +39,6 @@ class ResourceGraphic:
         self.on_change = on_change
 
 
-    def set_limit(self, limit):
-        self.limit = limit
-
-
-    def change_amount(self, change):
-        if change < 0:
-            for _ in range(-change):
-                self.decrement()
-        else:
-            for _ in range(change):
-                self.increment()
-
-
-    def increment(self):
-        if self.amount < self.limit:
-            self.amount += 1
-            if self.on_change is not None:
-                self.on_change()
-
-
-    def decrement(self):
-        if self.amount > 0:
-            self.amount -= 1
-            if self.on_change is not None:
-                self.on_change()
-
-
     def set_position_and_size(self, x, y, width):
         self.x = x
         self.y = y
@@ -83,6 +56,37 @@ class ResourceGraphic:
                                                   (self.width / 2), (self.width / 2))
             self.dec_button.set_visible(True)
             self.inc_button.set_visible(True)
+
+
+    # sets a maximum limit for the amount of this resource
+    def set_limit(self, limit):
+        self.limit = limit
+
+
+    # changes the amount of this resource by a specified amount
+    def change_amount(self, change):
+        if change < 0:
+            for _ in range(-change):
+                self.decrement()
+        else:
+            for _ in range(change):
+                self.increment()
+
+
+    # increases the amount of this resource by 1, if under limit
+    def increment(self):
+        if self.amount < self.limit:
+            self.amount += 1
+            if self.on_change is not None:
+                self.on_change()
+
+
+    # decreases the amount of this resource by 1, if over 0
+    def decrement(self):
+        if self.amount > 0:
+            self.amount -= 1
+            if self.on_change is not None:
+                self.on_change()
 
 
     def on_draw(self):

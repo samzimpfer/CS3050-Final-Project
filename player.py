@@ -89,7 +89,8 @@ class Player:
         self.accept_trade_button = Button("Accept")
 
         self.finish_turn_button.on_click = Player.finish_turn_function
-        self.trade_button.on_click = lambda : Player.update_all_player_states_function(PlayerState.OPEN_TRADE)
+        self.trade_button.on_click = \
+            lambda : Player.update_all_player_states_function(PlayerState.OPEN_TRADE)
         self.accept_trade_button.on_click = lambda : Player.accept_trade_function(self)
 
 
@@ -97,7 +98,8 @@ class Player:
         self.active_player = ap
 
 
-    # sets the state of the Player based on the current game state, updates the player's current state
+    # sets the state of the Player based on the current game state, updates the player's
+    # current state
     def set_state(self, game_state):
         if game_state == GameState.ROLL:
             self.player_state = PlayerState.ROLL
@@ -132,17 +134,6 @@ class Player:
             self.finish_turn_button.set_visible(True)
 
 
-    def relay_inventory(self):
-        Player.update_all_player_can_trade_function(self.get_inventory)
-
-
-    def update_can_trade(self, inventory):
-        if self.main_inventory.contains(inventory.get_amounts()):
-            self.accept_trade_button.set_visible(True)
-        else:
-            self.accept_trade_button.set_visible(False)
-
-
     # positions the player representation UI and it's components on the screen
     def set_position_and_size(self, l, r, b, t):
         self.left = l
@@ -170,15 +161,48 @@ class Player:
             self.trading_title_height = (self.top - self.bottom) * 0.1
             self.trading_panel_width = (self.right - self.left) * self.trading_panel_width_ratio
             self.give_inventory.set_position_and_size(self.right + (self.trading_panel_width / 2),
-                                                      self.top - self.trading_title_height - self.trading_panel_width / 8,
+                                                      (self.top - self.trading_title_height
+                                                       - self.trading_panel_width / 8),
                                                       self.trading_panel_width)
             self.get_inventory.set_position_and_size(self.right + (self.trading_panel_width / 2),
-                                                      self.center_y - self.trading_title_height - self.trading_panel_width / 8,
+                                                      (self.center_y - self.trading_title_height
+                                                       - self.trading_panel_width / 8),
                                                       self.trading_panel_width)
         else:
             self.accept_trade_button.set_position_and_size(self.left + (usable_width / 2),
                                                            self.center_y, usable_width * 0.7,
                                                            usable_width * 0.2)
+
+    # while trading, relays the "get" inventory to main class so other players know whether they
+    # have the resources necessary to make the trade
+    def relay_inventory(self):
+        Player.update_all_player_can_trade_function(self.get_inventory)
+
+    # updates the player's own ability to accept a trade
+    def update_can_trade(self, inventory):
+        if self.main_inventory.contains(inventory.get_amounts()):
+            self.accept_trade_button.set_visible(True)
+        else:
+            self.accept_trade_button.set_visible(False)
+
+
+    # adds a set of resources to the player's inventory
+    def add_resources(self, amts):
+        Player.bank.TakeResources(amts)
+        self.main_inventory.change_amounts(amts)
+
+
+    # subtracts a set of resources from the player's inventory
+    def use_resources(self, amts):
+        Player.bank.ReturnResources(amts)
+        for r, a in amts.items():
+            amts[r] = -a
+        self.main_inventory.change_amounts(amts)
+
+
+    # returns True if the player owns at least a certain set of resources, and False otherwise
+    def has_resources(self, amts):
+        return self.main_inventory.contains(amts)
 
 
     def add_road(self,start_node, end_node):
@@ -192,30 +216,13 @@ class Player:
         return self.roads
 
 
-    def add_resources(self, amts):
-        Player.bank.TakeResources(amts)
-        self.main_inventory.change_amounts(amts)
-
-
-    #decrements resources if possible and returns true, else returns false
-    def use_resources(self, amts):
-        Player.bank.ReturnResources(amts)
-        for r, a in amts.items():
-            amts[r] = -a
-        self.main_inventory.change_amounts(amts)
-
-
-    # returns True if the player owns at least a certain set of resources, and False otherwise
-    def has_resources(self, amts):
-        return self.main_inventory.contains(amts)
-
-
     def get_color(self):
         return self.color
 
 
     # can build functions
-    # return True is the player hasn't exceeded the limit per building and has the resources to build, and False otherwise
+    # return True is the player hasn't exceeded the limit per building and has the resources to
+    # build, and False otherwise
     # TODO: override limitations by resource if dev card owned
     def can_build_road(self):
         return ((self.has_resources(ROAD_COST) and
@@ -239,7 +246,8 @@ class Player:
     # build functions
     # update the player's resources in the event that they build
     # return True if build is successful, and False otherwise
-    # NOTE: these functions should not actually build things, they just update the player's resources
+    # NOTE: these functions should not actually build things, they just update the player's
+    # resources
     def build_road(self, start_node, end_node):
         if self.can_build_road():
             self.use_resources(ROAD_COST)
@@ -317,7 +325,8 @@ class Player:
     def on_draw(self):
         # draw player representation
         arcade.draw_lrbt_rectangle_filled(self.left, self.right, self.bottom, self.top, UI_COLOR)
-        arcade.draw_lrbt_rectangle_outline(self.left, self.right, self.bottom, self.top, UI_OUTLINE_COLOR, 6)
+        arcade.draw_lrbt_rectangle_outline(self.left, self.right, self.bottom, self.top,
+                                           UI_OUTLINE_COLOR, 6)
         arcade.draw_lrbt_rectangle_filled(self.right - self.color_tab_width, self.right + 3,
                                           self.bottom + 3, self.top - 3, self.color)
 
@@ -332,11 +341,13 @@ class Player:
             if self.player_state == PlayerState.OPEN_TRADE:
                 arcade.draw_lrbt_rectangle_filled(self.right, self.right + self.trading_panel_width,
                                                   self.bottom, self.top, UI_COLOR)
-                arcade.draw_lrbt_rectangle_outline(self.right, self.right + self.trading_panel_width,
+                arcade.draw_lrbt_rectangle_outline(self.right, (self.right
+                                                                + self.trading_panel_width),
                                                    self.bottom, self.top, UI_OUTLINE_COLOR, 6)
 
                 arcade.draw_lrbt_rectangle_filled(self.right, self.right + self.trading_panel_width,
-                                                  self.top - self.trading_title_height, self.top, UI_OUTLINE_COLOR)
+                                                  self.top - self.trading_title_height, self.top,
+                                                  UI_OUTLINE_COLOR)
                 arcade.draw_lrbt_rectangle_filled(self.right, self.right + self.trading_panel_width,
                                                   self.center_y - self.trading_title_height,
                                                   self.center_y, UI_OUTLINE_COLOR)

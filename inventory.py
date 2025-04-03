@@ -36,22 +36,6 @@ class Inventory:
             x += spacing
 
 
-    # returns dictionary of the amounts of each resource currently held in the inventory
-    def get_amounts(self):
-        amts = {}
-        for t, r in self.inventory.items():
-            amts[t] = r.amount
-        return amts
-
-    # checks if this inventory contains a certain set of resources specified
-    # by dictionary in form { Resource.TYPE: integer_amount }
-    def contains(self, need):
-        for r, req in need.items():
-            if self.inventory[r].amount < req:
-                return False
-        return True
-
-
     # resets limits to "infinity" (100)
     def reset_limits(self):
         self.set_limits({
@@ -79,6 +63,23 @@ class Inventory:
     def combine_with_inventory(self, inv2):
         for t, r in self.inventory.items():
             r.change_amount(inv2[t].amount)
+
+
+    # returns dictionary of the amounts of each resource currently held in the inventory
+    def get_amounts(self):
+        amts = {}
+        for t, r in self.inventory.items():
+            amts[t] = r.amount
+        return amts
+
+
+    # checks if this inventory contains a certain set of resources specified
+    # by dictionary in form { Resource.TYPE: integer_amount }
+    def contains(self, need):
+        for r, req in need.items():
+            if self.inventory[r].amount < req:
+                return False
+        return True
 
 
     def on_draw(self):

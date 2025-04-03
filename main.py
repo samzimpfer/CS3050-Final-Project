@@ -48,9 +48,11 @@ class GameView(arcade.View):
         self.sprites.append(self.logo)
 
         # TODO: take these out
-        # these are here only so board can create a player class for testing. More organized to have them below
+        # these are here only so board can create a player class for testing. More organized to
+        # have them below
         self.bank = Bank()
         self.dev_card_stack = DevCardStack()
+
         Player.bank = self.bank
         Player.dev_card_stack = self.dev_card_stack
         Player.finish_turn_function = self.next_player_turn
@@ -68,7 +70,8 @@ class GameView(arcade.View):
         self.component_width = (WINDOW_WIDTH - self.board.width + self.board.x_spacing) // 2
         self.component_height = self.logo_space + self.margin + self.board.x_spacing
         self.other_player_width = (WINDOW_WIDTH - self.board.width) * 0.4
-        self.other_player_height = (WINDOW_HEIGHT - self.component_height - (self.margin * 5)) // (self.num_players - 1)
+        self.other_player_height = ((WINDOW_HEIGHT - self.component_height - (self.margin * 5))
+                                    // (self.num_players - 1))
         dice_width = (WINDOW_WIDTH - self.board.width - (self.margin * 2)) // 2
         dice_height = dice_width * 0.52
         dice_x = WINDOW_WIDTH - (self.margin * 2) - (dice_width // 2)
@@ -96,12 +99,15 @@ class GameView(arcade.View):
         self.reset()
 
 
+    # resets the game
     def reset(self):
         self.current_state = GameState.ROLL
         self.active_player_index = -1
         self.next_player_turn()
+        # TODO: reset player inventories
 
 
+    # advances to the next player's turn, updating player UIs and updating the game state
     def next_player_turn(self):
         # cycle active player
         self.active_player_index += 1
@@ -123,7 +129,8 @@ class GameView(arcade.View):
                 p = 0
             self.players[p].set_active_player(False)
             self.players[p].set_position_and_size(0, self.other_player_width,
-                                                  self.margin + (i * (self.margin + self.other_player_height)),
+                                                  self.margin + (i * (self.margin
+                                                                      + self.other_player_height)),
                                                   (i + 1) * (self.margin + self.other_player_height))
             p += 1
             i -= 1
@@ -132,11 +139,14 @@ class GameView(arcade.View):
         self.update_player_states()
 
 
+    # updates each player's ability to accept a given trade based on whether they have enough
+    # resources
     def update_players_can_trade(self, inventory):
         for p in self.players:
             p.update_can_trade(inventory)
 
 
+    # swaps resources between the active player and another player
     def execute_trade(self, player2):
         player2.add_resources(self.active_player.give_inventory.get_amounts())
         player2.use_resources(self.active_player.get_inventory.get_amounts())
@@ -147,6 +157,8 @@ class GameView(arcade.View):
         self.update_player_states()
 
 
+    # updates each players state, either based on the current game state, or to a specific
+    # player state if specified
     def update_player_states(self, set_to=None):
         for p in self.players:
             if set_to is None:
@@ -155,6 +167,7 @@ class GameView(arcade.View):
                 p.handle_state(set_to)
 
 
+    # checks for a winner
     def check_winner(self):
         for p in self.players:
             if p.get_points() >= 11:
@@ -169,7 +182,9 @@ class GameView(arcade.View):
 
         # component placeholders TODO: replace these with actual component on_draw() functions
         # bank
-        arcade.draw_lrbt_rectangle_filled(WINDOW_WIDTH - self.component_width, WINDOW_WIDTH, WINDOW_HEIGHT - self.component_height, WINDOW_HEIGHT, arcade.color.GRAY)
+        arcade.draw_lrbt_rectangle_filled(WINDOW_WIDTH - self.component_width, WINDOW_WIDTH,
+                                          WINDOW_HEIGHT - self.component_height, WINDOW_HEIGHT,
+                                          arcade.color.GRAY)
 
         for p in self.players:
             p.on_draw()
