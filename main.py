@@ -9,7 +9,7 @@ python -m arcade.examples.starting_template
 """
 from gameobjects import *
 from board import Board
-from player import Player
+from player import *
 from dice import Dice
 import arcade
 
@@ -54,6 +54,8 @@ class GameView(arcade.View):
         Player.bank = self.bank
         Player.dev_card_stack = self.dev_card_stack
         Player.finish_turn_function = self.next_player_turn
+        Player.update_all_player_states_function = self.update_player_states
+        Player.accept_trade_function = self.execute_trade
 
         board_center_x = WINDOW_WIDTH // 2
         board_center_y = (self.board_space // 2) + self.margin
@@ -129,9 +131,22 @@ class GameView(arcade.View):
         self.update_player_states()
 
 
-    def update_player_states(self):
+    def execute_trade(self, player2):
+        player2.add_resources(self.active_player.give_inventory.get_amounts())
+        player2.use_resources(self.active_player.get_inventory.get_amounts())
+        self.active_player.add_resources(self.active_player.get_inventory.get_amounts())
+        self.active_player.use_resources(self.active_player.give_inventory.get_amounts())
+
+        self.current_state = GameState.BUILD
+        self.update_player_states()
+
+
+    def update_player_states(self, set_to=None):
         for p in self.players:
-            p.set_state(self.current_state)
+            if set_to is None:
+                p.set_state(self.current_state)
+            else:
+                p.handle_state(set_to)
 
 
     def check_winner(self):
@@ -170,7 +185,8 @@ class GameView(arcade.View):
 
 
     def on_mouse_press(self, x, y, button, modifiers):
-        self.active_player.on_mouse_press(x, y)
+        for p in self.players:
+            p.on_mouse_press(x, y)
 
         if self.current_state == GameState.ROLL:
             self.dice.on_mouse_press(x, y)
@@ -182,7 +198,8 @@ class GameView(arcade.View):
 
 
     def on_mouse_motion(self, x, y, dx, dy):
-        self.active_player.on_mouse_motion(x, y)
+        for p in self.players:
+            p.on_mouse_motion(x, y)
         self.board.on_mouse_move(x, y, dx, dy)
 
 

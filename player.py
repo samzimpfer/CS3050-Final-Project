@@ -32,6 +32,10 @@ class Player:
     bank = None
     game_dev_cards = None
     finish_turn_function = None
+    update_all_player_states_function = None
+    accept_trade_function = None
+
+    game_state = None
 
     def __init__(self, color):
         # inventory
@@ -65,8 +69,6 @@ class Player:
         self.center_y = 0
 
         self.active_player = False
-        self.game_state = None
-        self.player_state = PlayerState.DEFAULT
 
         # UI elements
         self.show_resources = True # TODO: change this to False when done testing
@@ -83,11 +85,11 @@ class Player:
 
         self.finish_turn_button = Button("Finish turn")
         self.trade_button = Button("Trade")
-        self.reject_trade_button = Button("Reject")
         self.accept_trade_button = Button("Accept")
 
         self.finish_turn_button.on_click = Player.finish_turn_function
-        self.trade_button.on_click = lambda : self.handle_state(PlayerState.OPEN_TRADE)
+        self.trade_button.on_click = lambda : Player.update_all_player_states_function(PlayerState.OPEN_TRADE)
+        self.accept_trade_button.on_click = lambda : Player.accept_trade_function(self)
 
 
     def set_active_player(self, ap):
@@ -110,7 +112,6 @@ class Player:
     def handle_state(self, set_to=None):
         self.finish_turn_button.set_visible(False)
         self.trade_button.set_visible(False)
-        self.reject_trade_button.set_visible(False)
         self.accept_trade_button.set_visible(False)
 
         if set_to is not None:
@@ -121,7 +122,10 @@ class Player:
             self.finish_turn_button.set_visible(True)
 
         elif self.player_state == PlayerState.OPEN_TRADE:
-            self.give_inventory.set_limits(self.main_inventory.get_amounts())
+            if self.active_player:
+                self.give_inventory.set_limits(self.main_inventory.get_amounts())
+            else:
+                self.accept_trade_button.set_visible(True)
 
         elif self.player_state == PlayerState.DEFAULT:
             self.finish_turn_button.set_visible(True)
@@ -135,6 +139,7 @@ class Player:
         self.top = t
 
         usable_width = self.right - self.left - self.color_tab_width
+        self.center_y = (self.top + self.bottom) / 2
         self.main_inventory.set_position_and_size(usable_width / 2,
                                                   self.top - usable_width / 8,
                                                   usable_width)
@@ -147,11 +152,9 @@ class Player:
             y = self.bottom + (button_height * 0.8)
 
             self.trade_button.set_position_and_size(x1, y, button_width, button_height)
-            self.reject_trade_button.set_position_and_size(x1, y, button_width, button_height)
             self.finish_turn_button.set_position_and_size(x2, y, button_width, button_height)
             self.accept_trade_button.set_position_and_size(x2, y, button_width, button_height)
 
-            self.center_y = (self.top + self.bottom) / 2
             self.trading_title_height = (self.top - self.bottom) * 0.1
             self.trading_panel_width = (self.right - self.left) * self.trading_panel_width_ratio
             self.give_inventory.set_position_and_size(self.right + (self.trading_panel_width / 2),
@@ -160,6 +163,10 @@ class Player:
             self.get_inventory.set_position_and_size(self.right + (self.trading_panel_width / 2),
                                                       self.center_y - self.trading_title_height - self.trading_panel_width / 8,
                                                       self.trading_panel_width)
+        else:
+            self.accept_trade_button.set_position_and_size(self.left + (usable_width / 2),
+                                                           self.center_y, usable_width * 0.7,
+                                                           usable_width * 0.2)
 
 
     def add_road(self,start_node, end_node):
@@ -332,13 +339,13 @@ class Player:
                 self.give_inventory.on_draw()
                 self.get_inventory.on_draw()
         else:
-            self.accept_trade_button.on_draw()
+            if self.player_state == PlayerState.OPEN_TRADE:
+                self.accept_trade_button.on_draw()
 
 
     def on_mouse_press(self, x, y):
         self.finish_turn_button.on_mouse_press(x, y)
         self.trade_button.on_mouse_press(x, y)
-        self.reject_trade_button.on_mouse_press(x, y)
         self.accept_trade_button.on_mouse_press(x, y)
 
         self.main_inventory.on_mouse_press(x, y)
@@ -349,7 +356,6 @@ class Player:
     def on_mouse_motion(self, x, y):
         self.finish_turn_button.on_mouse_motion(x, y)
         self.trade_button.on_mouse_motion(x, y)
-        self.reject_trade_button.on_mouse_motion(x, y)
         self.accept_trade_button.on_mouse_motion(x, y)
 
         self.main_inventory.on_mouse_motion(x, y)
