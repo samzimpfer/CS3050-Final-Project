@@ -32,7 +32,7 @@ class Board:
         self.tile_nodes = []
         self.resources = ['wheat', 'wheat', 'wheat', 'wheat', 'wood', 'wood', 'wood', 'wood', 'sheep', 'sheep', 'sheep', 'sheep', 'ore', 'ore', 'ore', 'brick', 'brick', 'brick', 'desert']
         self.numbers = [5, 2, 6, 8, 10, 9, 3, 3, 11, 4, 8, 4, 6, 5, 10, 11, 12, 9]
-        self.players = [players]#players list
+        self.players = players#players list
 
         # tile attributes
         self.x_spacing = 0 # this is the tile width
