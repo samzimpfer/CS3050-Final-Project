@@ -126,6 +126,12 @@ class GameView(arcade.View):
             i -= 1
 
         self.current_state = GameState.ROLL
+        self.update_player_states()
+
+
+    def update_player_states(self):
+        for p in self.players:
+            p.set_state(self.current_state)
 
 
     def check_winner(self):
@@ -149,9 +155,6 @@ class GameView(arcade.View):
 
 
     def on_update(self, delta_time: float):
-        for p in self.players:
-            p.set_state(self.current_state)
-
         # manage game state
         if self.current_state == GameState.ROLL:
             self.dice.on_update(delta_time)
@@ -160,7 +163,8 @@ class GameView(arcade.View):
                 # handle roll sum
                 # TODO: call board function to distribute resources based on dice roll
                 print(f"Roll: {self.dice.get_sum_and_reset()}") # replace with board.distribute_resources(self.dice.sum)
-                self.current_state = GameState.TRADE # TODO: change to GameState.TRADE once trading is developed
+                self.current_state = GameState.TRADE
+                self.update_player_states()
 
         self.check_winner()
 
@@ -174,6 +178,7 @@ class GameView(arcade.View):
         elif self.current_state == GameState.TRADE or self.current_state == GameState.BUILD:
             if self.board.on_mouse_press(x, y, button, modifiers, self.active_player):
                 self.current_state = GameState.BUILD
+                self.update_player_states()
 
 
     def on_mouse_motion(self, x, y, dx, dy):

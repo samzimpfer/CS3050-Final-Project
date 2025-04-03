@@ -19,9 +19,8 @@ import arcade
 class PlayerState(Enum):
     DEFAULT = 1
     ROLL = 2
-    ABLE_TO_TRADE = 3
-    # OPEN_TRADE = 4
-    TRADING = 4
+    TRADE_OR_BUILD = 3
+    OPEN_TRADE = 4
 
 # TODO: convert all camelcase to snakecase for pep 8 purposes
 class Player:
@@ -60,6 +59,10 @@ class Player:
         self.top = 0
         self.color_tab_width = 30
         self.resource_sprite_width = 0
+        self.trading_panel_width_ratio = 0.7
+        self.trading_panel_width = 0
+        self.trading_title_height = 0
+        self.center_y = 0
 
         self.active_player = False
         self.game_state = None
@@ -84,32 +87,41 @@ class Player:
         self.accept_trade_button = Button("Accept")
 
         self.finish_turn_button.on_click = Player.finish_turn_function
+        self.trade_button.on_click = lambda : self.handle_state(PlayerState.OPEN_TRADE)
 
 
     def set_active_player(self, ap):
         self.active_player = ap
 
 
+    # sets the state of the Player based on the current game state, updates the player's current state
     def set_state(self, game_state):
         if game_state == GameState.ROLL:
             self.player_state = PlayerState.ROLL
         elif game_state == GameState.TRADE:
-            self.player_state = PlayerState.ABLE_TO_TRADE
+            self.player_state = PlayerState.TRADE_OR_BUILD
         elif game_state == GameState.BUILD:
             self.player_state = PlayerState.DEFAULT
 
+        self.handle_state()
+
+
+    # sets properties of the player based on its current state
+    def handle_state(self, set_to=None):
         self.finish_turn_button.set_visible(False)
         self.trade_button.set_visible(False)
         self.reject_trade_button.set_visible(False)
         self.accept_trade_button.set_visible(False)
 
-        if self.player_state == PlayerState.ABLE_TO_TRADE:
+        if set_to is not None:
+            self.player_state = set_to
+
+        if self.player_state == PlayerState.TRADE_OR_BUILD:
             self.trade_button.set_visible(True)
             self.finish_turn_button.set_visible(True)
 
-        elif self.player_state == PlayerState.TRADING:
-            self.reject_trade_button.set_visible(True)
-            self.accept_trade_button.set_visible(True)
+        elif self.player_state == PlayerState.OPEN_TRADE:
+            pass
 
         elif self.player_state == PlayerState.DEFAULT:
             self.finish_turn_button.set_visible(True)
@@ -138,6 +150,16 @@ class Player:
             self.reject_trade_button.set_position_and_size(x1, y, button_width, button_height)
             self.finish_turn_button.set_position_and_size(x2, y, button_width, button_height)
             self.accept_trade_button.set_position_and_size(x2, y, button_width, button_height)
+
+            self.center_y = (self.top + self.bottom) / 2
+            self.trading_title_height = (self.top - self.bottom) * 0.1
+            self.trading_panel_width = (self.right - self.left) * self.trading_panel_width_ratio
+            self.give_inventory.set_position_and_size(self.right + (self.trading_panel_width / 2),
+                                                      self.top - self.trading_title_height - self.trading_panel_width / 8,
+                                                      self.trading_panel_width)
+            self.get_inventory.set_position_and_size(self.right + (self.trading_panel_width / 2),
+                                                      self.center_y - self.trading_title_height - self.trading_panel_width / 8,
+                                                      self.trading_panel_width)
 
 
     def add_road(self,start_node, end_node):
@@ -273,10 +295,30 @@ class Player:
         if self.active_player:
             self.finish_turn_button.on_draw()
             self.trade_button.on_draw()
-            self.reject_trade_button.on_draw()
-            self.accept_trade_button.on_draw()
+
+            if self.player_state == PlayerState.OPEN_TRADE:
+                arcade.draw_lrbt_rectangle_filled(self.right, self.right + self.trading_panel_width,
+                                                  self.bottom, self.top, UI_COLOR)
+                arcade.draw_lrbt_rectangle_outline(self.right, self.right + self.trading_panel_width,
+                                                   self.bottom, self.top, UI_OUTLINE_COLOR, 6)
+
+                arcade.draw_lrbt_rectangle_filled(self.right, self.right + self.trading_panel_width,
+                                                  self.top - self.trading_title_height, self.top, UI_OUTLINE_COLOR)
+                arcade.draw_lrbt_rectangle_filled(self.right, self.right + self.trading_panel_width,
+                                                  self.center_y - self.trading_title_height,
+                                                  self.center_y, UI_OUTLINE_COLOR)
+
+                arcade.draw_text("Give", self.right + (self.trading_panel_width / 2),
+                                 self.top - (self.trading_title_height / 2), arcade.color.BLACK,
+                                 self.trading_title_height / 2, anchor_x="center", anchor_y="center")
+                arcade.draw_text("Get", self.right + (self.trading_panel_width / 2),
+                                 self.center_y - (self.trading_title_height / 2), arcade.color.BLACK,
+                                 self.trading_title_height / 2, anchor_x="center", anchor_y="center")
+
+                self.give_inventory.on_draw()
+                self.get_inventory.on_draw()
         else:
-            pass
+            self.accept_trade_button.on_draw()
 
     def on_mouse_press(self, x, y):
         self.finish_turn_button.on_mouse_press(x, y)
