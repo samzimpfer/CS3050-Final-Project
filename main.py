@@ -13,7 +13,6 @@ from player import Player
 from dice import Dice
 import arcade
 
-# test
 
 screen_width, screen_height = arcade.get_display_size()
 WINDOW_WIDTH = screen_width - 100
