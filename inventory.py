@@ -3,7 +3,7 @@ from resource import ResourceGraphic
 
 class Inventory:
 
-    def __init__(self, show_buttons):
+    def __init__(self, show_buttons, on_change=None):
         self.show_buttons = show_buttons
 
         self.x = 0
@@ -11,19 +11,19 @@ class Inventory:
         self.width = 0
 
         self.inventory = {
-            Resource.BRICK: ResourceGraphic(Resource.BRICK, show_buttons),
-            Resource.SHEEP: ResourceGraphic(Resource.SHEEP, show_buttons),
-            Resource.STONE: ResourceGraphic(Resource.STONE, show_buttons),
-            Resource.WHEAT: ResourceGraphic(Resource.WHEAT, show_buttons),
-            Resource.WOOD: ResourceGraphic(Resource.WOOD, show_buttons)
+            Resource.BRICK: ResourceGraphic(Resource.BRICK, show_buttons, on_change),
+            Resource.SHEEP: ResourceGraphic(Resource.SHEEP, show_buttons, on_change),
+            Resource.STONE: ResourceGraphic(Resource.STONE, show_buttons, on_change),
+            Resource.WHEAT: ResourceGraphic(Resource.WHEAT, show_buttons, on_change),
+            Resource.WOOD: ResourceGraphic(Resource.WOOD, show_buttons, on_change)
         }
 
         self.limits = {
-            Resource.BRICK: ResourceGraphic(Resource.BRICK, show_buttons),
-            Resource.SHEEP: ResourceGraphic(Resource.SHEEP, show_buttons),
-            Resource.STONE: ResourceGraphic(Resource.STONE, show_buttons),
-            Resource.WHEAT: ResourceGraphic(Resource.WHEAT, show_buttons),
-            Resource.WOOD: ResourceGraphic(Resource.WOOD, show_buttons)
+            Resource.BRICK: ResourceGraphic(Resource.BRICK, show_buttons, on_change),
+            Resource.SHEEP: ResourceGraphic(Resource.SHEEP, show_buttons, on_change),
+            Resource.STONE: ResourceGraphic(Resource.STONE, show_buttons, on_change),
+            Resource.WHEAT: ResourceGraphic(Resource.WHEAT, show_buttons, on_change),
+            Resource.WOOD: ResourceGraphic(Resource.WOOD, show_buttons, on_change)
         }
 
 

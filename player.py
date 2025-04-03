@@ -33,6 +33,7 @@ class Player:
     game_dev_cards = None
     finish_turn_function = None
     update_all_player_states_function = None
+    update_all_player_can_trade_function = None
     accept_trade_function = None
 
     game_state = None
@@ -81,7 +82,7 @@ class Player:
             Resource.WOOD: 1
         })
         self.give_inventory = Inventory(True)
-        self.get_inventory = Inventory(True)
+        self.get_inventory = Inventory(True, self.relay_inventory)
 
         self.finish_turn_button = Button("Finish turn")
         self.trade_button = Button("Trade")
@@ -129,6 +130,17 @@ class Player:
 
         elif self.player_state == PlayerState.DEFAULT:
             self.finish_turn_button.set_visible(True)
+
+
+    def relay_inventory(self):
+        Player.update_all_player_can_trade_function(self.get_inventory)
+
+
+    def update_can_trade(self, inventory):
+        if self.main_inventory.contains(inventory.get_amounts()):
+            self.accept_trade_button.set_visible(True)
+        else:
+            self.accept_trade_button.set_visible(False)
 
 
     # positions the player representation UI and it's components on the screen

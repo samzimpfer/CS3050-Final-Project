@@ -4,7 +4,7 @@ import arcade
 
 class ResourceGraphic:
 
-    def __init__(self, resource, show_buttons):
+    def __init__(self, resource, show_buttons, on_change):
         self.resource_type = resource
         self.amount = 0
         self.limit = 100
@@ -36,6 +36,7 @@ class ResourceGraphic:
             self.inc_button = Button("+")
             self.dec_button.on_click = self.decrement
             self.inc_button.on_click = self.increment
+        self.on_change = on_change
 
 
     def set_limit(self, limit):
@@ -54,11 +55,15 @@ class ResourceGraphic:
     def increment(self):
         if self.amount < self.limit:
             self.amount += 1
+            if self.on_change is not None:
+                self.on_change()
 
 
     def decrement(self):
         if self.amount > 0:
             self.amount -= 1
+            if self.on_change is not None:
+                self.on_change()
 
 
     def set_position_and_size(self, x, y, width):

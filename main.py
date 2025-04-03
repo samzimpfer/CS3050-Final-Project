@@ -55,6 +55,7 @@ class GameView(arcade.View):
         Player.dev_card_stack = self.dev_card_stack
         Player.finish_turn_function = self.next_player_turn
         Player.update_all_player_states_function = self.update_player_states
+        Player.update_all_player_can_trade_function = self.update_players_can_trade
         Player.accept_trade_function = self.execute_trade
 
         board_center_x = WINDOW_WIDTH // 2
@@ -129,6 +130,11 @@ class GameView(arcade.View):
 
         self.current_state = GameState.ROLL
         self.update_player_states()
+
+
+    def update_players_can_trade(self, inventory):
+        for p in self.players:
+            p.update_can_trade(inventory)
 
 
     def execute_trade(self, player2):
