@@ -1,6 +1,6 @@
 from gameobjects import *
-import arcade
 from button import Button
+import arcade
 
 class ResourceGraphic:
 
@@ -31,10 +31,11 @@ class ResourceGraphic:
         self.dec_button = None
         self.inc_button = None
         if show_buttons:
-            self.dec_button = Button("-", (40, 80, 140))
-            self.inc_button = Button("+", (40, 80, 140))
+            self.dec_button = Button("-")
+            self.inc_button = Button("+")
             self.dec_button.on_click = self.decrement
             self.inc_button.on_click = self.increment
+
 
     def change_amount(self, change):
         if change < 0:
@@ -43,12 +44,15 @@ class ResourceGraphic:
         else:
             self.amount += change
 
+
     def increment(self):
         self.amount += 1
+
 
     def decrement(self):
         if self.amount > 0:
             self.amount -= 1
+
 
     def set_position_and_size(self, x, y, width):
         self.x = x
@@ -68,6 +72,7 @@ class ResourceGraphic:
             self.dec_button.set_visible(True)
             self.inc_button.set_visible(True)
 
+
     def on_draw(self):
         self.sprites.draw()
 
@@ -79,10 +84,12 @@ class ResourceGraphic:
             self.dec_button.on_draw()
             self.inc_button.on_draw()
 
+
     def on_mouse_press(self, x, y):
         if self.show_buttons:
             self.dec_button.on_mouse_press(x, y)
             self.inc_button.on_mouse_press(x, y)
+
 
     def on_mouse_motion(self, x, y):
         if self.show_buttons:

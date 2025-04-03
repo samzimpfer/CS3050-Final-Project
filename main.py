@@ -7,14 +7,12 @@ template.
 If Python and Arcade are installed, this example can be run from the command line with:
 python -m arcade.examples.starting_template
 """
-import arcade
-from enum import Enum
-
 from gameobjects import *
-
 from board import Board
 from player import Player
 from dice import Dice
+import arcade
+
 
 screen_width, screen_height = arcade.get_display_size()
 WINDOW_WIDTH = screen_width - 100
@@ -94,10 +92,12 @@ class GameView(arcade.View):
         # start game
         self.reset()
 
+
     def reset(self):
         self.current_state = GameState.ROLL
         self.active_player_index = -1
         self.next_player_turn()
+
 
     def next_player_turn(self):
         # cycle active player
@@ -127,10 +127,12 @@ class GameView(arcade.View):
 
         self.current_state = GameState.ROLL
 
+
     def check_winner(self):
         for p in self.players:
             if p.get_points() >= 11:
                 print(f"{p.get_color()} player wins!")
+
 
     def on_draw(self):
         self.clear()
@@ -144,6 +146,7 @@ class GameView(arcade.View):
 
         for p in self.players:
             p.on_draw()
+
 
     def on_update(self, delta_time: float):
         for p in self.players:
@@ -161,6 +164,7 @@ class GameView(arcade.View):
 
         self.check_winner()
 
+
     def on_mouse_press(self, x, y, button, modifiers):
         self.active_player.on_mouse_press(x, y)
 
@@ -171,15 +175,18 @@ class GameView(arcade.View):
             if self.board.on_mouse_press(x, y, button, modifiers, self.active_player):
                 self.current_state = GameState.BUILD
 
+
     def on_mouse_motion(self, x, y, dx, dy):
         self.active_player.on_mouse_motion(x, y)
         self.board.on_mouse_move(x, y, dx, dy)
+
 
 def main():
     window = arcade.Window(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE)
     game = GameView()
     window.show_view(game)
     arcade.run()
+
 
 if __name__ == "__main__":
     main()

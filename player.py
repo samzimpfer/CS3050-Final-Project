@@ -12,9 +12,9 @@ Finally, this class includes functions to handle dev cards and the longest road,
 NOTE: there are still some things to add, but this encompasses the basics
 """
 from gameobjects import *
-import arcade
 from button import Button
 from inventory import Inventory
+import arcade
 
 class PlayerState(Enum):
     DEFAULT = 1
@@ -26,10 +26,6 @@ class PlayerState(Enum):
 # TODO: convert all camelcase to snakecase for pep 8 purposes
 class Player:
 
-    UI_COLOR = (75, 110, 150)
-    UI_OUTLINE_COLOR = (40, 80, 140)
-    BUTTON_COLOR = (40, 80, 140)
-
     MAX_SETTLEMENTS = 5
     MAX_CITIES = 4
     MAX_ROADS = 15
@@ -37,29 +33,6 @@ class Player:
     bank = None
     game_dev_cards = None
     finish_turn_function = None
-
-    ROAD_COST = {
-        Resource.BRICK:1,
-        Resource.WOOD:1
-    }
-
-    SETTLEMENT_COST = {
-        Resource.BRICK:1,
-        Resource.SHEEP:1,
-        Resource.WHEAT:1,
-        Resource.WOOD:1
-    }
-
-    CITY_COST = {
-        Resource.WHEAT:2,
-        Resource.STONE:3
-    }
-
-    DEV_CARD_COST = {
-        Resource.WHEAT:1,
-        Resource.STONE:1,
-        Resource.SHEEP:1,
-    }
 
     def __init__(self, color):
         # inventory
@@ -79,13 +52,6 @@ class Player:
         self.has_largest_army = False
 
         self.victory_points = 0
-
-        #adding these so player class can consult bank and dev cards
-        #TODO: right now these are separate instances for each player.  We will need to create bank instance in main
-        # and pass the same instance to each player, or create a global bank instance.
-        # easily done in main gameBank = Bank(), then in player global gameBank
-        #self.bank = Bank()
-        #self.devCardStack = DevCardStack()
 
         # UI positional fields
         self.left = 0
@@ -112,10 +78,10 @@ class Player:
         self.give_inventory = Inventory(True)
         self.get_inventory = Inventory(True)
 
-        self.finish_turn_button = Button("Finish turn", Player.BUTTON_COLOR)
-        self.trade_button = Button("Trade", Player.BUTTON_COLOR)
-        self.reject_trade_button = Button("Reject", Player.BUTTON_COLOR)
-        self.accept_trade_button = Button("Accept", Player.BUTTON_COLOR)
+        self.finish_turn_button = Button("Finish turn")
+        self.trade_button = Button("Trade")
+        self.reject_trade_button = Button("Reject")
+        self.accept_trade_button = Button("Accept")
 
         self.finish_turn_button.on_click = Player.finish_turn_function
 
@@ -205,19 +171,19 @@ class Player:
     # return True is the player hasn't exceeded the limit per building and has the resources to build, and False otherwise
     # TODO: override limitations by resource if dev card owned
     def can_build_road(self):
-        return ((self.has_resources(self.ROAD_COST) and
+        return ((self.has_resources(ROAD_COST) and
                 self.road_count < self.MAX_ROADS)) # or self.has_road_building_dev_card
 
     def can_build_settlement(self):
-        return (self.has_resources(self.SETTLEMENT_COST) and
+        return (self.has_resources(SETTLEMENT_COST) and
                 self.settlement_count < self.MAX_SETTLEMENTS)
 
     def can_build_city(self):
-        return (self.has_resources(self.CITY_COST) and
+        return (self.has_resources(CITY_COST) and
                 self.city_count < self.MAX_CITIES)
 
     def can_buy_dev_card(self):
-        return self.has_resources(self.DEV_CARD_COST)
+        return self.has_resources(DEV_CARD_COST)
 
     # build functions
     # update the player's resources in the event that they build
@@ -225,7 +191,7 @@ class Player:
     # NOTE: these functions should not actually build things, they just update the player's resources
     def build_road(self, start_node, end_node):
         if self.can_build_road():
-            self.use_resources(self.ROAD_COST)
+            self.use_resources(ROAD_COST)
             self.road_count += 1
             self.add_road(start_node, end_node)
             return True
@@ -233,14 +199,14 @@ class Player:
 
     def build_settlement(self):
         if self.can_build_settlement():
-            self.use_resources(self.SETTLEMENT_COST)
+            self.use_resources(SETTLEMENT_COST)
             self.settlement_count += 1
             return True
         return False
 
     def build_city(self):
         if self.can_build_city():
-            self.use_resources(self.CITY_COST)
+            self.use_resources(CITY_COST)
             self.city_count += 1
             self.settlement_count -= 1
             return True
@@ -248,7 +214,7 @@ class Player:
 
     def buy_dev_card(self):
         if self.can_buy_dev_card():
-            self.use_resources(self.DEV_CARD_COST)
+            self.use_resources(DEV_CARD_COST)
             return True
         return False
 
@@ -295,23 +261,14 @@ class Player:
 
     def on_draw(self):
         # draw player representation
-        arcade.draw_lrbt_rectangle_filled(self.left, self.right, self.bottom, self.top,
-                                          Player.UI_COLOR)
-        arcade.draw_lrbt_rectangle_outline(self.left, self.right, self.bottom, self.top,
-                                           Player.UI_OUTLINE_COLOR, 6)
+        arcade.draw_lrbt_rectangle_filled(self.left, self.right, self.bottom, self.top, UI_COLOR)
+        arcade.draw_lrbt_rectangle_outline(self.left, self.right, self.bottom, self.top, UI_OUTLINE_COLOR, 6)
         arcade.draw_lrbt_rectangle_filled(self.right - self.color_tab_width, self.right + 3,
                                           self.bottom + 3, self.top - 3, self.color)
 
         # draw resources
         if self.show_resources:
             self.main_inventory.on_draw()
-            """for res, n in self.resources.items():
-                arcade.draw_text(f"x{n}", self.resource_sprites[res].center_x,
-                                 self.resource_sprites[res].center_y - self.resource_sprite_width,
-                                 arcade.color.BLACK, font_size=(self.resource_sprite_width / 3),
-                                 anchor_x="center")
-
-            self.sprites.draw()"""
 
         if self.active_player:
             self.finish_turn_button.on_draw()
