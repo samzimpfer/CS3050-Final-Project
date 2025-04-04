@@ -239,20 +239,29 @@ class Board:
 
         self.reset_board()
 
+    # main function that calls the sub functions on all players
+    # TODO: Fix the path_length function recursion is not work right 
     def find_longest_road(self):
-      for player in self.players:
-          self.find_segment_lengths(self.find_nodes_of_intrest(player), player.get_roads())
-      pass
+        print("longest road")
+        print(self.players)
+        for player in self.players:
+            self.find_segment_lengths(self.find_nodes_of_intrest(player), player.get_roads())
+        pass
 
+    #finds all nodes that are either an endpoint or an intersection
     def find_nodes_of_intrest(self, player):
         nodes_of_intrest = []
         roads = player.get_roads()
+        print(roads)
         for node in roads:
             count = len([connection for connection in node.get_connections() if connection in roads])
+            # if a node does not have two road connections then it is either an endpoint or an intersection
             if count != 2:
                 nodes_of_intrest.append(node)
+        print(f'nodes_of_intrest: {nodes_of_intrest}')
         return nodes_of_intrest
     
+    # finds the lengths of all segments which is just a path between two nodes_of_intrest
     def find_segment_lengths(self, nodes_of_importance, roads):
         checked_segments = []
         for node in nodes_of_importance:
@@ -263,6 +272,8 @@ class Board:
                 print("-----")
                 checked_segments.append([path[0],len(path),path[-1]])
 
+    # finds the length of a path given a direction(the next param) until the next node_of_intrest
+    # still WIP
     def path_length(self, start, next, nodes_of_importance, roads, path=[]):
         if next in nodes_of_importance:
             path.append(next)
@@ -276,7 +287,8 @@ class Board:
                     new_next = node
             print(len(path))
             return self.path_length(next, new_next, nodes_of_importance, roads, path=path) 
-        
+    
+    # returns the edge with the matching start_node and end_node
     def get_edge(self, start_node, end_node):
         for edge in self.edges:
             if edge.get_start_node() == start_node or edge.get_start_node() == end_node:
@@ -295,13 +307,18 @@ class Board:
 
     # calls on_mouse_press on all objects that are on the board and interactable
     def on_mouse_press(self, x, y, button, modifiers, player):
+        did_build = False
         for row in self.nodes:
             for node in row:
-                node.on_mouse_press(x, y, button, modifiers, player, self)
+                if node.on_mouse_press(x, y, button, modifiers, player, self):
+                    did_build = True
 
         for edge in self.edges:
-            edge.on_mouse_press(x, y, button, modifiers, self.players[0])
+            if edge.on_mouse_press(x, y, button, modifiers, player):
+                did_build = True
         self.find_longest_road()
+
+        return did_build
 
     # calls on_mouse_motion on all objects that should have a hover effect
     def on_mouse_move(self, x, y, dx, dy):

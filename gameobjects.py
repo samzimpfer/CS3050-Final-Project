@@ -2,6 +2,11 @@ from enum import Enum
 import random
 from dataclasses import *
 
+class GameState(Enum):
+    SETUP = 0
+    ROLL = 1
+    TRADE = 2
+    BUILD = 3
 
 # haven't used this yet but whatever
 class Resource(Enum):

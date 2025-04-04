@@ -74,10 +74,12 @@ class Node:
         
     # builds a town 
     def build_settlement(self, player, board):
-        if self.has_space() and self.is_touching_road(board, player) and player.canBuildSettlement():
+        if self.has_space() and self.is_touching_road(board, player) and player.can_build_settlement():
             self.color = player.get_color()
             self.building = True
-            player.buildSettlement()
+            player.build_settlement()
+            return True
+        return False
 
     
     def build_city(self,player):
@@ -96,9 +98,12 @@ class Node:
     
     # checks if there was a mouse click on the node
     def on_mouse_press(self, x, y, button, modifiers, player, board):
+        return_flag = False
         if self.is_touching(x, y) and button == arcade.MOUSE_BUTTON_LEFT:
-            self.build_settlement(player, board)
-            self.build_city(player)
+            return_flag = self.build_settlement(player, board)
+            if self.build_city(player):
+                return_flag = True
+        return return_flag
 
     # checks if the mouse has stopped on the node after moving
     def on_mouse_motion(self, x, y):
