@@ -237,9 +237,31 @@ class Board:
     def find_longest_road(self):
         print("longest road")
         print(self.players)
+
         for player in self.players:
-            self.find_segment_lengths(self.find_nodes_of_intrest(player), player.get_roads())
-        pass
+            nodes_of_interest = self.find_nodes_of_intrest(player)
+            segments = self.find_segment_lengths(nodes_of_interest, player.get_roads())
+            sum = 0
+            done = False
+            endpoints = [self.find_endpoints(player)]
+            for segment in segments:
+                if segment[0] in endpoints:
+                    while not done:
+                        connection = segment[2]
+
+    #connect segments starting from a seed node
+    def construct_longest_path(self, seed, segments):
+
+
+    def find_endpoints(self, player):
+        endpoints = []
+        roads = player.get_roads()
+        for node in roads:
+            count = len([connection for connection in node.get_connections() if connection in roads])
+            # if a node does not have two road connections then it is either an endpoint or an intersection
+            if count == 1:
+                endpoints.append(node)
+        return endpoints
 
     #finds all nodes that are either an endpoint or an intersection
     def find_nodes_of_intrest(self, player):
@@ -259,27 +281,32 @@ class Board:
         checked_segments = []
         for node in nodes_of_importance:
             connections = [connection for connection in node.get_connections() if connection in roads]
+            print(f'connections: {connections}')
             for connection in connections:
                 print("-----")
                 path = self.path_length(node, connection, nodes_of_importance, roads)
                 print("-----")
                 checked_segments.append([path[0],len(path),path[-1]])
+        return checked_segments
 
     # finds the length of a path given a direction(the next param) until the next node_of_intrest
     # still WIP
-    def path_length(self, start, next, nodes_of_importance, roads, path=[]):
+    def path_length(self, start, next, nodes_of_importance, roads, path=None):
+        if path is None:
+            path = []
         if next in nodes_of_importance:
             path.append(next)
             print(len(path))
+            print(path)
             return path
         else:
-            path.append(start)
+            path.append(next)
             new_next = None
             for node in next.get_connections():
                 if node in roads and node != start:
                     new_next = node
             print(len(path))
-            return self.path_length(next, new_next, nodes_of_importance, roads, path=path) 
+            return self.path_length(next, new_next, nodes_of_importance, roads, path)
     
     # returns the edge with the matching start_node and end_node
     def get_edge(self, start_node, end_node):
