@@ -171,11 +171,22 @@ class GameView(arcade.View):
         self.active_player.on_mouse_press(self.mouse_sprite)
 
         if self.current_state == GameState.ROLL:
-            self.dice.on_mouse_press(self.mouse_sprite)
+            dice_rolled = self.dice.on_mouse_press(self.mouse_sprite)
+            if dice_rolled and self.dice.get_sum_and_reset() == 7:
+                self.current_state = GameState.ROBBER
+            
 
         elif self.current_state == GameState.TRADE or self.current_state == GameState.BUILD:
             if self.board.on_mouse_press(x, y, button, modifiers, self.active_player):
                 self.current_state = GameState.BUILD
+
+
+        elif self.current_state == GameState.ROBBER:
+            did_rob = self.board.on_mouse_press(x, y, button, modifiers, self.active_player, can_build=False, can_rob=True)
+            if did_rob:
+                self.current_state = GameState.TRADE
+            
+                
 
     def on_mouse_motion(self, x, y, dx, dy):
         self.mouse_sprite.center_x = x

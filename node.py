@@ -28,7 +28,7 @@ class Node:
     
     def get_y(self):
         return self.y
-
+    
     def add_connection(self, n):
         self.connections.append(n)
 
@@ -46,6 +46,9 @@ class Node:
     
     def get_building(self):
         return self.building
+    
+    def is_city(self):
+        return self.city
     
     # checks if there are any settlements within a road length from the node
     def has_space(self):
@@ -76,7 +79,7 @@ class Node:
     def build_settlement(self, player, board):
         if self.has_space() and self.is_touching_road(board, player) and player.can_build_settlement():
             self.color = player.get_color()
-            self.building = True
+            self.building = player
             player.build_settlement()
             return True
         return False
