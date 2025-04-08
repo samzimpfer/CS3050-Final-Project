@@ -100,7 +100,7 @@ class Node:
         return False
     
     # checks if there was a mouse click on the node
-    def on_mouse_press(self, x, y, button, modifiers, player, board):
+    def on_mouse_press(self, x, y, button, player, board):
         return_flag = False
         if self.is_touching(x, y) and button == arcade.MOUSE_BUTTON_LEFT:
             return_flag = self.build_settlement(player, board)

@@ -55,12 +55,12 @@ class Edge:
             return True
         return False
     
-    def on_mouse_press(self, x, y, button, modifiers, player):
+    def on_mouse_press(self, x, y, button, player):
         if self.is_touching(x, y) and button == arcade.MOUSE_BUTTON_LEFT:
             return self.build_road(player)
         return False
 
-    def on_mouse_motion(self, x, y, dx, dy):
+    def on_mouse_motion(self, x, y):
         if self.is_touching(x, y) and self.width == 6:
             self.width += self.width * 0.5
         elif not self.is_touching(x, y):

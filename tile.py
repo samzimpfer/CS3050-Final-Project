@@ -56,6 +56,25 @@ class Tile:
 
     def get_number(self):
         return self.number
+    
+    def is_touching(self, x, y):
+        if (x >= self.x - self.size and x <= self.x + self.size and 
+            y >= self.y - self.size and y <= self.y + self.size):
+            return True
+        return False
+    
+    # checks if there was a mouse click on the node
+    def on_mouse_press(self, x, y, button):
+        return_flag = None
+        if self.is_touching(x, y) and button == arcade.MOUSE_BUTTON_LEFT:
+            if not self.robber:
+                self.robber = True
+                return_flag = self
+        return return_flag
 
     def draw(self):
+        if self.robber:
+            self.color = arcade.color.GRAY
+        else:
+            self.color = arcade.color.WHITE_SMOKE
         arcade.draw_circle_filled(self.x, self.y, self.size, self.color)

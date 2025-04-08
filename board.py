@@ -32,6 +32,7 @@ class Board:
         self.tile_nodes = []
         self.resources = ['wheat', 'wheat', 'wheat', 'wheat', 'wood', 'wood', 'wood', 'wood', 'sheep', 'sheep', 'sheep', 'sheep', 'ore', 'ore', 'ore', 'brick', 'brick', 'brick', 'desert']
         self.numbers = [5, 2, 6, 8, 10, 9, 3, 3, 11, 4, 8, 4, 6, 5, 10, 11, 12, 9]
+        self.robber_tile = None # the tile that has the robber on it
         
 
         # tile attributes
@@ -333,31 +334,31 @@ class Board:
         self.set_size(h / Board.BOARD_SCALE_FACTOR, h)
 
     # calls on_mouse_press on all objects that are on the board and interactable
-    def on_mouse_press(self, x, y, button, modifiers, player, can_build=True, can_rob=False):
+    def on_mouse_press(self, x, y, button, player, can_build=True, can_rob=False):
         did_build = False
         if can_build:
             for row in self.nodes:
                 for node in row:
-                    if node.on_mouse_press(x, y, button, modifiers, player, self):
+                    if node.on_mouse_press(x, y, button, player, self):
                         did_build = True
 
             for edge in self.edges:
-                if edge.on_mouse_press(x, y, button, modifiers, player):
+                if edge.on_mouse_press(x, y, button):
                     did_build = True
-        self.find_longest_road()
 
         if can_rob:
             for tile in self.tile_nodes:
-                if not tile.has_robber():
-                    if tile.on_mouse_press(x, y, button, modifiers, player):
-                        tile.set_robber(True)
-                        tile.set_color(arcade.color.GRAY)
+                robber_location = tile.on_mouse_press(x, y, button)
+                if robber_location:
+                    if self.robber_tile:
+                        self.robber_tile.set_robber(False)
+                    self.robber_tile = robber_location
         return did_build
 
     # calls on_mouse_motion on all objects that should have a hover effect
-    def on_mouse_move(self, x, y, dx, dy):
+    def on_mouse_move(self, x, y):
         for edge in self.edges:
-            edge.on_mouse_motion(x, y, dx, dy)
+            edge.on_mouse_motion(x, y)
         for row in self.nodes:
             for node in row:
                 node.on_mouse_motion(x,y)

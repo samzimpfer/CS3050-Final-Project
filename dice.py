@@ -90,3 +90,5 @@ class Dice:
     def on_mouse_press(self, mouse_sprite):
         if arcade.check_for_collision(mouse_sprite, self.box):
             self.roll()
+            return True
+        return False

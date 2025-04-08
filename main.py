@@ -159,8 +159,13 @@ class GameView(arcade.View):
             if self.dice.ready:
                 # handle roll sum
                 # TODO: call board function to distribute resources based on dice roll
-                print(f"Roll: {self.dice.get_sum_and_reset()}") # replace with board.distribute_resources(self.dice.sum)
-                self.current_state = GameState.TRADE # TODO: change to GameState.TRADE once trading is developed
+                roll_value = self.dice.get_sum_and_reset()
+                print(f"Roll: {roll_value}") # replace with board.distribute_resources(self.dice.sum)
+                if roll_value == 7:
+                    self.current_state = GameState.ROBBER
+                else:
+                    self.board.allocate_resources(roll_value)
+                    self.current_state = GameState.TRADE # TODO: change to GameState.TRADE once trading is developed
 
         self.check_winner()
 
@@ -171,18 +176,15 @@ class GameView(arcade.View):
         self.active_player.on_mouse_press(self.mouse_sprite)
 
         if self.current_state == GameState.ROLL:
-            dice_rolled = self.dice.on_mouse_press(self.mouse_sprite)
-            if dice_rolled and self.dice.get_sum_and_reset() == 7:
-                self.current_state = GameState.ROBBER
+            self.dice.on_mouse_press(self.mouse_sprite)
             
-
         elif self.current_state == GameState.TRADE or self.current_state == GameState.BUILD:
-            if self.board.on_mouse_press(x, y, button, modifiers, self.active_player):
+            if self.board.on_mouse_press(x, y, button, self.active_player):
                 self.current_state = GameState.BUILD
 
 
         elif self.current_state == GameState.ROBBER:
-            did_rob = self.board.on_mouse_press(x, y, button, modifiers, self.active_player, can_build=False, can_rob=True)
+            did_rob = self.board.on_mouse_press(x, y, button, self.active_player, can_build=False, can_rob=True)
             if did_rob:
                 self.current_state = GameState.TRADE
             
@@ -192,7 +194,7 @@ class GameView(arcade.View):
         self.mouse_sprite.center_x = x
         self.mouse_sprite.center_y = y
 
-        self.board.on_mouse_move(x, y, dx, dy)
+        self.board.on_mouse_move(x, y)
 
         self.active_player.on_mouse_motion(self.mouse_sprite)
 

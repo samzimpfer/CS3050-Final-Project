@@ -7,6 +7,7 @@ class GameState(Enum):
     ROLL = 1
     TRADE = 2
     BUILD = 3
+    ROBBER = 4
 
 # haven't used this yet but whatever
 class Resource(Enum):
