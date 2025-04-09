@@ -73,6 +73,26 @@ class GameView(arcade.View):
         dice_x = WINDOW_WIDTH - (self.margin * 2) - (dice_width // 2)
         dice_y = (self.margin * 2) + (dice_height // 2)
 
+
+        #longest road/army card stuff
+        self.longest_road_sprite = arcade.Sprite("sprites/longest_road_card.png")
+        self.longest_road_sprite.center_x = WINDOW_WIDTH - ((5 * self.component_width) / 6)
+        self.longest_road_sprite.center_y = WINDOW_HEIGHT - (self.component_height / 4)
+        self.longest_road_sprite.width = self.component_width / 3
+        self.longest_road_sprite.height = self.component_height / 2
+
+        self.largest_army_sprite = arcade.Sprite("sprites/largest_army_card.png")
+        self.largest_army_sprite.center_x = WINDOW_WIDTH - ((5 * self.component_width) / 6)
+        self.largest_army_sprite.center_y = WINDOW_HEIGHT - ((3 * self.component_height) / 4)
+        self.largest_army_sprite.width = self.component_width / 3
+        self.largest_army_sprite.height = self.component_height / 2
+
+        self.dev_card_sprite = arcade.Sprite("sprites/dev_card_img.png")
+        self.dev_card_sprite.center_x = WINDOW_WIDTH - (self.component_width / 4)
+        self.dev_card_sprite.center_y = WINDOW_HEIGHT - (self.component_height / 2)
+        self.dev_card_sprite.width = self.component_width / 2
+        self.dev_card_sprite.height = self.component_height
+
         # initialize game objects
         #self.bank = Bank()
         #self.dev_card_stack = DevCardStack()
@@ -81,6 +101,18 @@ class GameView(arcade.View):
         self.players = []
         for i in range(self.num_players):
             p = Player(PLAYER_COLORS[i])
+            #setting the bank/dev cards
+            p.bank = self.bank
+            p.dev_card_stack = self.dev_card_stack
+            p.dev_card_stack_button_params = [
+                self.dev_card_sprite.center_x,
+                self.dev_card_sprite.center_y,
+                self.dev_card_sprite.width,
+                self.dev_card_sprite.height,
+            ]
+            #testing card stuff
+            p.set_longest_road(True)
+            p.set_largest_army(True)
             self.players.append(p)
 
         #Player.bank = self.bank
@@ -141,12 +173,20 @@ class GameView(arcade.View):
         self.board.draw()
         self.dice.on_draw()
 
-        # component placeholders TODO: replace these with actual component on_draw() functions
-        # bank
-        arcade.draw_lrbt_rectangle_filled(WINDOW_WIDTH - self.component_width, WINDOW_WIDTH, WINDOW_HEIGHT - self.component_height, WINDOW_HEIGHT, arcade.color.GRAY)
 
+
+        #bank won't be drawn, only dev card stack
+        arcade.draw_lrbt_rectangle_filled(WINDOW_WIDTH - self.component_width, WINDOW_WIDTH, WINDOW_HEIGHT - self.component_height, WINDOW_HEIGHT, arcade.color.GRAY)
+        arcade.draw_sprite(self.dev_card_sprite)
         for p in self.players:
             p.on_draw()
+            if p.has_longest_road:
+                arcade.draw_sprite(self.longest_road_sprite)
+            if p.has_largest_army:
+                arcade.draw_sprite(self.largest_army_sprite)
+            #p.draw_player_resources()
+            #p.BuyDevCard()
+            #p.draw_view_dev_cards()
 
     def on_update(self, delta_time: float):
         for p in self.players:
