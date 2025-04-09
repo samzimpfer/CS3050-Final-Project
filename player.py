@@ -538,7 +538,7 @@ class Player:
             select_sprite.height = r_select_height
             arcade.draw_sprite(select_sprite)
 
-    #this is very similar tp draw resource select but no buttons and actual resource count so this can be combined
+    #TODO: this correctly displays player resource count, it just needs to be properly implemented into the draw flow
     def draw_player_resources(self):
         l = self.WINDOW_WIDTH / 4
         r = (3 * self.WINDOW_WIDTH) / 4
