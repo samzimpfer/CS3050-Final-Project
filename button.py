@@ -15,10 +15,12 @@ class Button:
         self.box = arcade.SpriteSolidColor(10, 10, 0, 0, color)
         self.sprites.append(self.box)
 
+        self.og_color = color
+        self.hover_transparent_shade = (0, 0, 0, 50)
+
         self.text = text
 
         self.on_click = None
-
         self.show = False
 
     def set_visible(self, visible):
@@ -50,6 +52,9 @@ class Button:
         if self.show and arcade.check_for_collision(mouse_sprite, self.box):
             self.box.width = self.hover_width
             self.box.height = self.hover_height
+            if len(self.og_color) > 3:
+                self.box.color = self.hover_transparent_shade
         else:
             self.box.width = self.width
             self.box.height = self.height
+            self.box.color = self.og_color

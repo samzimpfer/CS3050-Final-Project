@@ -13,7 +13,7 @@ from enum import Enum
 from gameobjects import *
 
 from board import Board
-from player import Player
+from player import Player, PlayerState
 from dice import Dice
 
 screen_width, screen_height = arcade.get_display_size()
@@ -26,6 +26,7 @@ PLAYER_COLORS = [arcade.color.BLUE, arcade.color.GREEN, arcade.color.RED, arcade
 class GameView(arcade.View):
 
     def __init__(self):
+        global WINDOW_WIDTH, WINDOW_HEIGHT
         super().__init__()
 
         # general sizing fields for components
@@ -100,7 +101,7 @@ class GameView(arcade.View):
 
         self.players = []
         for i in range(self.num_players):
-            p = Player(PLAYER_COLORS[i])
+            p = Player(PLAYER_COLORS[i], self.bank, self.dev_card_stack)
             #setting the bank/dev cards
             p.bank = self.bank
             p.dev_card_stack = self.dev_card_stack
@@ -186,11 +187,30 @@ class GameView(arcade.View):
                 arcade.draw_sprite(self.largest_army_sprite)
             #p.draw_player_resources()
             #p.BuyDevCard()
+            #p.BuyDevCard()
             #p.draw_view_dev_cards()
+        #active player drawing
+        #self.active_player.player_state = PlayerState.MENU
+        # print(f"active player: {self.active_player_index}")
+        print(self.active_player.player_state)
+        print(self.current_state)
+        if self.active_player.player_state == PlayerState.DEVCARD_MENU:
+            self.active_player.draw_view_dev_cards()
+        if self.active_player.player_state == PlayerState.RESOURCE_MENU:
+            self.active_player.draw_player_resources()
+        if self.active_player.player_state == PlayerState.DRAWN_CARD_MENU:
+            #self.active_player.render_single_card(self.active_player.BuyDevCard())
+            self.active_player.render_single_card(self.active_player.player_dev_cards[-1])
+
 
     def on_update(self, delta_time: float):
-        for p in self.players:
-            p.set_state(self.current_state)
+        # for p in self.players:
+        #     p.set_state(self.current_state)
+
+        # for p in self.players:
+        #     print(p.active_player)
+        #     if not p.active_player:
+        #         p.set_state(self.current_state)
 
         # manage game state
         if self.current_state == GameState.ROLL:
@@ -205,7 +225,10 @@ class GameView(arcade.View):
                     self.current_state = GameState.ROBBER
                 else:
                     self.board.allocate_resources(roll_value)
-                    self.current_state = GameState.TRADE # TODO: change to GameState.TRADE once trading is developed
+                    self.current_state = GameState.TRADE# TODO: change to GameState.TRADE once trading is developed
+
+                    for p in self.players:
+                        p.set_state(self.current_state)
 
         self.check_winner()
 
@@ -217,7 +240,7 @@ class GameView(arcade.View):
 
         if self.current_state == GameState.ROLL:
             self.dice.on_mouse_press(self.mouse_sprite)
-            
+
         elif self.current_state == GameState.TRADE or self.current_state == GameState.BUILD:
             if self.board.on_mouse_press(x, y, button, self.active_player):
                 self.current_state = GameState.BUILD

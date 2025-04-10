@@ -33,65 +33,148 @@ class DevCard:
     pass
 
 @dataclass(frozen=True)
-class Knight:
+class Knight(DevCard):
     amt = 14
     name = "Knight"
     description = "Move the robber. Steal one resource from the owner of a settlement or city adjacent to the robber’s new hex."
     pathname = "sprites/catan_knight_card.png"
+    def __init__(self):
+        super().__init__(Knight.amt, Knight.name, Knight.description, Knight.pathname)
+
 
 @dataclass(frozen=True)
-class RoadBuilding:
+class RoadBuilding(DevCard):
     amt = 2
     name = "Road Building"
     description = "Place two new roads as if you had just built them."
     pathname = "sprites/road_building_card.png"
+    def __init__(self):
+        super().__init__(RoadBuilding.amt, RoadBuilding.name, RoadBuilding.description, RoadBuilding.pathname)
+
 
 @dataclass(frozen=True)
-class YearOfPlenty:
+class YearOfPlenty(DevCard):
     amt = 2
     name = "Year of Plenty"
     description = "Take any two resources from the bank. Add them to your hand. They can be two of the same resource or two different resources."
     pathname = "sprites/yearofplenty_card.jpeg"
+    def __init__(self):
+        super().__init__(YearOfPlenty.amt, YearOfPlenty.name, YearOfPlenty.description, YearOfPlenty.pathname)
+
+
+
 
 @dataclass(frozen=True)
-class Monopoly:
+class Monopoly(DevCard):
     amt = 2
     name = "Monopoly"
     description = "When you play this card, announce one type of resource. All other players must give you all of their resources of that type."
     pathname = "sprites/monopoly_card.png"
+    def __init__(self):
+        super().__init__(Monopoly.amt, Monopoly.name, Monopoly.description, Monopoly.pathname)
+
+
 
 @dataclass(frozen=True)
-class University:
+class University(DevCard):
     amt = 1
     name = "University"
     description = "One victory point. Reveal this card on your turn if, with it, you reach the number of points required for victory."
     pathname = "sprites/university_card.png"
+    def __init__(self):
+        super().__init__(University.amt, University.name, University.description, University.pathname)
+
+
 
 @dataclass(frozen=True)
-class Market:
+class Market(DevCard):
     amt = 1
     name = "Market"
     description = "One victory point. Reveal this card on your turn if, with it, you reach the number of points required for victory."
     pathname = "sprites/market_card.png"
+    def __init__(self):
+        super().__init__(Market.amt, Market.name, Market.description, Market.pathname)
+
+
 
 @dataclass(frozen=True)
-class GreatHall:
+class GreatHall(DevCard):
     amt = 1
     name = "Great Hall"
     description = "One victory point. Reveal this card on your turn if, with it, you reach the number of points required for victory."
+    pathname = "sprites/greathall_card.jpeg"
+    def __init__(self):
+        super().__init__(GreatHall.amt, GreatHall.name, GreatHall.description, GreatHall.pathname)
+
 
 @dataclass(frozen=True)
-class Chapel:
+class Chapel(DevCard):
     amt = 1
     name = "Chapel"
     description = "One victory point. Reveal this card on your turn if, with it, you reach the number of points required for victory."
+    pathname = "sprites/chapel_card.jpg"
+    def __init__(self):
+        super().__init__(Chapel.amt, Chapel.name, Chapel.description, Chapel.pathname)
+
+
 
 @dataclass(frozen=True)
-class Library:
+class Library(DevCard):
     amt = 1
     name = "Library"
     description = "One victory point. Reveal this card on your turn if, with it, you reach the number of points required for victory."
     pathname = "sprites/library_card.png"
+    def __init__(self):
+        super().__init__(Library.amt, Library.name, Library.description, Library.pathname)
+
+
+
+# @dataclass(frozen=True)
+# class YearOfPlenty(DevCard):
+#     amt = 2
+#     name = "Year of Plenty"
+#     description = "Take any two resources from the bank. Add them to your hand. They can be two of the same resource or two different resources."
+#     pathname = "sprites/yearofplenty_card.jpeg"
+#
+# @dataclass(frozen=True)
+# class Monopoly:
+#     amt = 2
+#     name = "Monopoly"
+#     description = "When you play this card, announce one type of resource. All other players must give you all of their resources of that type."
+#     pathname = "sprites/monopoly_card.png"
+#
+# @dataclass(frozen=True)
+# class University:
+#     amt = 1
+#     name = "University"
+#     description = "One victory point. Reveal this card on your turn if, with it, you reach the number of points required for victory."
+#     pathname = "sprites/university_card.png"
+#
+# @dataclass(frozen=True)
+# class Market:
+#     amt = 1
+#     name = "Market"
+#     description = "One victory point. Reveal this card on your turn if, with it, you reach the number of points required for victory."
+#     pathname = "sprites/market_card.png"
+#
+# @dataclass(frozen=True)
+# class GreatHall:
+#     amt = 1
+#     name = "Great Hall"
+#     description = "One victory point. Reveal this card on your turn if, with it, you reach the number of points required for victory."
+#
+# @dataclass(frozen=True)
+# class Chapel:
+#     amt = 1
+#     name = "Chapel"
+#     description = "One victory point. Reveal this card on your turn if, with it, you reach the number of points required for victory."
+#
+# @dataclass(frozen=True)
+# class Library:
+#     amt = 1
+#     name = "Library"
+#     description = "One victory point. Reveal this card on your turn if, with it, you reach the number of points required for victory."
+#     pathname = "sprites/library_card.png"
 
 # Resource bank, mostly necessary because resources can and do run out during the game
 class Bank:

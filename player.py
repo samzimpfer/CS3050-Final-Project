@@ -11,12 +11,21 @@ Finally, this class includes functions to handle dev cards and the longest road,
 
 NOTE: there are still some things to add, but this encompasses the basics
 """
+import gameobjects
 from gameobjects import *
+
 
 import arcade
 from button import Button
 from gameobjects import *
 import math
+from menu_support import (draw_resource_backing,
+                          draw_devcard_backing,
+                          create_resource_select_buttons,
+                          create_devcard_select_buttons,
+                          set_buttons_visible,
+                          set_buttons_visible,
+                          BLANK_BUTTON)
 
 #from scratchpad import WINDOW_WIDTH, WINDOW_HEIGHT
 
@@ -27,7 +36,13 @@ class PlayerState(Enum):
     ABLE_TO_TRADE = 3
     # OPEN_TRADE = 4
     TRADING = 4
-    MENU = 5
+    RESOURCE_MENU = 5
+    DEVCARD_MENU = 6
+    DRAWN_CARD_MENU = 7
+    YOP_MENU = 8
+    MONOPOLY_MENU = 9
+    ROADBUILDING_MENU = 10
+
 
 # TODO: convert all camelcase to snakecase for pep 8 purposes
 class Player:
@@ -55,8 +70,8 @@ class Player:
     # global is not needed here (keeps the bank encapsulated in the Player class, theoretically better for security)
     # these are being set to the same instance that was created in main.__init__() in that function
     # reference from inside player functions as Player.bank
-    bank = None
-    game_dev_cards = None
+    # bank = None
+    # game_dev_cards = None
     trade_function = None
     finish_turn_function = None
 
@@ -83,20 +98,21 @@ class Player:
         Resource.SHEEP:1,
     }
 
-    def __init__(self, color):
+    def __init__(self, color, bank, dCards):
         # inventory
         self.roads = []  # used for calculating longest road is a list of nodes
         self.color = color
 
         self.resources = {
             Resource.BRICK:9,
-            Resource.SHEEP:1,
-            Resource.STONE:1,
-            Resource.WHEAT:1,
+            Resource.SHEEP:10,
+            Resource.STONE:10,
+            Resource.WHEAT:10,
             Resource.WOOD:9
         }
 
-
+        self.bank = bank
+        self.game_dev_cards = dCards
         self.knight_card_count = 0
         # add other dev card fields here
 
@@ -106,13 +122,13 @@ class Player:
         self.city_count = 0
         self.road_count = 0
 
+
         self.has_longest_road = False
         self.has_largest_army = False
 
         self.victory_points = 0
 
-        self.visible_points = 0
-        self.hidden_points = 0
+        self.dev_card_victory_points = 0
 
         #adding these so player class can consult bank and dev cards
         #TODO: right now these are separate instances for each player.  We will need to create bank instance in main
@@ -143,8 +159,11 @@ class Player:
             Resource.WHEAT: arcade.Sprite("sprites/resources/wheat.png"),
             Resource.WOOD: arcade.Sprite("sprites/resources/wood.png")
         }
+
         for s in self.resource_sprites.values():
             self.sprites.append(s)
+
+
 
         self.finish_turn_button = Button("Finish turn", Player.BUTTON_COLOR)
         self.trade_button = Button("Trade", Player.BUTTON_COLOR)
@@ -152,25 +171,40 @@ class Player:
         self.accept_trade_button = Button("Accept", Player.BUTTON_COLOR)
 
         self.view_dev_cards_button = Button("Show dev cards", Player.BUTTON_COLOR)
-        self.view_dev_cards_button.on_click = Player.draw_view_dev_cards
+        self.view_dev_cards_button.on_click = lambda: self.set_player_state(PlayerState.DEVCARD_MENU)
 
         self.view_resources_button = Button("View resources", Player.BUTTON_COLOR)
-        self.view_resources_button.on_click = Player.draw_player_resources
+        self.view_resources_button.on_click = lambda: self.set_player_state(PlayerState.RESOURCE_MENU)
 
         self.finish_turn_button.on_click = Player.finish_turn_function
         self.trade_button.on_click = Player.trade_function
 
         self.dev_card_stack_button_params = []
 
-        self.dev_card_stack_button = Button("", (0, 0, 0, 0))
+        self.dev_card_stack_button = Button("", (255, 255, 255, 255))
         # 'visible' so button can be pressed
         self.dev_card_stack_button.set_visible(True)
+        #self.dev_card_stack_button.on_click = lambda: self.set_player_state(PlayerState.DRAWN_CARD_MENU)
+        self.dev_card_stack_button.on_click = self.BuyDevCard
 
         #universal close menu button, put in main?
         self.close_menu_button = Button("Close", Player.BUTTON_COLOR)
         self.close_menu_button.set_pos((4*self.WINDOW_WIDTH) / 5, self.WINDOW_HEIGHT / 2, 200, 100)
-        self.close_menu_button.on_click = Player.close_menu
+        # self.close_menu_button.on_click = lambda: self.set_player_state(PlayerState.DEFAULT)
+        self.close_menu_button.on_click = self.close_menu
 
+        #resource selection buttons
+        #the function is in menu_support and creates buttons in a way that they line up with the resource sprites
+        #could also just set it constant, can do that later
+        self.resource_select_buttons = create_resource_select_buttons()
+
+
+        #dev card buttons
+        #this is going to be updated with the player owned dev cards.  since lists preserve order, they should just line
+        #by index
+        self.dev_card_buttons = create_devcard_select_buttons()
+        for button in self.dev_card_buttons:
+            button.on_click = lambda: self.use_devcard(button)
 
 
     def set_active_player(self, ap):
@@ -184,8 +218,6 @@ class Player:
             self.player_state = PlayerState.ABLE_TO_TRADE
         elif game_state == GameState.BUILD:
             self.player_state = PlayerState.DEFAULT
-        elif game_state == PlayerState.MENU:
-            self.player_state = PlayerState.MENU
 
         self.finish_turn_button.set_visible(False)
         self.trade_button.set_visible(False)
@@ -195,30 +227,37 @@ class Player:
         self.view_dev_cards_button.set_visible(False)
         self.view_resources_button.set_visible(False)
 
+        self.close_menu_button.set_visible(False)
+
+        for b in self.resource_select_buttons:
+            b.set_visible(False)
+        for b in self.dev_card_buttons:
+            b.set_visible(False)
 
         #always able to view your cards
         #self.view_dev_cards_button.set_visible(True)
-
-        if self.player_state == PlayerState.ABLE_TO_TRADE:
-            self.trade_button.set_visible(True)
-            self.finish_turn_button.set_visible(True)
-            self.view_dev_cards_button.set_visible(True)
-            self.view_resources_button.set_visible(True)
-
-        elif self.player_state == PlayerState.TRADING:
-            self.reject_trade_button.set_visible(True)
-            self.accept_trade_button.set_visible(True)
-            self.view_dev_cards_button.set_visible(True)
-            self.view_resources_button.set_visible(True)
-
-        elif self.player_state == PlayerState.DEFAULT:
-            self.finish_turn_button.set_visible(True)
-            self.view_dev_cards_button.set_visible(True)
-            self.view_resources_button.set_visible(True)
-        elif self.player_state == PlayerState.MENU:
-            self.close_menu_button.set_visible(True)
-
-
+        match self.player_state:
+            case PlayerState.ABLE_TO_TRADE:
+                self.trade_button.set_visible(True)
+                self.finish_turn_button.set_visible(True)
+                self.view_dev_cards_button.set_visible(True)
+                self.view_resources_button.set_visible(True)
+            case PlayerState.TRADING:
+                self.reject_trade_button.set_visible(True)
+                self.accept_trade_button.set_visible(True)
+                self.view_dev_cards_button.set_visible(True)
+                self.view_resources_button.set_visible(True)
+            case PlayerState.RESOURCE_MENU:
+                self.close_menu_button.set_visible(True)
+                set_buttons_visible(self.resource_select_buttons)
+            case PlayerState.DEVCARD_MENU:
+                self.close_menu_button.set_visible(True)
+                for i in range(len(self.player_dev_cards)):
+                    self.dev_card_buttons[i].set_visible(True)
+            case PlayerState.FINISHED:
+                pass
+            case _:
+                pass
 
     # positions the player representation UI and it's components on the screen
     def set_pos(self, l, r, b, t):
@@ -236,7 +275,7 @@ class Player:
         y = self.top - self.resource_sprite_width
 
         #setting dev card button
-
+        #forget why I did this, will fix later
         self.dev_card_stack_button.set_pos(self.dev_card_stack_button_params[0],
                                            self.dev_card_stack_button_params[1],
                                            self.dev_card_stack_button_params[2],
@@ -276,7 +315,7 @@ class Player:
         return self.roads
 
     def add_resources(self, amts: dict):
-        taken_from_bank = Player.bank.TakeResources(amts)
+        taken_from_bank = self.bank.TakeResources(amts)
         for r, val in taken_from_bank.items():
             self.resources[r] += val
 
@@ -376,8 +415,9 @@ class Player:
 
     def BuyDevCard(self):
         if self.use_resources(self.DEV_CARD_COST):
+            self.set_player_state(PlayerState.DRAWN_CARD_MENU)
             drawn_dev_card = self.game_dev_cards.DrawCard()
-            self.render_single_card(drawn_dev_card)
+            #self.render_single_card(drawn_dev_card)
             #print(f"{drawn_dev_card.name}: {drawn_dev_card.description}")
             match drawn_dev_card:
                 case Knight():
@@ -394,6 +434,9 @@ class Player:
                 case _:
                     pass
             self.player_dev_cards.append(drawn_dev_card)
+            # add a new button to list, then update the positions so they line up
+            #set_devcard_button_positions(self.dev_card_buttons)
+
 
 
     # sets the value of has_longest_road for this player
@@ -414,6 +457,7 @@ class Player:
         if self.has_largest_army:
             total += 2
         # add in victory card points
+        total += self.dev_card_victory_points
 
         return total
 
@@ -430,6 +474,9 @@ class Player:
         #visible_points_text = arcade.Text(f"Victory Points: {self.visible_points}")
 
         #self.view_dev_cards_button.on_draw()
+
+        arcade.draw_text(f"Victory points: {self.get_points()}", self.left, self.bottom + ((self.top - self.bottom) / 2),
+                         arcade.color.BLACK, 14)
         # draw resources
         if self.show_resources:
             for res, n in self.resources.items():
@@ -451,6 +498,7 @@ class Player:
         else:
             pass
 
+    #TODO: change this so that only relevant buttons are checked based on player state
     def on_mouse_press(self, mouse_sprite):
         self.finish_turn_button.on_mouse_press(mouse_sprite)
         self.trade_button.on_mouse_press(mouse_sprite)
@@ -461,6 +509,12 @@ class Player:
         self.view_resources_button.on_mouse_press(mouse_sprite)
 
         self.close_menu_button.on_mouse_press(mouse_sprite)
+
+        self.dev_card_stack_button.on_mouse_press(mouse_sprite)
+
+        for button in self.dev_card_buttons:
+            button.on_mouse_press(mouse_sprite)
+
 
     def on_mouse_motion(self, mouse_sprite):
         self.finish_turn_button.on_mouse_motion(mouse_sprite)
@@ -473,8 +527,15 @@ class Player:
 
         self.close_menu_button.on_mouse_motion(mouse_sprite)
 
+        for button in self.dev_card_buttons:
+            button.on_mouse_motion(mouse_sprite)
+
     def draw_view_dev_cards(self):
+        #self.close_menu_button.on_draw()
         #just gonna hope no one draws more than 10 dev cards for now, scaling lowkey a pita
+
+        self.close_menu_button.set_visible(True)
+        draw_devcard_backing()
         l = self.WINDOW_WIDTH / 4
         r = (3 * self.WINDOW_WIDTH) / 4
         b = self.WINDOW_HEIGHT / 4
@@ -495,28 +556,33 @@ class Player:
             dev_sprite = arcade.Sprite(card.pathname)
             dev_sprite.center_x = l + ((colCount * display_width) / 5) - sprite_x_offset
             if colCount > 5:
-                dev_sprite.center_y = b + (3 * (display_height / 4))
-            else:
+                dev_sprite.center_x = l + (((colCount-5) * display_width) / 5) - sprite_x_offset
                 dev_sprite.center_y = b + (display_height / 4)
+            else:
+                dev_sprite.center_y = b + (3 * (display_height / 4))
             dev_sprite.width = sprite_width
             dev_sprite.height = sprite_height
             # unsure where to add the drawing at this point, but this should be scaled properly and work. sprite path stored
             # in class instances
             arcade.draw_sprite(dev_sprite)
             colCount += 1
+        for i in range(len(self.player_dev_cards)):
+            self.dev_card_buttons[i].set_visible(True)
+            self.dev_card_buttons[i].on_draw()
         #I will probably need some help getting this to work properly, but the idea is switch to menu state when viewing
         # cards so that the close menu button will appear
-        self.set_state(PlayerState.MENU)
+        print(self.close_menu_button.text)
+        self.close_menu_button.on_draw()
 
     def render_single_card(self, dev_card):
+        self.close_menu_button.set_visible(True)
         single_sprite = arcade.Sprite(dev_card.pathname)
         single_sprite.center_x = self.WINDOW_WIDTH / 2
         single_sprite.center_y = self.WINDOW_HEIGHT / 2
         single_sprite.width = self.WINDOW_WIDTH / 5
-        single_sprite.height = (3.5 * ((self.WINDOW_WIDTH / 5) * 2.5))
+        single_sprite.height = (3.5 * ((self.WINDOW_WIDTH / 5) / 2.5))
         arcade.draw_sprite(single_sprite)
-
-        self.set_state(PlayerState.MENU)
+        self.close_menu_button.on_draw()
 
     #this is for monopoly and YOP
     #TODO: add buttons and functions
@@ -538,8 +604,9 @@ class Player:
             select_sprite.height = r_select_height
             arcade.draw_sprite(select_sprite)
 
-    #TODO: this correctly displays player resource count, it just needs to be properly implemented into the draw flow
     def draw_player_resources(self):
+        #below this ir original
+        self.close_menu_button.set_visible(True)
         l = self.WINDOW_WIDTH / 4
         r = (3 * self.WINDOW_WIDTH) / 4
         b = (2 * self.WINDOW_HEIGHT) / 5
@@ -557,13 +624,65 @@ class Player:
             select_sprite.width = r_select_section
             select_sprite.height = r_select_height
             arcade.draw_sprite(select_sprite)
-
             #resource_val = arcade.Text(str(self.resources[i]), l + (i * r_select_section), b, arcade.color.BLACK, self.resource_sprite_width / 3)
             arcade.draw_text(f"x{self.resources[k]}", l + ((i+1) * r_select_section) - (r_select_section / 3), b, arcade.color.BLACK, self.resource_sprite_width / 2)
-        self.set_state(PlayerState.MENU)
+        self.close_menu_button.on_draw()
 
-    #hopefully this just resets the screen
+
+    #NOTE: the reason for all these calls is that arcade thinks every sprite with the same path is the same sprite.
+    # so if you make 2 different sprite with the same file path, it thinks they're the same thing(at least that's what
+    # I think is going on)
     def close_menu(self):
-        self.set_state(PlayerState.DEFAULT)
+        self.sprites.clear()
+        self.reset_sprites()
+        self.set_pos(self.left, self.right, self.bottom, self.top)
+        self.set_player_state(PlayerState.DEFAULT)
         self.on_draw()
+
+
+    def finish_turn(self):
+        self.set_state(PlayerState.FINISHED)
+
+    def set_player_state(self, state):
+        self.player_state = state
+
+    def reset_sprites(self):
+        for s in self.resource_sprites.values():
+            self.sprites.append(s)
+
+
+
+    def use_devcard(self, button):
+        devcard_index = self.get_buttonarray_index(button, False)
+        #most garbo fix ever right here
+        devcard_index = 10 - devcard_index
+        print(devcard_index)
+        devcard = self.player_dev_cards[devcard_index]
+        print(devcard)
+        match devcard:
+            case gameobjects.Knight:
+                #TODO: robber stuff
+                self.knight_card_count += 1
+            case gameobjects.RoadBuilding:
+                self.set_player_state(PlayerState.ROADBUILDING_MENU)
+                pass
+            case gameobjects.Monopoly:
+                self.set_player_state(PlayerState.MONOPOLY_MENU)
+            case gameobjects.YearOfPlenty:
+                self.set_player_state(PlayerState.YOP_MENU)
+            case _:
+                self.dev_card_victory_points += 1
+                self.player_dev_cards.pop(devcard_index)
+                self.set_player_state(PlayerState.DEFAULT)
+                self.close_menu()
+
+
+    def get_buttonarray_index(self, button, typeflag):
+        if typeflag:
+            return self.resource_select_buttons.index(button)
+        return self.dev_card_buttons.index(button)
+
+
+
+
 
