@@ -25,9 +25,16 @@ from menu_support import (draw_resource_backing,
                           create_devcard_select_buttons,
                           set_buttons_visible,
                           set_buttons_visible,
-                          BLANK_BUTTON)
+                          BLANK_BUTTON,
+                          YOP_selection_spacing,
+                          draw_YOP_selection_backing,
+                          draw_single_selection_backing,
+                          single_selection_spacing,
+                          get_YOP_selection_sprite,
+                          draw_default_resource_view, get_single_selection_sprite)
 
 #from scratchpad import WINDOW_WIDTH, WINDOW_HEIGHT
+import time
 
 
 class PlayerState(Enum):
@@ -41,7 +48,9 @@ class PlayerState(Enum):
     DRAWN_CARD_MENU = 7
     YOP_MENU = 8
     MONOPOLY_MENU = 9
-    ROADBUILDING_MENU = 10
+    MONOPOLY_CONCLUSION = 10
+    ROADBUILDING_MENU = 11
+    ROBBER = 12
 
 
 # TODO: convert all camelcase to snakecase for pep 8 purposes
@@ -60,6 +69,7 @@ class Player:
     screen_width, screen_height = arcade.get_display_size()
     WINDOW_WIDTH = screen_width - 100
     WINDOW_HEIGHT = screen_height - 100
+    print(WINDOW_WIDTH, WINDOW_HEIGHT)
 
     #testing this out, not even sure if it works
     # global Bank
@@ -98,6 +108,14 @@ class Player:
         Resource.SHEEP:1,
     }
 
+    SPRITE_PATHS = {
+        0:"sprites/resources/brick.png",
+        1:"sprites/resources/sheep.png",
+        2:"sprites/resources/stone.png",
+        3:"sprites/resources/wheat.png",
+        4:"sprites/resources/wood.png"
+    }
+
     def __init__(self, color, bank, dCards):
         # inventory
         self.roads = []  # used for calculating longest road is a list of nodes
@@ -115,6 +133,9 @@ class Player:
         self.game_dev_cards = dCards
         self.knight_card_count = 0
         # add other dev card fields here
+        self.YOP_first_selection = None
+        self.YOP_second_selection = None
+        self.monopoly_selection = None
 
         self.player_dev_cards = []
 
@@ -190,13 +211,14 @@ class Player:
         #universal close menu button, put in main?
         self.close_menu_button = Button("Close", Player.BUTTON_COLOR)
         self.close_menu_button.set_pos((4*self.WINDOW_WIDTH) / 5, self.WINDOW_HEIGHT / 2, 200, 100)
-        # self.close_menu_button.on_click = lambda: self.set_player_state(PlayerState.DEFAULT)
         self.close_menu_button.on_click = self.close_menu
 
         #resource selection buttons
         #the function is in menu_support and creates buttons in a way that they line up with the resource sprites
         #could also just set it constant, can do that later
         self.resource_select_buttons = create_resource_select_buttons()
+        for button in self.resource_select_buttons:
+            button.on_click = lambda b=button: self.select_YOP_resource(b)
 
 
         #dev card buttons
@@ -204,7 +226,7 @@ class Player:
         #by index
         self.dev_card_buttons = create_devcard_select_buttons()
         for button in self.dev_card_buttons:
-            button.on_click = lambda: self.use_devcard(button)
+            button.on_click = lambda b=button: self.use_devcard(b)
 
 
     def set_active_player(self, ap):
@@ -318,6 +340,27 @@ class Player:
         taken_from_bank = self.bank.TakeResources(amts)
         for r, val in taken_from_bank.items():
             self.resources[r] += val
+
+    #"take" bypasses bank for use in monopoly and trading
+    def take_resources(self, amts: dict):
+        taken_from_players = {}
+        for r, val in amts.items():
+            self.resources[r] += val
+
+    def give_resources(self, amts: dict):
+        current_resources = self.resources.copy()
+        given_resources = {}
+        for r, val in amts.items():
+            if self.resources[r] - val >= 0:
+                self.resources[r] -= val
+                given_resources[r] = val
+            else:
+                self.resources = current_resources
+                break
+        return given_resources
+
+    def get_resources(self):
+        return self.resources
 
     #decrements resources if possible and returns true, else returns false
     def use_resources(self, amts: dict):
@@ -515,6 +558,10 @@ class Player:
         for button in self.dev_card_buttons:
             button.on_mouse_press(mouse_sprite)
 
+        if self.player_state == PlayerState.YOP_MENU or self.player_state == PlayerState.MONOPOLY_MENU:
+            for button in self.resource_select_buttons:
+                button.on_mouse_press(mouse_sprite)
+
 
     def on_mouse_motion(self, mouse_sprite):
         self.finish_turn_button.on_mouse_motion(mouse_sprite)
@@ -529,6 +576,10 @@ class Player:
 
         for button in self.dev_card_buttons:
             button.on_mouse_motion(mouse_sprite)
+
+        if self.player_state == PlayerState.YOP_MENU or self.player_state == PlayerState.MONOPOLY_MENU:
+            for button in self.resource_select_buttons:
+                button.on_mouse_motion(mouse_sprite)
 
     def draw_view_dev_cards(self):
         #self.close_menu_button.on_draw()
@@ -585,24 +636,13 @@ class Player:
         self.close_menu_button.on_draw()
 
     #this is for monopoly and YOP
-    #TODO: add buttons and functions
     def draw_resource_select(self):
-        l = self.WINDOW_WIDTH / 4
-        r = (3 * self.WINDOW_WIDTH) / 4
-        b = (2 * self.WINDOW_HEIGHT) / 5
-        t = (3 * self.WINDOW_HEIGHT) / 5
-        r_select_width = r - l
-        r_select_height = t - b
-        r_select_section = r_select_width / 5
-        center_align_offset = r_select_height / 2
-        arcade.draw_lrbt_rectangle_filled(l, r, b, t, arcade.color.GRAY)
-        for i, e in self.resource_sprites.values():
-            select_sprite = e
-            select_sprite.center_x = (l + (i * r_select_section)) - center_align_offset
-            select_sprite.center_y = self.WINDOW_HEIGHT / 2
-            select_sprite.width = r_select_section
-            select_sprite.height = r_select_height
-            arcade.draw_sprite(select_sprite)
+        self.close_menu_button.set_visible(True)
+        draw_default_resource_view()
+        for button in self.resource_select_buttons:
+            button.set_visible(True)
+            button.on_draw()
+        self.close_menu_button.on_draw()
 
     def draw_player_resources(self):
         #below this ir original
@@ -616,6 +656,7 @@ class Player:
         r_select_section = r_select_width / 5
         center_align_offset = r_select_height / 2
         arcade.draw_lrbt_rectangle_filled(l, r, b, t, arcade.color.GRAY)
+        print(f"from dpr: {r_select_section, r_select_width, r_select_height}")
 
         for i, (k, e) in enumerate(self.resource_sprites.items()):
             select_sprite = e
@@ -654,21 +695,20 @@ class Player:
 
     def use_devcard(self, button):
         devcard_index = self.get_buttonarray_index(button, False)
-        #most garbo fix ever right here
-        devcard_index = 10 - devcard_index
         print(devcard_index)
         devcard = self.player_dev_cards[devcard_index]
         print(devcard)
+        print(type(devcard))
         match devcard:
-            case gameobjects.Knight:
-                #TODO: robber stuff
+            case gameobjects.Knight():
+                self.set_player_state(PlayerState.ROBBER)
                 self.knight_card_count += 1
-            case gameobjects.RoadBuilding:
+            case gameobjects.RoadBuilding():
                 self.set_player_state(PlayerState.ROADBUILDING_MENU)
                 pass
-            case gameobjects.Monopoly:
+            case gameobjects.Monopoly():
                 self.set_player_state(PlayerState.MONOPOLY_MENU)
-            case gameobjects.YearOfPlenty:
+            case gameobjects.YearOfPlenty():
                 self.set_player_state(PlayerState.YOP_MENU)
             case _:
                 self.dev_card_victory_points += 1
@@ -680,7 +720,50 @@ class Player:
     def get_buttonarray_index(self, button, typeflag):
         if typeflag:
             return self.resource_select_buttons.index(button)
+        print(f"return index: {self.dev_card_buttons.index(button)}")
         return self.dev_card_buttons.index(button)
+
+    def draw_YOP_selection(self):
+        draw_YOP_selection_backing()
+        if self.YOP_first_selection:
+            sprite = get_YOP_selection_sprite(self.SPRITE_PATHS[self.YOP_first_selection], 1)
+            arcade.draw_sprite(sprite)
+        if self.YOP_second_selection:
+            sprite2 = get_YOP_selection_sprite(self.SPRITE_PATHS[self.YOP_second_selection], 2)
+            arcade.draw_sprite(sprite2)
+            #TODO: somehow sleep this, not working for some reason
+            #time.sleep(1)
+        if self.YOP_first_selection and self.YOP_second_selection:
+            self.add_resources({gameobjects.Resource(self.YOP_first_selection):2, gameobjects.Resource(self.YOP_second_selection):2})
+            self.YOP_first_selection = None
+            self.YOP_second_selection = None
+            self.close_menu()
+
+    def select_YOP_resource(self, button):
+        if not self.YOP_first_selection:
+            resource_index = self.get_buttonarray_index(button, True)
+            self.YOP_first_selection = resource_index
+        else:
+            resource_index = self.get_buttonarray_index(button, True)
+            self.YOP_second_selection = resource_index
+
+    def select_single_resource(self, button):
+        resource_index = self.get_buttonarray_index(button, True)
+        self.monopoly_selection = resource_index
+
+    def draw_monopoly_selection(self):
+        draw_single_selection_backing()
+        if self.monopoly_selection:
+            sprite = get_single_selection_sprite(self.SPRITE_PATHS[self.monopoly_selection])
+            arcade.draw_sprite(sprite)
+            self.set_player_state(PlayerState.MONOPOLY_CONCLUSION)
+
+    def get_monopoly_selection(self):
+        return self.monopoly_selection
+
+
+
+
 
 
 

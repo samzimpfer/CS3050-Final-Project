@@ -228,6 +228,7 @@ class DevCardStack:
         for card in DevCard.__subclasses__():
             self.stack += [card()] * card.amt
         random.shuffle(self.stack)
+        self.stack.append(YearOfPlenty())
 
     # draw card pops from stack and returns an instance of a dev card.  For example each player class instance can use
     # "draw_new_dev_card = DevCardStack.DrawCard()" to give the player a new dev card while also updating what's left in

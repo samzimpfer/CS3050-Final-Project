@@ -190,8 +190,6 @@ class GameView(arcade.View):
             #p.BuyDevCard()
             #p.draw_view_dev_cards()
         #active player drawing
-        #self.active_player.player_state = PlayerState.MENU
-        # print(f"active player: {self.active_player_index}")
         print(self.active_player.player_state)
         print(self.current_state)
         if self.active_player.player_state == PlayerState.DEVCARD_MENU:
@@ -201,6 +199,25 @@ class GameView(arcade.View):
         if self.active_player.player_state == PlayerState.DRAWN_CARD_MENU:
             #self.active_player.render_single_card(self.active_player.BuyDevCard())
             self.active_player.render_single_card(self.active_player.player_dev_cards[-1])
+        if self.active_player.player_state == PlayerState.YOP_MENU:
+            self.active_player.draw_resource_select()
+            self.active_player.draw_YOP_selection()
+        if self.active_player.player_state == PlayerState.ROBBER:
+            self.current_state = GameState.ROBBER
+        if self.active_player.player_state == PlayerState.MONOPOLY_CONCLUSION:
+            chosen_resource = Resource(self.active_player.get_monopoly_selection())
+            total_taken = 0
+            for p in self.players:
+                if not p.active_player:
+                    player_resource_amt = p.get_resources()[chosen_resource]
+                    total_taken += p.give_resources(player_resource_amt)
+            self.active_player.take_resources({chosen_resource:total_taken})
+            self.active_player.close_menu()
+
+
+
+
+
 
 
     def on_update(self, delta_time: float):
