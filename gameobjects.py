@@ -4,7 +4,6 @@ from dataclasses import *
 
 import arcade
 
-
 class GameState(Enum):
     SETUP = 0
     ROLL = 1

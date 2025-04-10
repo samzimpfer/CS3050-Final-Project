@@ -104,7 +104,7 @@ class Node:
         return_flag = False
         if self.is_touching(x, y) and button == arcade.MOUSE_BUTTON_LEFT:
             return_flag = self.build_settlement(player, board)
-            if self.build_city(player):
+            if not return_flag and self.build_city(player):
                 return_flag = True
         return return_flag
 

@@ -198,7 +198,6 @@ class GameView(arcade.View):
 
             if self.dice.ready:
                 # handle roll sum
-                # TODO: call board function to distribute resources based on dice roll
                 roll_value = self.dice.get_sum_and_reset()
                 print(f"Roll: {roll_value}") # replace with board.distribute_resources(self.dice.sum)
                 if roll_value == 7:

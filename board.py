@@ -30,7 +30,7 @@ class Board:
         self.height = 0
         self.tiles = arcade.SpriteList()
         self.tile_nodes = []
-        self.resources = ['wheat', 'wheat', 'wheat', 'wheat', 'wood', 'wood', 'wood', 'wood', 'sheep', 'sheep', 'sheep', 'sheep', 'ore', 'ore', 'ore', 'brick', 'brick', 'brick', 'desert']
+        self.resources = [Resource.WHEAT, Resource.WHEAT, Resource.WHEAT, Resource.WHEAT, Resource.WOOD, Resource.WOOD, Resource.WOOD, Resource.WOOD, Resource.SHEEP, Resource.SHEEP, Resource.SHEEP, Resource.SHEEP, Resource.STONE, Resource.STONE, Resource.STONE, Resource.BRICK, Resource.BRICK, Resource.BRICK, 'desert']
         self.numbers = [5, 2, 6, 8, 10, 9, 3, 3, 11, 4, 8, 4, 6, 5, 10, 11, 12, 9]
         self.robber_tile = None # the tile that has the robber on it
         
@@ -134,30 +134,30 @@ class Board:
         #also set numbers
         seen_desert = False
         for n in self.tile_nodes:
-
+            self.set_tile_edge_nodes(n)
             if n.get_resource() != 'desert':
                 if not seen_desert:
                     n.set_number(self.numbers[self.tile_nodes.index(n)])
                 else:
                     n.set_number(self.numbers[self.tile_nodes.index(n) - 1])
-            if n.get_resource() == 'wood':
+            if n.get_resource() == Resource.WOOD:
                 #testing scale, old value .65
                 sprite = arcade.Sprite("sprites/green_tile.png",scale=self.x_spacing/180,
                                                 center_x=n.get_x(),center_y=n.get_y())
                 self.tiles.append(sprite)
-            elif n.get_resource() == 'wheat':
+            elif n.get_resource() == Resource.WHEAT:
                 sprite = arcade.Sprite("sprites/wheat_tile.png", scale=self.x_spacing/180,
                                        center_x=n.get_x(), center_y=n.get_y())
                 self.tiles.append(sprite)
-            elif n.get_resource() == 'sheep':
+            elif n.get_resource() == Resource.SHEEP:
                 sprite = arcade.Sprite("sprites/sheep_tile.png", scale=self.x_spacing/180,
                                        center_x=n.get_x(), center_y=n.get_y())
                 self.tiles.append(sprite)
-            elif n.get_resource() == 'ore':
+            elif n.get_resource() == Resource.STONE:
                 sprite = arcade.Sprite("sprites/ore_tile.png", scale=self.x_spacing/180,
                                        center_x=n.get_x(), center_y=n.get_y())
                 self.tiles.append(sprite)
-            elif n.get_resource() == 'brick':
+            elif n.get_resource() == Resource.BRICK:
                 sprite = arcade.Sprite("sprites/brick_tile.png", scale=self.x_spacing/180,
                                        center_x=n.get_x(), center_y=n.get_y())
                 self.tiles.append(sprite)
@@ -251,14 +251,13 @@ class Board:
     def allocate_resources(self, roll):
         target_tiles = [tile for tile in self.tile_nodes if tile.get_number() == roll and not tile.has_robber()]
         for tile in target_tiles:
-            if tile.get_resource() != 'desert':
-                for node in tile.get_nodes():
-                    if node.get_building():
-                        player = node.get_building()
-                        # adds an extra resource if the building is a city
-                        if node.is_city():
-                            player.add_resources({1: tile.get_resource()})
-                        player.add_resources({1: tile.get_resource()})
+            for node in tile.get_nodes():
+                if node.get_building():
+                    player = node.get_building()
+                    # adds an extra resource if the building is a city
+                    if node.is_city():
+                        player.add_resources({tile.get_resource() : 1 })
+                    player.add_resources({tile.get_resource() : 1 })
                 
 
     # main function that calls the sub functions on all players
@@ -343,7 +342,7 @@ class Board:
                         did_build = True
 
             for edge in self.edges:
-                if edge.on_mouse_press(x, y, button):
+                if edge.on_mouse_press(x, y, button, player):
                     did_build = True
 
         if can_rob:
@@ -353,6 +352,7 @@ class Board:
                     if self.robber_tile:
                         self.robber_tile.set_robber(False)
                     self.robber_tile = robber_location
+                    return True
         return did_build
 
     # calls on_mouse_motion on all objects that should have a hover effect
@@ -375,3 +375,9 @@ class Board:
             n.draw()
             if n.get_resource() != 'desert':
                 arcade.draw_text(str(n.get_number()), n.get_x() - 10, n.get_y() - 10,arcade.color.BLACK, 20)
+
+    def get_nodes(self):
+        return self.nodes
+    
+    def get_tiles(self):
+        return self.tile_nodes
