@@ -236,12 +236,13 @@ class GameView(arcade.View):
             if self.dice.ready:
                 # handle roll sum
                 roll_value = self.dice.get_sum_and_reset()
-                print(f"Roll: {roll_value}") # replace with board.distribute_resources(self.dice.sum)
+                print(f"Roll: {roll_value}")
                 if roll_value == 7:
                     self.current_state = GameState.ROBBER
                 else:
                     self.board.allocate_resources(roll_value)
                     self.current_state = GameState.TRADE # TODO: change to GameState.TRADE once trading is developed
+                    self.update_player_states()
 
         self.check_winner()
 
@@ -259,18 +260,16 @@ class GameView(arcade.View):
                 self.update_player_states()
 
 
-
         elif self.current_state == GameState.ROBBER:
             did_rob = self.board.on_mouse_press(x, y, button, self.active_player, can_build=False, can_rob=True)
             if did_rob:
                 self.current_state = GameState.TRADE
 
 
-
     def on_mouse_motion(self, x, y, dx, dy):
         for p in self.players:
             p.on_mouse_motion(x, y)
-        self.board.on_mouse_move(x, )
+        self.board.on_mouse_move(x, y)
 
 
 def main():

@@ -32,7 +32,7 @@ class Player:
     MAX_CITIES = 4
     MAX_ROADS = 15
 
-    #adding these directly into player class as it seems constant throughout
+    # adding these directly into player class as it seems constant throughout
     screen_width, screen_height = arcade.get_display_size()
     WINDOW_WIDTH = screen_width - 100
     WINDOW_HEIGHT = screen_height - 100
@@ -100,10 +100,10 @@ class Player:
         self.trade_button = Button("Trade")
         self.accept_trade_button = Button("Accept")
 
-        self.view_dev_cards_button = Button("Show dev cards", Player.BUTTON_COLOR)
+        self.view_dev_cards_button = Button("Show dev cards")
         self.view_dev_cards_button.on_click = Player.draw_view_dev_cards
 
-        self.view_resources_button = Button("View resources", Player.BUTTON_COLOR)
+        self.view_resources_button = Button("View resources")
         self.view_resources_button.on_click = Player.draw_player_resources
 
         self.finish_turn_button.on_click = Player.finish_turn_function
@@ -113,13 +113,13 @@ class Player:
 
         self.dev_card_stack_button_params = []
 
-        self.dev_card_stack_button = Button("", (0, 0, 0, 0))
+        self.dev_card_stack_button = Button("")
         # 'visible' so button can be pressed
         self.dev_card_stack_button.set_visible(True)
 
         #universal close menu button, put in main?
-        self.close_menu_button = Button("Close", Player.BUTTON_COLOR)
-        self.close_menu_button.set_pos((4*self.WINDOW_WIDTH) / 5, self.WINDOW_HEIGHT / 2, 200, 100)
+        self.close_menu_button = Button("Close")
+        self.close_menu_button.set_position_and_size((4*self.WINDOW_WIDTH) / 5, self.WINDOW_HEIGHT / 2, 200, 100)
         self.close_menu_button.on_click = Player.close_menu
 
 
@@ -191,7 +191,7 @@ class Player:
                                                   usable_width)
 
         #setting dev card button
-        self.dev_card_stack_button.set_pos(self.dev_card_stack_button_params[0],
+        self.dev_card_stack_button.set_position_and_size(self.dev_card_stack_button_params[0],
                                            self.dev_card_stack_button_params[1],
                                            self.dev_card_stack_button_params[2],
                                            self.dev_card_stack_button_params[3])
@@ -208,8 +208,8 @@ class Player:
             self.finish_turn_button.set_position_and_size(x2, y, button_width, button_height)
             self.accept_trade_button.set_position_and_size(x2, y, button_width, button_height)
 
-            self.view_dev_cards_button.set_pos(x1, y2, button_width, button_height)
-            self.view_resources_button.set_pos(x2, y2, button_width, button_height)
+            self.view_dev_cards_button.set_position_and_size(x1, y2, button_width, button_height)
+            self.view_resources_button.set_position_and_size(x2, y2, button_width, button_height)
 
             self.trading_title_height = (self.top - self.bottom) * 0.1
             self.trading_panel_width = (self.right - self.left) * self.trading_panel_width_ratio
@@ -442,7 +442,6 @@ class Player:
 
         self.close_menu_button.on_mouse_press(x, y)
 
-
     def on_mouse_motion(self, x, y):
         self.finish_turn_button.on_mouse_motion(x, y)
         self.trade_button.on_mouse_motion(x, y)
@@ -456,7 +455,6 @@ class Player:
         self.view_resources_button.on_mouse_motion(x, y)
 
         self.close_menu_button.on_mouse_motion(x, y)
-
 
     def draw_view_dev_cards(self):
         #just gonna hope no one draws more than 10 dev cards for now, scaling lowkey a pita
