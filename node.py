@@ -28,7 +28,7 @@ class Node:
     
     def get_y(self):
         return self.y
-
+    
     def add_connection(self, n):
         self.connections.append(n)
 
@@ -46,6 +46,9 @@ class Node:
     
     def get_building(self):
         return self.building
+    
+    def is_city(self):
+        return self.city
     
     # checks if there are any settlements within a road length from the node
     def has_space(self):
@@ -76,7 +79,7 @@ class Node:
     def build_settlement(self, player, board):
         if self.has_space() and self.is_touching_road(board, player) and player.can_build_settlement():
             self.color = player.get_color()
-            self.building = True
+            self.building = player
             player.build_settlement()
             return True
         return False
@@ -97,11 +100,11 @@ class Node:
         return False
     
     # checks if there was a mouse click on the node
-    def on_mouse_press(self, x, y, button, modifiers, player, board):
+    def on_mouse_press(self, x, y, button, player, board):
         return_flag = False
         if self.is_touching(x, y) and button == arcade.MOUSE_BUTTON_LEFT:
             return_flag = self.build_settlement(player, board)
-            if self.build_city(player):
+            if not return_flag and self.build_city(player):
                 return_flag = True
         return return_flag
 

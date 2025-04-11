@@ -86,7 +86,48 @@ class GameView(arcade.View):
         dice_height = dice_width * 0.52
         dice_x = WINDOW_WIDTH - (self.margin * 2) - (dice_width // 2)
         dice_y = (self.margin * 2) + (dice_height // 2)
+
+
+        #longest road/army card stuff
+        self.longest_road_sprite = arcade.Sprite("sprites/longest_road_card.png")
+        self.longest_road_sprite.center_x = WINDOW_WIDTH - ((5 * self.component_width) / 6)
+        self.longest_road_sprite.center_y = WINDOW_HEIGHT - (self.component_height / 4)
+        self.longest_road_sprite.width = self.component_width / 3
+        self.longest_road_sprite.height = self.component_height / 2
+
+        self.largest_army_sprite = arcade.Sprite("sprites/largest_army_card.png")
+        self.largest_army_sprite.center_x = WINDOW_WIDTH - ((5 * self.component_width) / 6)
+        self.largest_army_sprite.center_y = WINDOW_HEIGHT - ((3 * self.component_height) / 4)
+        self.largest_army_sprite.width = self.component_width / 3
+        self.largest_army_sprite.height = self.component_height / 2
+
+        self.dev_card_sprite = arcade.Sprite("sprites/dev_card_img.png")
+        self.dev_card_sprite.center_x = WINDOW_WIDTH - (self.component_width / 4)
+        self.dev_card_sprite.center_y = WINDOW_HEIGHT - (self.component_height / 2)
+        self.dev_card_sprite.width = self.component_width / 2
+        self.dev_card_sprite.height = self.component_height
+
+        # initialize game objects
+        #self.bank = Bank()
+        #self.dev_card_stack = DevCardStack()
         self.dice = Dice(dice_x, dice_y, dice_width, dice_height)
+
+        self.players = []
+        for i in range(self.num_players):
+            p = Player(PLAYER_COLORS[i])
+            #setting the bank/dev cards
+            p.bank = self.bank
+            p.dev_card_stack = self.dev_card_stack
+            p.dev_card_stack_button_params = [
+                self.dev_card_sprite.center_x,
+                self.dev_card_sprite.center_y,
+                self.dev_card_sprite.width,
+                self.dev_card_sprite.height,
+            ]
+            #testing card stuff
+            p.set_longest_road(True)
+            p.set_largest_army(True)
+            self.players.append(p)
 
         #Player.bank = self.bank
         #Player.dev_card_stack = self.dev_card_stack
@@ -146,12 +187,20 @@ class GameView(arcade.View):
         self.board.draw()
         self.dice.on_draw()
 
-        # component placeholders TODO: replace these with actual component on_draw() functions
-        # bank
-        arcade.draw_lrbt_rectangle_filled(WINDOW_WIDTH - self.component_width, WINDOW_WIDTH, WINDOW_HEIGHT - self.component_height, WINDOW_HEIGHT, arcade.color.GRAY)
 
+
+        #bank won't be drawn, only dev card stack
+        arcade.draw_lrbt_rectangle_filled(WINDOW_WIDTH - self.component_width, WINDOW_WIDTH, WINDOW_HEIGHT - self.component_height, WINDOW_HEIGHT, arcade.color.GRAY)
+        arcade.draw_sprite(self.dev_card_sprite)
         for p in self.players:
             p.on_draw()
+            if p.has_longest_road:
+                arcade.draw_sprite(self.longest_road_sprite)
+            if p.has_largest_army:
+                arcade.draw_sprite(self.largest_army_sprite)
+            #p.draw_player_resources()
+            #p.BuyDevCard()
+            #p.draw_view_dev_cards()
 
     def on_update(self, delta_time: float):
         for p in self.players:
@@ -163,9 +212,13 @@ class GameView(arcade.View):
 
             if self.dice.ready:
                 # handle roll sum
-                # TODO: call board function to distribute resources based on dice roll
-                print(f"Roll: {self.dice.get_sum_and_reset()}") # replace with board.distribute_resources(self.dice.sum)
-                self.current_state = GameState.TRADE # TODO: change to GameState.TRADE once trading is developed
+                roll_value = self.dice.get_sum_and_reset()
+                print(f"Roll: {roll_value}") # replace with board.distribute_resources(self.dice.sum)
+                if roll_value == 7:
+                    self.current_state = GameState.ROBBER
+                else:
+                    self.board.allocate_resources(roll_value)
+                    self.current_state = GameState.TRADE # TODO: change to GameState.TRADE once trading is developed
 
         self.check_winner()
 
@@ -177,16 +230,24 @@ class GameView(arcade.View):
 
         if self.current_state == GameState.ROLL:
             self.dice.on_mouse_press(self.mouse_sprite)
-
+            
         elif self.current_state == GameState.TRADE or self.current_state == GameState.BUILD:
-            if self.board.on_mouse_press(x, y, button, modifiers, self.active_player):
+            if self.board.on_mouse_press(x, y, button, self.active_player):
                 self.current_state = GameState.BUILD
+
+
+        elif self.current_state == GameState.ROBBER:
+            did_rob = self.board.on_mouse_press(x, y, button, self.active_player, can_build=False, can_rob=True)
+            if did_rob:
+                self.current_state = GameState.TRADE
+            
+                
 
     def on_mouse_motion(self, x, y, dx, dy):
         self.mouse_sprite.center_x = x
         self.mouse_sprite.center_y = y
 
-        self.board.on_mouse_move(x, y, dx, dy)
+        self.board.on_mouse_move(x, y)
 
         self.active_player.on_mouse_motion(self.mouse_sprite)
 

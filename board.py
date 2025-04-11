@@ -30,9 +30,11 @@ class Board:
         self.height = 0
         self.tiles = arcade.SpriteList()
         self.tile_nodes = []
-        self.resources = ['wheat', 'wheat', 'wheat', 'wheat', 'wood', 'wood', 'wood', 'wood', 'sheep', 'sheep', 'sheep', 'sheep', 'ore', 'ore', 'ore', 'brick', 'brick', 'brick', 'desert']
+        self.resources = [Resource.WHEAT, Resource.WHEAT, Resource.WHEAT, Resource.WHEAT, Resource.WOOD, Resource.WOOD, Resource.WOOD, Resource.WOOD, Resource.SHEEP, Resource.SHEEP, Resource.SHEEP, Resource.SHEEP, Resource.STONE, Resource.STONE, Resource.STONE, Resource.BRICK, Resource.BRICK, Resource.BRICK, 'desert']
         self.numbers = [5, 2, 6, 8, 10, 9, 3, 3, 11, 4, 8, 4, 6, 5, 10, 11, 12, 9]
         self.players = players#players list
+        self.robber_tile = None # the tile that has the robber on it
+        
 
         # tile attributes
         self.x_spacing = 0 # this is the tile width
@@ -133,30 +135,30 @@ class Board:
         #also set numbers
         seen_desert = False
         for n in self.tile_nodes:
-
+            self.set_tile_edge_nodes(n)
             if n.get_resource() != 'desert':
                 if not seen_desert:
                     n.set_number(self.numbers[self.tile_nodes.index(n)])
                 else:
                     n.set_number(self.numbers[self.tile_nodes.index(n) - 1])
-            if n.get_resource() == 'wood':
+            if n.get_resource() == Resource.WOOD:
                 #testing scale, old value .65
                 sprite = arcade.Sprite("sprites/green_tile.png",scale=self.x_spacing/180,
                                                 center_x=n.get_x(),center_y=n.get_y())
                 self.tiles.append(sprite)
-            elif n.get_resource() == 'wheat':
+            elif n.get_resource() == Resource.WHEAT:
                 sprite = arcade.Sprite("sprites/wheat_tile.png", scale=self.x_spacing/180,
                                        center_x=n.get_x(), center_y=n.get_y())
                 self.tiles.append(sprite)
-            elif n.get_resource() == 'sheep':
+            elif n.get_resource() == Resource.SHEEP:
                 sprite = arcade.Sprite("sprites/sheep_tile.png", scale=self.x_spacing/180,
                                        center_x=n.get_x(), center_y=n.get_y())
                 self.tiles.append(sprite)
-            elif n.get_resource() == 'ore':
+            elif n.get_resource() == Resource.STONE:
                 sprite = arcade.Sprite("sprites/ore_tile.png", scale=self.x_spacing/180,
                                        center_x=n.get_x(), center_y=n.get_y())
                 self.tiles.append(sprite)
-            elif n.get_resource() == 'brick':
+            elif n.get_resource() == Resource.BRICK:
                 sprite = arcade.Sprite("sprites/brick_tile.png", scale=self.x_spacing/180,
                                        center_x=n.get_x(), center_y=n.get_y())
                 self.tiles.append(sprite)
@@ -167,7 +169,21 @@ class Board:
                 seen_desert = True
 
         self.find_touching_tiles()
-                        
+
+    # finds the nodes that are touching/make up the edge of a tile 
+    def set_tile_edge_nodes(self, tile):
+        edge_nodes = []
+        for row in self.nodes:
+            for node in row:
+                # the tile center node(pos) should be within one edge length from any node that is touching the tile
+                # this makes a range and if pos is in that range that tile is touching the node
+                node_x_range = [node.get_x() - self.avg_edge_length, node.get_x() + self.avg_edge_length]
+                node_y_range = [node.get_y() - self.avg_edge_length, node.get_y() + self.avg_edge_length]
+                if tile.get_x() >= node_x_range[0] and tile.get_x() <= node_x_range[1]:
+                    if tile.get_y() >= node_y_range[0] and tile.get_y() <= node_y_range[1]:
+                        edge_nodes.append(node)
+
+        tile.set_nodes(edge_nodes)
 
             
     # adds nodes that share an edge to the connections list within each node
@@ -231,6 +247,19 @@ class Board:
         self.y_pos = self.center_y - (h // 2)
 
         self.reset_board()
+    
+    # gives out resources to the players that have buildings touching a tile with the number rolled
+    def allocate_resources(self, roll):
+        target_tiles = [tile for tile in self.tile_nodes if tile.get_number() == roll and not tile.has_robber()]
+        for tile in target_tiles:
+            for node in tile.get_nodes():
+                if node.get_building():
+                    player = node.get_building()
+                    # adds an extra resource if the building is a city
+                    if node.is_city():
+                        player.add_resources({tile.get_resource() : 1 })
+                    player.add_resources({tile.get_resource() : 1 })
+                
 
     # main function that calls the sub functions on all players
     # TODO: Fix the path_length function recursion is not work right 
@@ -332,6 +361,14 @@ class Board:
                     new_next = node
             start.set_color(arcade.color.BLACK)
             return self.path_length(next, new_next, nodes_of_importance, roads, path)
+            print(len(path))
+            return self.path_length(next, new_next, nodes_of_importance, roads, path=path) 
+        
+    def rob_tile(self, player, tile):
+        for node in tile.get_nodes():
+            if node.get_buidling() and node.get_building() != player:
+                node.get_building().remove_resources(1)
+                # TODO: figure out the resource transfer
     
     # returns the edge with the matching start_node and end_node
     def get_edge(self, start_node, end_node):
@@ -351,24 +388,32 @@ class Board:
         self.set_size(h / Board.BOARD_SCALE_FACTOR, h)
 
     # calls on_mouse_press on all objects that are on the board and interactable
-    def on_mouse_press(self, x, y, button, modifiers, player):
+    def on_mouse_press(self, x, y, button, player, can_build=True, can_rob=False):
         did_build = False
-        for row in self.nodes:
-            for node in row:
-                if node.on_mouse_press(x, y, button, modifiers, player, self):
+        if can_build:
+            for row in self.nodes:
+                for node in row:
+                    if node.on_mouse_press(x, y, button, player, self):
+                        did_build = True
+
+            for edge in self.edges:
+                if edge.on_mouse_press(x, y, button, player):
                     did_build = True
 
-        for edge in self.edges:
-            if edge.on_mouse_press(x, y, button, modifiers, player):
-                did_build = True
-        self.find_longest_road()
-
+        if can_rob:
+            for tile in self.tile_nodes:
+                robber_location = tile.on_mouse_press(x, y, button)
+                if robber_location:
+                    if self.robber_tile:
+                        self.robber_tile.set_robber(False)
+                    self.robber_tile = robber_location
+                    return True
         return did_build
 
     # calls on_mouse_motion on all objects that should have a hover effect
-    def on_mouse_move(self, x, y, dx, dy):
+    def on_mouse_move(self, x, y):
         for edge in self.edges:
-            edge.on_mouse_motion(x, y, dx, dy)
+            edge.on_mouse_motion(x, y)
         for row in self.nodes:
             for node in row:
                 node.on_mouse_motion(x,y)
@@ -385,3 +430,9 @@ class Board:
             n.draw()
             if n.get_resource() != 'desert':
                 arcade.draw_text(str(n.get_number()), n.get_x() - 10, n.get_y() - 10,arcade.color.BLACK, 20)
+
+    def get_nodes(self):
+        return self.nodes
+    
+    def get_tiles(self):
+        return self.tile_nodes

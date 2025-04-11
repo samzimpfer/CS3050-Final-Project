@@ -1,0 +1,1 @@
+# this plan will make the com player build up their armies and cities

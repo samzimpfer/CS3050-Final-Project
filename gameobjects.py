@@ -2,11 +2,14 @@ from enum import Enum
 import random
 from dataclasses import *
 
+import arcade
+
 class GameState(Enum):
     SETUP = 0
     ROLL = 1
     TRADE = 2
     BUILD = 3
+    ROBBER = 4
 
 # haven't used this yet but whatever
 class Resource(Enum):
@@ -25,64 +28,72 @@ class DevCard:
     amt: int
     name: str
     description: str
+    pathname: str
     pass
 
 @dataclass(frozen=True)
-class Knight():
+class Knight:
     amt = 14
     name = "Knight"
     description = "Move the robber. Steal one resource from the owner of a settlement or city adjacent to the robber’s new hex."
+    pathname = "sprites/catan_knight_card.png"
 
 @dataclass(frozen=True)
-class RoadBuilding():
+class RoadBuilding:
     amt = 2
     name = "Road Building"
     description = "Place two new roads as if you had just built them."
+    pathname = "sprites/road_building_card.png"
 
 @dataclass(frozen=True)
-class YearOfPlenty():
+class YearOfPlenty:
     amt = 2
     name = "Year of Plenty"
     description = "Take any two resources from the bank. Add them to your hand. They can be two of the same resource or two different resources."
+    pathname = "sprites/yearofplenty_card.jpeg"
 
 @dataclass(frozen=True)
-class Monopoly():
+class Monopoly:
     amt = 2
     name = "Monopoly"
     description = "When you play this card, announce one type of resource. All other players must give you all of their resources of that type."
+    pathname = "sprites/monopoly_card.png"
 
 @dataclass(frozen=True)
-class University():
+class University:
     amt = 1
     name = "University"
     description = "One victory point. Reveal this card on your turn if, with it, you reach the number of points required for victory."
+    pathname = "sprites/university_card.png"
 
 @dataclass(frozen=True)
-class Market():
+class Market:
     amt = 1
     name = "Market"
     description = "One victory point. Reveal this card on your turn if, with it, you reach the number of points required for victory."
+    pathname = "sprites/market_card.png"
 
 @dataclass(frozen=True)
-class GreatHall():
+class GreatHall:
     amt = 1
     name = "Great Hall"
     description = "One victory point. Reveal this card on your turn if, with it, you reach the number of points required for victory."
 
 @dataclass(frozen=True)
-class Chapel():
+class Chapel:
     amt = 1
     name = "Chapel"
     description = "One victory point. Reveal this card on your turn if, with it, you reach the number of points required for victory."
 
 @dataclass(frozen=True)
-class Library():
+class Library:
     amt = 1
     name = "Library"
     description = "One victory point. Reveal this card on your turn if, with it, you reach the number of points required for victory."
+    pathname = "sprites/library_card.png"
 
 # Resource bank, mostly necessary because resources can and do run out during the game
-class Bank():
+class Bank:
     # when initialized, there are 19 of each resource (95 cards total)
     def __init__(self):
         self.resourceDict = {
@@ -124,7 +135,7 @@ class Bank():
 
 
 # Actual stack of Dev Cards
-class DevCardStack():
+class DevCardStack:
     # when initialized, dev card instances are added to stack list and then shuffled.  the description and name can be
     # accessed using <Class Instance>.<data field>
     def __init__(self):

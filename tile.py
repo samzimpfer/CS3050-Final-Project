@@ -6,7 +6,7 @@ class Tile:
         self.y = y
         self.number = 0
         self.connections = []
-        self.adjacentTiles = []
+        self.nodes = []
         self.color = arcade.color.BLACK
         self.size = size  # size of the node that is drawn
         self.originalSize = size  # size of the node with no effects
@@ -30,6 +30,8 @@ class Tile:
     def set_number(self, number):
         self.number = number
 
+    def set_nodes(self, new_nodes):
+        self.nodes = new_nodes
 
     def get_x(self):
         return self.x
@@ -40,8 +42,8 @@ class Tile:
     def add_connection(self, n):
         self.connections.append(n)
 
-    def add_adjacent_tile(self, t):
-        self.adjacentTiles.append(t)
+    def get_nodes(self):
+        return self.nodes
 
     def get_connections(self):
         return self.connections
@@ -49,11 +51,30 @@ class Tile:
     def get_resource(self):
         return self.resource
 
-    def get_robber(self):
+    def has_robber(self):
         return self.robber
 
     def get_number(self):
         return self.number
+    
+    def is_touching(self, x, y):
+        if (x >= self.x - self.size and x <= self.x + self.size and 
+            y >= self.y - self.size and y <= self.y + self.size):
+            return True
+        return False
+    
+    # checks if there was a mouse click on the node
+    def on_mouse_press(self, x, y, button):
+        return_flag = None
+        if self.is_touching(x, y) and button == arcade.MOUSE_BUTTON_LEFT:
+            if not self.robber:
+                self.robber = True
+                return_flag = self
+        return return_flag
 
     def draw(self):
+        if self.robber:
+            self.color = arcade.color.GRAY
+        else:
+            self.color = arcade.color.WHITE_SMOKE
         arcade.draw_circle_filled(self.x, self.y, self.size, self.color)
