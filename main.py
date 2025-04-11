@@ -7,14 +7,12 @@ template.
 If Python and Arcade are installed, this example can be run from the command line with:
 python -m arcade.examples.starting_template
 """
-import arcade
-from enum import Enum
-
 from gameobjects import *
-
 from board import Board
-from player import Player
+from player import *
 from dice import Dice
+import arcade
+
 
 screen_width, screen_height = arcade.get_display_size()
 WINDOW_WIDTH = screen_width - 100
@@ -50,12 +48,17 @@ class GameView(arcade.View):
         self.sprites.append(self.logo)
 
         # TODO: take these out
-        # these are here only so board can create a player class for testing. More organized to have them below
+        # these are here only so board can create a player class for testing. More organized to
+        # have them below
         self.bank = Bank()
         self.dev_card_stack = DevCardStack()
+
         Player.bank = self.bank
         Player.dev_card_stack = self.dev_card_stack
         Player.finish_turn_function = self.next_player_turn
+        Player.update_all_player_states_function = self.update_player_states
+        Player.update_all_player_can_trade_function = self.update_players_can_trade
+        Player.accept_trade_function = self.execute_trade
 
         board_center_x = WINDOW_WIDTH // 2
         board_center_y = (self.board_space // 2) + self.margin
@@ -67,7 +70,8 @@ class GameView(arcade.View):
         self.component_width = (WINDOW_WIDTH - self.board.width + self.board.x_spacing) // 2
         self.component_height = self.logo_space + self.margin + self.board.x_spacing
         self.other_player_width = (WINDOW_WIDTH - self.board.width) * 0.4
-        self.other_player_height = (WINDOW_HEIGHT - self.component_height - (self.margin * 5)) // (self.num_players - 1)
+        self.other_player_height = ((WINDOW_HEIGHT - self.component_height - (self.margin * 5))
+                                    // (self.num_players - 1))
         dice_width = (WINDOW_WIDTH - self.board.width - (self.margin * 2)) // 2
         dice_height = dice_width * 0.52
         dice_x = WINDOW_WIDTH - (self.margin * 2) - (dice_width // 2)
@@ -118,9 +122,6 @@ class GameView(arcade.View):
         #Player.bank = self.bank
         #Player.dev_card_stack = self.dev_card_stack
 
-        mouse_size = 5
-        self.mouse_sprite = arcade.SpriteSolidColor(mouse_size, mouse_size, color=(0, 0, 0, 150))
-
         # gameplay fields
         self.current_state = None
         self.active_player_index = 0
@@ -129,11 +130,16 @@ class GameView(arcade.View):
         # start game
         self.reset()
 
+
+    # resets the game
     def reset(self):
         self.current_state = GameState.ROLL
         self.active_player_index = -1
         self.next_player_turn()
+        # TODO: reset player inventories
 
+
+    # advances to the next player's turn, updating player UIs and updating the game state
     def next_player_turn(self):
         # cycle active player
         self.active_player_index += 1
@@ -143,9 +149,9 @@ class GameView(arcade.View):
 
         # set active player position
         self.active_player.set_active_player(True)
-        self.active_player.set_pos(0, self.component_width,
-                                   WINDOW_HEIGHT - self.component_height,
-                                   WINDOW_HEIGHT - self.margin)
+        self.active_player.set_position_and_size(0, self.component_width,
+                                                 WINDOW_HEIGHT - self.component_height,
+                                                 WINDOW_HEIGHT - self.margin)
 
         # set inactive player positions
         i = 2  # iterate through inactive player positions
@@ -154,18 +160,51 @@ class GameView(arcade.View):
             if p >= self.num_players:
                 p = 0
             self.players[p].set_active_player(False)
-            self.players[p].set_pos(0, self.other_player_width,
-                                    self.margin + (i * (self.margin + self.other_player_height)),
-                                    (i + 1) * (self.margin + self.other_player_height))
+            self.players[p].set_position_and_size(0, self.other_player_width,
+                                                  self.margin + (i * (self.margin
+                                                                      + self.other_player_height)),
+                                                  (i + 1) * (self.margin + self.other_player_height))
             p += 1
             i -= 1
 
         self.current_state = GameState.ROLL
+        self.update_player_states()
 
+
+    # updates each player's ability to accept a given trade based on whether they have enough
+    # resources
+    def update_players_can_trade(self, inventory):
+        for p in self.players:
+            p.update_can_trade(inventory)
+
+
+    # swaps resources between the active player and another player
+    def execute_trade(self, player2):
+        player2.add_resources(self.active_player.give_inventory.get_amounts())
+        player2.use_resources(self.active_player.get_inventory.get_amounts())
+        self.active_player.add_resources(self.active_player.get_inventory.get_amounts())
+        self.active_player.use_resources(self.active_player.give_inventory.get_amounts())
+
+        self.current_state = GameState.BUILD
+        self.update_player_states()
+
+
+    # updates each players state, either based on the current game state, or to a specific
+    # player state if specified
+    def update_player_states(self, set_to=None):
+        for p in self.players:
+            if set_to is None:
+                p.set_state(self.current_state)
+            else:
+                p.handle_state(set_to)
+
+
+    # checks for a winner
     def check_winner(self):
         for p in self.players:
             if p.get_points() >= 11:
                 print(f"{p.get_color()} player wins!")
+
 
     def on_draw(self):
         self.clear()
@@ -188,10 +227,8 @@ class GameView(arcade.View):
             #p.BuyDevCard()
             #p.draw_view_dev_cards()
 
-    def on_update(self, delta_time: float):
-        for p in self.players:
-            p.set_state(self.current_state)
 
+    def on_update(self, delta_time: float):
         # manage game state
         if self.current_state == GameState.ROLL:
             self.dice.on_update(delta_time)
@@ -208,40 +245,40 @@ class GameView(arcade.View):
 
         self.check_winner()
 
-    def on_mouse_press(self, x, y, button, modifiers):
-        self.mouse_sprite.center_x = x
-        self.mouse_sprite.center_y = y
 
-        self.active_player.on_mouse_press(self.mouse_sprite)
+    def on_mouse_press(self, x, y, button, modifiers):
+        for p in self.players:
+            p.on_mouse_press(x, y)
 
         if self.current_state == GameState.ROLL:
-            self.dice.on_mouse_press(self.mouse_sprite)
-            
+            self.dice.on_mouse_press(x, y)
+
         elif self.current_state == GameState.TRADE or self.current_state == GameState.BUILD:
             if self.board.on_mouse_press(x, y, button, self.active_player):
                 self.current_state = GameState.BUILD
+                self.update_player_states()
+
 
 
         elif self.current_state == GameState.ROBBER:
             did_rob = self.board.on_mouse_press(x, y, button, self.active_player, can_build=False, can_rob=True)
             if did_rob:
                 self.current_state = GameState.TRADE
-            
-                
+
+
 
     def on_mouse_motion(self, x, y, dx, dy):
-        self.mouse_sprite.center_x = x
-        self.mouse_sprite.center_y = y
+        for p in self.players:
+            p.on_mouse_motion(x, y)
+        self.board.on_mouse_move(x, )
 
-        self.board.on_mouse_move(x, y)
-
-        self.active_player.on_mouse_motion(self.mouse_sprite)
 
 def main():
     window = arcade.Window(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE)
     game = GameView()
     window.show_view(game)
     arcade.run()
+
 
 if __name__ == "__main__":
     main()

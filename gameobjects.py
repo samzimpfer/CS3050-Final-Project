@@ -4,6 +4,7 @@ from dataclasses import *
 
 import arcade
 
+# enums
 class GameState(Enum):
     SETUP = 0
     ROLL = 1
@@ -11,7 +12,6 @@ class GameState(Enum):
     BUILD = 3
     ROBBER = 4
 
-# haven't used this yet but whatever
 class Resource(Enum):
     BRICK = 0
     SHEEP = 1
@@ -19,6 +19,33 @@ class Resource(Enum):
     WHEAT = 3
     WOOD = 4
 
+# game constants
+UI_COLOR = (75, 110, 150)
+UI_OUTLINE_COLOR = (40, 80, 140)
+BUTTON_COLOR = (40, 80, 140)
+
+ROAD_COST = {
+    Resource.BRICK:1,
+    Resource.WOOD:1
+}
+
+SETTLEMENT_COST = {
+    Resource.BRICK:1,
+    Resource.SHEEP:1,
+    Resource.WHEAT:1,
+    Resource.WOOD:1
+}
+
+CITY_COST = {
+    Resource.WHEAT:2,
+    Resource.STONE:3
+}
+
+DEV_CARD_COST = {
+    Resource.WHEAT:1,
+    Resource.STONE:1,
+    Resource.SHEEP:1,
+}
 
 # All dev card types, basically structs.  Subclasses of DevCard.  Each has the number of them(amt), name, and description.
 # functions like "show type" and "print description" can be added to the parent DevCard function.  May be best to remove
