@@ -2,11 +2,12 @@ import arcade
 
 class Node:
 
-    def __init__(self, x=0, y=0, row=0, size=6):
+    def __init__(self, x=0, y=0, row=0, col=0, size=6):
         self.x = x
         self.y = y
         # for easy relation to position in board
         self.row = row
+        self.col = col
         self.connections = []
         self.adjacentTiles = []
         self.color = arcade.color.BLACK
@@ -43,6 +44,9 @@ class Node:
 
     def get_row(self):
         return self.row
+    
+    def get_col(self):
+        return self.col
     
     def get_building(self):
         return self.building

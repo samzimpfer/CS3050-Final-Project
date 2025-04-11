@@ -5,6 +5,7 @@ from edge import Edge
 from tile import Tile
 from gameobjects import *
 import random
+from aggressive_plan import AggressivePlan
 
 # defines a board object that contains nodes representing appropriate positions for settlements
 class Board:
@@ -34,6 +35,7 @@ class Board:
         self.numbers = [5, 2, 6, 8, 10, 9, 3, 3, 11, 4, 8, 4, 6, 5, 10, 11, 12, 9]
         self.players = players#players list
         self.robber_tile = None # the tile that has the robber on it
+        self.plan = AggressivePlan(self.players[0], self)
         
 
         # tile attributes
@@ -67,7 +69,7 @@ class Board:
             for col in range(0, Board.ROW_SIZES[row]): # creates a node at each appropriate column in the row
                 x = first_x + (self.x_spacing * col)
 
-                n = Node(x,y,row=row)
+                n = Node(x,y,row=row, col=col)
                 row_node_list.append(n)
             self.nodes.append(row_node_list)
 
@@ -390,6 +392,7 @@ class Board:
     # calls on_mouse_press on all objects that are on the board and interactable
     def on_mouse_press(self, x, y, button, player, can_build=True, can_rob=False):
         did_build = False
+        self.plan.evaluate_nodes()
         if can_build:
             for row in self.nodes:
                 for node in row:

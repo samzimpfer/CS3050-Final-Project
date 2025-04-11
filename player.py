@@ -301,6 +301,10 @@ class Player:
 
     def get_color(self):
         return self.color
+    
+    # TODO: just here so I can test the bot
+    def has_knight(self):
+        return True
 
     # can build functions
     # return True is the player hasn't exceeded the limit per building and has the resources to build, and False otherwise
