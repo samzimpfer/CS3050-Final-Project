@@ -4,11 +4,19 @@ from resource import ResourceGraphic
 class Inventory:
 
     DEFAULT_AMOUNTS = {
-            Resource.BRICK: 99,
-            Resource.SHEEP: 99,
-            Resource.STONE: 99,
-            Resource.WHEAT: 99,
-            Resource.WOOD: 99
+        Resource.BRICK: 0,
+        Resource.SHEEP: 0,
+        Resource.STONE: 0,
+        Resource.WHEAT: 0,
+        Resource.WOOD: 0
+    }
+
+    PRELOADED_RESOURCES = {
+        Resource.BRICK: 99,
+        Resource.SHEEP: 99,
+        Resource.STONE: 99,
+        Resource.WHEAT: 99,
+        Resource.WOOD: 99
     }
 
     DEFAULT_LIMITS = {
@@ -54,7 +62,7 @@ class Inventory:
 
     # resets the resource amounts to defaults
     def reset(self):
-        self.change_amounts(Inventory.DEFAULT_AMOUNTS)
+        self.set_amounts(Inventory.DEFAULT_AMOUNTS)
 
     # resets limits to "infinity" (1000)
     def reset_limits(self):
@@ -65,6 +73,12 @@ class Inventory:
     def set_limits(self, limits):
         for r, l in limits.items():
             self.inventory[r].set_limit(l)
+
+
+    # sets the amounts of each resource based on dictionary in form { Resource.TYPE: integer_amount }
+    def set_amounts(self, amounts):
+        for r, a in amounts.items():
+            self.inventory[r].set_amount(a)
 
 
     # change amounts based on dictionary in form { Resource.TYPE: integer_amount }
