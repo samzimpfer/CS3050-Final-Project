@@ -27,7 +27,7 @@ class Edge:
         return self.road
     
     def build_road(self,player, free=False):
-        if self.road is None and player.can_build_road():
+        if self.road is None and (free or player.can_build_road()):
             self.road = player
             self.color = player.get_color()
             if free:

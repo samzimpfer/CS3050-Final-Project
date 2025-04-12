@@ -87,7 +87,9 @@ class Player:
         # UI elements
         self.show_resources = True # TODO: change this to False when done testing
         self.main_inventory = Inventory(False)
-        self.main_inventory.set_amounts(Inventory.PRELOADED_RESOURCES) # TODO: change this to .reset()
+        self.main_inventory.reset()
+        self.main_inventory.reset_limits()
+        # self.main_inventory.set_amounts(Inventory.PRELOADED_RESOURCES) # TODO: take this out
         self.give_inventory = Inventory(True)
         self.get_inventory = Inventory(True, self.relay_inventory)
 

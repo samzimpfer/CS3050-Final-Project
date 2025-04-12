@@ -253,7 +253,8 @@ class Board:
             for node in row:
                 if node.get_building() == player:
                     for tile in node.get_adjacent_tiles():
-                        player.add_resources({tile.get_resource() : 1})
+                        if tile.get_resource() != "desert":
+                            player.add_resources({tile.get_resource() : 1})
     
     # gives out resources to the players that have buildings touching a tile with the number rolled
     def allocate_resources(self, roll):

@@ -159,6 +159,7 @@ class GameView(arcade.View):
         self.players.clear()
         for i in range(self.num_players):
             p = Player(PLAYER_COLORS[i])
+
             #setting the bank/dev cards
             p.bank = self.bank
             p.dev_card_stack = self.dev_card_stack
@@ -179,7 +180,6 @@ class GameView(arcade.View):
         self.turn_direction = 1
         self.start_turn_settlement = False
         self.next_player_turn()
-        # TODO: reset player inventories
 
 
     # advances to the next player's turn, updating player UIs and updating the game state
