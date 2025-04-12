@@ -181,6 +181,8 @@ class GameView(arcade.View):
             i -= 1
 
         self.current_state = GameState.ROLL
+        self.update_player_states()
+
         # there is almost no way this works delete it if you need main 
         # sorry for leaving this here 
         if self.active_player.is_bot():
