@@ -20,8 +20,6 @@ WINDOW_WIDTH = screen_width - 100
 WINDOW_HEIGHT = screen_height - 100
 WINDOW_TITLE = "Settlers of Catan"
 
-PLAYER_COLORS = [arcade.color.BLUE, arcade.color.GREEN, arcade.color.RED, arcade.color.YELLOW]
-
 class GameView(arcade.View):
 
     def __init__(self):
@@ -48,6 +46,23 @@ class GameView(arcade.View):
         self.logo.center_y = WINDOW_HEIGHT - self.margin - (self.logo_space // 2)
         self.sprites.append(self.logo)
 
+        button_size = WINDOW_HEIGHT // 8
+        self.three_player_button = Button("3")
+        self.four_player_button = Button("4")
+        self.five_player_button = Button("5")
+        self.three_player_button.set_position_and_size((WINDOW_WIDTH // 2) - button_size * 1.1,
+                                                       (WINDOW_HEIGHT // 2) - button_size,
+                                                       button_size, button_size)
+        self.four_player_button.set_position_and_size((WINDOW_WIDTH // 2),
+                                                       (WINDOW_HEIGHT // 2) - button_size,
+                                                       button_size, button_size)
+        self.five_player_button.set_position_and_size((WINDOW_WIDTH // 2) + button_size * 1.1,
+                                                       (WINDOW_HEIGHT // 2) - button_size,
+                                                       button_size, button_size)
+        self.three_player_button.on_click = lambda : self.reset(3)
+        self.four_player_button.on_click = lambda : self.reset(4)
+        self.five_player_button.on_click = lambda : self.reset(5)
+
         # TODO: take these out
         # these are here only so board can create a player class for testing. More organized to
         # have them below
@@ -66,22 +81,51 @@ class GameView(arcade.View):
 
 
         # more sizing fields used for bank, dice, and player representations
-        self.num_players = 4
+        self.component_width = 0
+        self.component_height = 0
+        self.other_player_width = 0
+        self.other_player_height = 0
 
+        self.longest_road_sprite = arcade.Sprite("sprites/longest_road_card.png")
+        self.largest_army_sprite = arcade.Sprite("sprites/largest_army_card.png")
+        self.dev_card_sprite = arcade.Sprite("sprites/dev_card_img.png")
 
-
-        # initialize game objects
-        #self.bank = Bank()
-        #self.dev_card_stack = DevCardStack()
-
+        self.dice = None
 
         self.players = []
-        for i in range(self.num_players):
-            p = Player(PLAYER_COLORS[i])
-            self.players.append(p)
+        self.num_players = 0
 
-        self.board = Board(board_center_x, board_center_y, self.players, height=self.board_space)
+        #Player.bank = self.bank
+        #Player.dev_card_stack = self.dev_card_stack
 
+        # gameplay fields
+        self.current_state = None
+        self.active_player_index = 0
+        self.active_player = None
+        self.turn_direction = 0
+        self.start_turn_settlement = False
+
+        # start game
+        self.setup()
+
+
+    # shows the start screen
+    def setup(self):
+        self.current_state = GameState.SETUP
+        self.three_player_button.set_visible(True)
+        self.four_player_button.set_visible(True)
+        self.five_player_button.set_visible(True)
+
+
+    # resets the game
+    def reset(self, num_players):
+        self.num_players = num_players
+
+        self.three_player_button.set_visible(False)
+        self.four_player_button.set_visible(False)
+        self.five_player_button.set_visible(False)
+
+        # set positions/sizes of components
         self.component_width = (WINDOW_WIDTH - self.board.width + self.board.x_spacing) // 2
         self.component_height = self.logo_space + self.margin + self.board.x_spacing
         self.other_player_width = (WINDOW_WIDTH - self.board.width) * 0.4
@@ -92,32 +136,31 @@ class GameView(arcade.View):
         dice_x = WINDOW_WIDTH - (self.margin * 2) - (dice_width // 2)
         dice_y = (self.margin * 2) + (dice_height // 2)
 
-
-        #longest road/army card stuff
-        self.longest_road_sprite = arcade.Sprite("sprites/longest_road_card.png")
+        # longest road/army card stuff
         self.longest_road_sprite.center_x = WINDOW_WIDTH - ((5 * self.component_width) / 6)
         self.longest_road_sprite.center_y = WINDOW_HEIGHT - (self.component_height / 4)
         self.longest_road_sprite.width = self.component_width / 3
         self.longest_road_sprite.height = self.component_height / 2
 
-        self.largest_army_sprite = arcade.Sprite("sprites/largest_army_card.png")
         self.largest_army_sprite.center_x = WINDOW_WIDTH - ((5 * self.component_width) / 6)
         self.largest_army_sprite.center_y = WINDOW_HEIGHT - ((3 * self.component_height) / 4)
         self.largest_army_sprite.width = self.component_width / 3
         self.largest_army_sprite.height = self.component_height / 2
 
-        self.dev_card_sprite = arcade.Sprite("sprites/dev_card_img.png")
         self.dev_card_sprite.center_x = WINDOW_WIDTH - (self.component_width / 4)
         self.dev_card_sprite.center_y = WINDOW_HEIGHT - (self.component_height / 2)
         self.dev_card_sprite.width = self.component_width / 2
         self.dev_card_sprite.height = self.component_height
 
         # initialize game objects
-        #self.bank = Bank()
-        #self.dev_card_stack = DevCardStack()
+        # self.bank = Bank()
+        # self.dev_card_stack = DevCardStack()
         self.dice = Dice(dice_x, dice_y, dice_width, dice_height)
 
-        for p in self.players:
+        self.players.clear()
+        for i in range(self.num_players):
+            p = Player(PLAYER_COLORS[i])
+
             #setting the bank/dev cards
             p.bank = self.bank
             p.dev_card_stack = self.dev_card_stack
@@ -130,34 +173,37 @@ class GameView(arcade.View):
             #testing card stuff
             p.set_longest_road(True)
             p.set_largest_army(True)
+
+            # TODO: human vs ai here
             #p.set_robot(Robot(p, self.board))
 
-        #Player.bank = self.bank
-        #Player.dev_card_stack = self.dev_card_stack
-
         # gameplay fields
-        self.current_state = None
-        self.active_player_index = 0
-        self.active_player = None
-
-        # start game
-        self.reset()
-
-
-    # resets the game
-    def reset(self):
-        self.current_state = GameState.ROLL
+        self.current_state = GameState.START_TURN
         self.active_player_index = -1
+        self.turn_direction = 1
+        self.start_turn_settlement = True
         self.next_player_turn()
-        # TODO: reset player inventories
 
 
     # advances to the next player's turn, updating player UIs and updating the game state
     def next_player_turn(self):
         # cycle active player
-        self.active_player_index += 1
-        if self.active_player_index >= self.num_players:
-            self.active_player_index = 0
+        self.active_player_index += self.turn_direction
+
+        if self.current_state == GameState.START_TURN:
+            if self.active_player_index >= self.num_players:
+                self.active_player_index = self.num_players - 1
+                self.turn_direction = -1
+
+            if self.active_player_index < 0:
+                self.active_player_index = 0
+                self.current_state = GameState.ROLL
+        else:
+            if self.active_player_index >= self.num_players:
+                self.active_player_index = 0
+
+            self.current_state = GameState.ROLL
+
         self.active_player = self.players[self.active_player_index]
 
         # set active player position
@@ -165,9 +211,9 @@ class GameView(arcade.View):
         self.active_player.set_position_and_size(0, self.component_width,
                                                  WINDOW_HEIGHT - self.component_height,
                                                  WINDOW_HEIGHT - self.margin)
-        
+
         # set inactive player positions
-        i = 2  # iterate through inactive player positions
+        i = self.num_players - 2  # iterate through inactive player positions
         p = self.active_player_index + 1  # iterate through inactive players
         while (i >= 0):
             if p >= self.num_players:
@@ -180,11 +226,10 @@ class GameView(arcade.View):
             p += 1
             i -= 1
 
-        self.current_state = GameState.ROLL
         self.update_player_states()
 
-        # there is almost no way this works delete it if you need main 
-        # sorry for leaving this here 
+        # there is almost no way this works delete it if you need main
+        # sorry for leaving this here
         if self.active_player.is_bot():
             self.dice.roll()
             #self.active_player.get_robot().play_turn()
@@ -228,23 +273,32 @@ class GameView(arcade.View):
     def on_draw(self):
         self.clear()
         self.sprites.draw()
-        self.board.draw()
-        self.dice.on_draw()
 
+        if self.current_state == GameState.SETUP:
 
+            arcade.draw_text("Select number of players", WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2,
+                             arcade.color.BLACK, font_size=WINDOW_WIDTH / 40, anchor_x="center",
+                             anchor_y="center")
 
-        #bank won't be drawn, only dev card stack
-        arcade.draw_lrbt_rectangle_filled(WINDOW_WIDTH - self.component_width, WINDOW_WIDTH, WINDOW_HEIGHT - self.component_height, WINDOW_HEIGHT, arcade.color.GRAY)
-        arcade.draw_sprite(self.dev_card_sprite)
-        for p in self.players:
-            p.on_draw()
-            if p.has_longest_road:
-                arcade.draw_sprite(self.longest_road_sprite)
-            if p.has_largest_army:
-                arcade.draw_sprite(self.largest_army_sprite)
-            #p.draw_player_resources()
-            #p.BuyDevCard()
-            #p.draw_view_dev_cards()
+            self.three_player_button.on_draw()
+            self.four_player_button.on_draw()
+            self.five_player_button.on_draw()
+        else:
+            self.board.draw()
+            self.dice.on_draw()
+
+            #bank won't be drawn, only dev card stack
+            arcade.draw_lrbt_rectangle_filled(WINDOW_WIDTH - self.component_width, WINDOW_WIDTH, WINDOW_HEIGHT - self.component_height, WINDOW_HEIGHT, arcade.color.GRAY)
+            arcade.draw_sprite(self.dev_card_sprite)
+            for p in self.players:
+                p.on_draw()
+                if p.has_longest_road:
+                    arcade.draw_sprite(self.longest_road_sprite)
+                if p.has_largest_army:
+                    arcade.draw_sprite(self.largest_army_sprite)
+                #p.draw_player_resources()
+                #p.BuyDevCard()
+                #p.draw_view_dev_cards()
 
 
     def on_update(self, delta_time: float):
@@ -260,7 +314,7 @@ class GameView(arcade.View):
                     self.current_state = GameState.ROBBER
                 else:
                     self.board.allocate_resources(roll_value)
-                    self.current_state = GameState.TRADE # TODO: change to GameState.TRADE once trading is developed
+                    self.current_state = GameState.TRADE
                     self.update_player_states()
 
         self.check_winner()
@@ -270,14 +324,26 @@ class GameView(arcade.View):
         for p in self.players:
             p.on_mouse_press(x, y)
 
-        if self.current_state == GameState.ROLL:
+        if self.current_state == GameState.SETUP:
+            self.three_player_button.on_mouse_press(x, y)
+            self.four_player_button.on_mouse_press(x, y)
+            self.five_player_button.on_mouse_press(x, y)
+
+        elif self.current_state == GameState.START_TURN:
+            if self.board.on_mouse_press(x, y, button, self.active_player, can_build_road=not self.start_turn_settlement, can_build_settlement=self.start_turn_settlement, start_turn=0):
+                if self.start_turn_settlement:
+                    self.start_turn_settlement = False
+                else:
+                    self.start_turn_settlement = True
+                    self.next_player_turn()
+
+        elif self.current_state == GameState.ROLL:
             self.dice.on_mouse_press(x, y)
 
         elif self.current_state == GameState.TRADE or self.current_state == GameState.BUILD:
             if self.board.on_mouse_press(x, y, button, self.active_player):
                 self.current_state = GameState.BUILD
                 self.update_player_states()
-
 
         elif self.current_state == GameState.ROBBER:
             did_rob = self.board.on_mouse_press(x, y, button, self.active_player, can_build=False, can_rob=True)
@@ -286,9 +352,15 @@ class GameView(arcade.View):
 
 
     def on_mouse_motion(self, x, y, dx, dy):
-        for p in self.players:
-            p.on_mouse_motion(x, y)
-        self.board.on_mouse_move(x, y)
+        if self.current_state == GameState.SETUP:
+            self.three_player_button.on_mouse_motion(x, y)
+            self.four_player_button.on_mouse_motion(x, y)
+            self.five_player_button.on_mouse_motion(x, y)
+
+        else:
+            for p in self.players:
+                p.on_mouse_motion(x, y)
+            self.board.on_mouse_move(x, y)
 
 
 def main():

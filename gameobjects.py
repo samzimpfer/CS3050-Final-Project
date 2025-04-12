@@ -7,10 +7,11 @@ import arcade
 # enums
 class GameState(Enum):
     SETUP = 0
-    ROLL = 1
-    TRADE = 2
-    BUILD = 3
-    ROBBER = 4
+    START_TURN = 1
+    ROLL = 2
+    TRADE = 3
+    BUILD = 4
+    ROBBER = 5
 
 class Resource(Enum):
     BRICK = 0
@@ -23,6 +24,8 @@ class Resource(Enum):
 UI_COLOR = (75, 110, 150)
 UI_OUTLINE_COLOR = (40, 80, 140)
 BUTTON_COLOR = (40, 80, 140)
+
+PLAYER_COLORS = [arcade.color.BLUE, arcade.color.GREEN, arcade.color.RED, arcade.color.YELLOW, arcade.color.ORANGE]
 
 ROAD_COST = {
     Resource.BRICK:1,
