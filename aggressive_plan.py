@@ -18,18 +18,57 @@ class AggressivePlan():
         self.settlements = []# list of nodes that have settlements
         self.weights = []# list of values that control what the com does
         self.resource_types_weights = [0,0,0,0,0]# number of each resource tile you have
+        self.action = None# the action that is queued up 
+        self.action_location = None# where the action will take place if needed
 
-    def play_turn(self, action):
+    def play_turn(self):
         pass
 
     def plan_move(self):
+        inventory = self.player.return_inventory()
+
+        # checks if the player can be robbed if they have more than 7 cards
+        can_be_robbed = False
+        number_of_resource_cards = 0
+        for _, value in inventory.items():
+            number_of_resource_cards += value
+        if number_of_resource_cards > 7:
+            can_be_robbed = True
+        
         # calculates how far from from the price of each item the player is or isnt 
-        distances = {
-            ROAD_COST: self.distance_from_price(ROAD_COST),
-            SETTLEMENT_COST: self.distance_from_price(SETTLEMENT_COST),
-            CITY_COST: self.distance_from_price(CITY_COST),
-            DEV_CARD_COST: self.distance_from_price(DEV_CARD_COST)
-        }
+        road_weights = self.distance_from_price(ROAD_COST)
+        settlement_weights = self.distance_from_price(SETTLEMENT_COST)
+        city_weights = self.distance_from_price(CITY_COST)
+        dev_card_weights = self.distance_from_price(DEV_CARD_COST)
+
+        outer_evaluations = self.evaluate_boardering_nodes()
+        road_evalutations = self.evaluate_incomplete_edges()
+        building_evaluations = self.evaluate_buildable_nodes()
+        upgradable_evaluations = self.evaluate_upgradable_nodes()
+
+        best_settlement_node = building_evaluations[0][building_evaluations[1].index(max(building_evaluations[1]))]
+        best_settlement_node_eval = max(building_evaluations[1])
+
+        best_settlement_upgrade = upgradable_evaluations[0][upgradable_evaluations[1].index(max(upgradable_evaluations[1]))]
+        best_settlement_upgrade_eval = max(upgradable_evaluations[1])
+
+        best_road_edge = road_evalutations[0][road_evalutations[1].index(max(road_evalutations[1]))]
+        best_road_edge_eval = max(road_evalutations[1])
+
+        for i in range(len(outer_evaluations[0])):
+            if outer_evaluations[1][i] > best_settlement_node_eval:
+                best_settlement_node = outer_evaluations[0][i]
+                best_settlement_node_eval = outer_evaluations[1][i]
+        
+        
+
+                
+
+        
+
+        
+
+        
         
 
     
@@ -40,6 +79,9 @@ class AggressivePlan():
             for neighbor in node.get_connections():
                 if neighbor != node:
                     boardering_nodes.append(neighbor)
+
+        for i in range(len(boardering_nodes[0])):
+            boardering_nodes[1].append(self.evaluate_node(boardering_nodes[0][i]))
         return boardering_nodes
     
     # finds and evaluates nodes that do not have three roads going into them
@@ -54,6 +96,10 @@ class AggressivePlan():
                 for n in count:
                     incomplete_edges[0].append([node, n])
 
+        for i in range(len(incomplete_edges[0])):
+            # an edges evaluation value is just the highest node evaluation of the two nodes that make it
+            incomplete_edges[1].append(max(self.evaluate_node(incomplete_edges[0][i][0]), 
+                                           self.evaluate_node(incomplete_edges[0][i][0])))
         return incomplete_edges
 
     # finds and evaluates the nodes that are connected to roads and valid to build on
@@ -62,15 +108,26 @@ class AggressivePlan():
         for node in self.player.get_roads():
             if node.get_building() == None and node.has_space():
                 buildable_nodes[0].append(node)
-        for node in buildable_nodes[0]:
-            pass
+        for i in range(len(buildable_nodes[0])):
+            buildable_nodes[1].append(self.evaluate_node(buildable_nodes[0][i]))
+        return buildable_nodes
+    
+    # finds and evaluates nodes that have a settlement on them
+    def evaluate_upgradable_nodes(self):
+        upgradable_nodes = [[],[]]
+        for node in self.settlements:
+            if node.get_buidling() == self.player:
+                upgradable_nodes[0].append(node)
+        
+        for i in range(len(upgradable_nodes[0])):
+            upgradable_nodes[1].append(self.evaluate_node(upgradable_nodes[0][i]))
     
     # TODO: deal with it later
     def trade(self):
         pass
 
     # checks if the node is valid to build on and if it is worth it to build on
-    def evaluate_node(self, node, is_setup=False):
+    def evaluate_node(self, node):
         # useless if someone has already built there 
         if node.get_building() and (node not in self.settlements or node not in self.cities):
             return -2 
@@ -144,13 +201,11 @@ class AggressivePlan():
     def opening_move(self):
         pass
     
-    # calculates a distance from the price of some item. 
-    # The distance based on how many of each resource is needed and the resource_type_weights
-    # returns negative is the purchase is possible 
+    # calculates the distance from the price per resource then returns a list of distances 
+    # if the distance is negative it means the player is over the cost of that resource
     def distance_from_price(self, purchase):
-        distance = 0
+        distance_list = [0,0,0,0,0]# each index is a resources type
         inventory = self.player.return_inventory()
-        overkill_count = 0# the number of resources where the player has double the price
         for key, value in purchase.items():
             # if the value is less than the price it will add distance to the price
             # this distance is 
@@ -160,13 +215,15 @@ class AggressivePlan():
                     this_distance *= 0.5
                 elif self.resource_types_weights[key.value] < 1 and self.resource_types_weights[key.value] != 0:
                     this_distance *= 1.5
-                distance += this_distance
-            if value * 2 <= inventory[key]:
-                overkill_count += 1
-        if overkill_count == len(purchase):
-            return -1
+                distance_list[key.value] = this_distance
+            elif value <= inventory[key]:
+                distance_list[key.value] = -1 * inventory[key]/value
+                if distance_list[key.value] <= -2:
+                    # if the player has over double the cost square the distance 
+                    distance_list[key.value] *= distance_list[key.value]
+        
                 
-        return distance
+        return distance_list
 
 
     def play_dev_card(self):
