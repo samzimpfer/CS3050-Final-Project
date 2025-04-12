@@ -460,5 +460,5 @@ class Board:
         node.build_settlement(player, self, start_turn=start_turn)
 
     def bot_build_road(self, edge, player, start_turn):
-        edge.build_road(player, free=start_turn)
+        edge.build_road(player, start_turn=start_turn)
         
