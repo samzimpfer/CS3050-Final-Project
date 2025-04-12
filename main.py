@@ -47,21 +47,21 @@ class GameView(arcade.View):
         self.sprites.append(self.logo)
 
         button_size = WINDOW_HEIGHT // 8
+        self.two_player_button = Button("2")
         self.three_player_button = Button("3")
         self.four_player_button = Button("4")
-        self.five_player_button = Button("5")
-        self.three_player_button.set_position_and_size((WINDOW_WIDTH // 2) - button_size * 1.1,
+        self.two_player_button.set_position_and_size((WINDOW_WIDTH // 2) - button_size * 1.1,
+                                                      (WINDOW_HEIGHT // 2) - button_size,
+                                                      button_size, button_size)
+        self.three_player_button.set_position_and_size((WINDOW_WIDTH // 2),
                                                        (WINDOW_HEIGHT // 2) - button_size,
                                                        button_size, button_size)
-        self.four_player_button.set_position_and_size((WINDOW_WIDTH // 2),
+        self.four_player_button.set_position_and_size((WINDOW_WIDTH // 2) + button_size * 1.1,
                                                        (WINDOW_HEIGHT // 2) - button_size,
                                                        button_size, button_size)
-        self.five_player_button.set_position_and_size((WINDOW_WIDTH // 2) + button_size * 1.1,
-                                                       (WINDOW_HEIGHT // 2) - button_size,
-                                                       button_size, button_size)
+        self.two_player_button.on_click = lambda : self.reset(2)
         self.three_player_button.on_click = lambda : self.reset(3)
         self.four_player_button.on_click = lambda : self.reset(4)
-        self.five_player_button.on_click = lambda : self.reset(5)
 
         # TODO: take these out
         # these are here only so board can create a player class for testing. More organized to
@@ -112,18 +112,18 @@ class GameView(arcade.View):
     # shows the start screen
     def setup(self):
         self.current_state = GameState.SETUP
+        self.two_player_button.set_visible(True)
         self.three_player_button.set_visible(True)
         self.four_player_button.set_visible(True)
-        self.five_player_button.set_visible(True)
 
 
     # resets the game
     def reset(self, num_players):
         self.num_players = num_players
 
+        self.two_player_button.set_visible(False)
         self.three_player_button.set_visible(False)
         self.four_player_button.set_visible(False)
-        self.five_player_button.set_visible(False)
 
         # set positions/sizes of components
         self.component_width = (WINDOW_WIDTH - self.board.width + self.board.x_spacing) // 2
@@ -283,9 +283,9 @@ class GameView(arcade.View):
                              arcade.color.BLACK, font_size=WINDOW_WIDTH / 40, anchor_x="center",
                              anchor_y="center")
 
+            self.two_player_button.on_draw()
             self.three_player_button.on_draw()
             self.four_player_button.on_draw()
-            self.five_player_button.on_draw()
         else:
             self.board.draw()
             self.dice.on_draw()
@@ -328,9 +328,9 @@ class GameView(arcade.View):
             p.on_mouse_press(x, y)
 
         if self.current_state == GameState.SETUP:
+            self.two_player_button.on_mouse_press(x, y)
             self.three_player_button.on_mouse_press(x, y)
             self.four_player_button.on_mouse_press(x, y)
-            self.five_player_button.on_mouse_press(x, y)
 
         elif self.current_state == GameState.START_TURN:
             if self.board.on_mouse_press(x, y, button, self.active_player, can_build_road=not self.start_turn_settlement, can_build_settlement=self.start_turn_settlement, start_turn=0):
@@ -356,9 +356,9 @@ class GameView(arcade.View):
 
     def on_mouse_motion(self, x, y, dx, dy):
         if self.current_state == GameState.SETUP:
+            self.two_player_button.on_mouse_motion(x, y)
             self.three_player_button.on_mouse_motion(x, y)
             self.four_player_button.on_mouse_motion(x, y)
-            self.five_player_button.on_mouse_motion(x, y)
 
         else:
             for p in self.players:
