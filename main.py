@@ -171,7 +171,7 @@ class GameView(arcade.View):
             p.set_largest_army(True)
             self.players.append(p)
 
-        self.current_state = GameState.ROLL
+        self.current_state = GameState.START_TURN
         self.active_player_index = -1
         self.next_player_turn()
         # TODO: reset player inventories
@@ -205,7 +205,7 @@ class GameView(arcade.View):
             p += 1
             i -= 1
 
-        self.current_state = GameState.ROLL
+        self.current_state = GameState.START_TURN
         self.update_player_states()
 
 
@@ -288,7 +288,7 @@ class GameView(arcade.View):
                     self.current_state = GameState.ROBBER
                 else:
                     self.board.allocate_resources(roll_value)
-                    self.current_state = GameState.TRADE # TODO: change to GameState.TRADE once trading is developed
+                    self.current_state = GameState.TRADE
                     self.update_player_states()
 
         self.check_winner()
@@ -303,6 +303,9 @@ class GameView(arcade.View):
             self.four_player_button.on_mouse_press(x, y)
             self.five_player_button.on_mouse_press(x, y)
 
+        elif self.current_state == GameState.START_TURN:
+            pass
+
         elif self.current_state == GameState.ROLL:
             self.dice.on_mouse_press(x, y)
 
@@ -310,7 +313,6 @@ class GameView(arcade.View):
             if self.board.on_mouse_press(x, y, button, self.active_player):
                 self.current_state = GameState.BUILD
                 self.update_player_states()
-
 
         elif self.current_state == GameState.ROBBER:
             did_rob = self.board.on_mouse_press(x, y, button, self.active_player, can_build=False, can_rob=True)

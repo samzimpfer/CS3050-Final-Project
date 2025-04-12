@@ -7,10 +7,11 @@ import arcade
 # enums
 class GameState(Enum):
     SETUP = 0
-    ROLL = 1
-    TRADE = 2
-    BUILD = 3
-    ROBBER = 4
+    START_TURN = 1
+    ROLL = 2
+    TRADE = 3
+    BUILD = 4
+    ROBBER = 5
 
 class Resource(Enum):
     BRICK = 0

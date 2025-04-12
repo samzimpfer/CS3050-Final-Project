@@ -20,10 +20,11 @@ import math
 
 class PlayerState(Enum):
     DEFAULT = 1
-    ROLL = 2
-    TRADE_OR_BUILD = 3
-    OPEN_TRADE = 4
-    MENU = 5
+    START_TURN = 2
+    ROLL = 3
+    TRADE_OR_BUILD = 4
+    OPEN_TRADE = 5
+    MENU = 6
 
 # TODO: convert all camelcase to snakecase for pep 8 purposes
 class Player:
@@ -127,7 +128,9 @@ class Player:
     # sets the state of the Player based on the current game state, updates the player's
     # current state
     def set_state(self, game_state):
-        if game_state == GameState.ROLL:
+        if game_state == GameState.START_TURN:
+            self.player_state = PlayerState.START_TURN
+        elif game_state == GameState.ROLL:
             self.player_state = PlayerState.ROLL
         elif game_state == GameState.TRADE:
             self.player_state = PlayerState.TRADE_OR_BUILD
@@ -146,13 +149,12 @@ class Player:
         self.cancel_trade_button.set_visible(False)
         self.accept_trade_button.set_visible(False)
 
-        self.view_dev_cards_button.set_visible(False)
-        self.view_resources_button.set_visible(False)
-
-
-        #always able to view your cards
-        self.view_dev_cards_button.set_visible(True)
-        self.view_resources_button.set_visible(True)
+        if self.player_state == PlayerState.START_TURN:
+            self.view_dev_cards_button.set_visible(False)
+            self.view_resources_button.set_visible(False)
+        else:
+            self.view_dev_cards_button.set_visible(True)
+            self.view_resources_button.set_visible(True)
 
         if set_to is not None:
             self.player_state = set_to
