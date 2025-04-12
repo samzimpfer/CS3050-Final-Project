@@ -50,6 +50,7 @@ class Player:
     def __init__(self, color, robot=None):
         # inventory
         self.roads = []  # used for calculating longest road is a list of nodes
+        self.buildings = [] # used primarily for start turns
         self.color = color
 
         self.knight_card_count = 0
@@ -297,6 +298,11 @@ class Player:
             self.roads.append(start_node)
         if end_node not in self.roads:
             self.roads.append(end_node)
+
+
+    def add_building(self, node):
+        if node not in self.buildings:
+            self.buildings.append(node)
 
 
     def get_roads(self):
