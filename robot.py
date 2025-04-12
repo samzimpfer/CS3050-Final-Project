@@ -23,11 +23,9 @@ class Robot():
 
     def play_first_turn(self):
         node, edge = self.plan_first_turns()
-        self.build_settlement(node)
-        self.build_road(edge)
-
+        self.build_settlement(node, True)
+        self.build_road(self.board.get_edge(edge[0], edge[1]), True)
         
-
     def play_turn(self):
         self.plan_move()
         if self.action == Moves.BUILD_SETTLEMENT:
@@ -178,11 +176,11 @@ class Robot():
     # checks if the node is valid to build on and if it is worth it to build on
     def evaluate_node(self, node):
         # useless if someone has already built there 
-        if node.get_building() and (node not in self.settlements or node not in self.cities):
+        if node.get_building() and (node not in self.settlements):
             return -2 
         else:
             # almost useless if someone has built next to there
-            settlements_next_door = [n for n in node.get_connections() if n.get_building() and (n not in self.settlements or n not in self.cities)]
+            settlements_next_door = [n for n in node.get_connections() if n.get_building() and (n not in self.settlements)]
             if settlements_next_door:
                 return -1
             else:
@@ -277,10 +275,10 @@ class Robot():
     def play_dev_card(self):
         pass
 
-    def build_road(self, edge):
-        self.board.bot_build_road(edge)
+    def build_road(self, edge, start_turn=False):
+        self.board.bot_build_road(edge, self.player, start_turn=start_turn)
 
-    def build_settlement(self, node):
+    def build_settlement(self, node, start_turn=False):
         tiles = node.get_adjacent_tiles()
         for tile in tiles:
             if tile.get_resource() != "desert":
@@ -291,7 +289,7 @@ class Robot():
                 else:
                     self.resource_types_weights[tile.get_resource().value] += 1
             self.settlements.append(node)
-        self.board.bot_build_settlement(self, node)
+        self.board.bot_build_settlement(node, self.player, start_turn=start_turn)
 
     def build_city(self, node):
         if node not in self.settlements:
