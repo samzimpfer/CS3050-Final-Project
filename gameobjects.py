@@ -6,12 +6,13 @@ import arcade
 
 # enums
 class GameState(Enum):
-    SETUP = 0
-    START_TURN = 1
-    ROLL = 2
-    TRADE = 3
-    BUILD = 4
-    ROBBER = 5
+    PLAYER_SELECT = 0
+    BOT_SELECT = 1
+    START_TURN = 2
+    ROLL = 3
+    TRADE = 4
+    BUILD = 5
+    ROBBER = 6
 
 class Resource(Enum):
     BRICK = 0

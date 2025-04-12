@@ -46,22 +46,11 @@ class GameView(arcade.View):
         self.logo.center_y = WINDOW_HEIGHT - self.margin - (self.logo_space // 2)
         self.sprites.append(self.logo)
 
-        button_size = WINDOW_HEIGHT // 8
-        self.two_player_button = Button("2")
-        self.three_player_button = Button("3")
-        self.four_player_button = Button("4")
-        self.two_player_button.set_position_and_size((WINDOW_WIDTH // 2) - button_size * 1.1,
-                                                      (WINDOW_HEIGHT // 2) - button_size,
-                                                      button_size, button_size)
-        self.three_player_button.set_position_and_size((WINDOW_WIDTH // 2),
-                                                       (WINDOW_HEIGHT // 2) - button_size,
-                                                       button_size, button_size)
-        self.four_player_button.set_position_and_size((WINDOW_WIDTH // 2) + button_size * 1.1,
-                                                       (WINDOW_HEIGHT // 2) - button_size,
-                                                       button_size, button_size)
-        self.two_player_button.on_click = lambda : self.reset(2)
-        self.three_player_button.on_click = lambda : self.reset(3)
-        self.four_player_button.on_click = lambda : self.reset(4)
+        self.zero_button = Button("0")
+        self.one_button = Button("1")
+        self.two_button = Button("2")
+        self.three_button = Button("3")
+        self.four_button = Button("4")
 
         # TODO: take these out
         # these are here only so board can create a player class for testing. More organized to
@@ -107,25 +96,82 @@ class GameView(arcade.View):
         self.start_turn_settlement = False
 
         # start game
-        self.setup()
+        self.setup_players()
 
 
-    # shows the start screen
-    def setup(self):
-        self.current_state = GameState.SETUP
-        self.two_player_button.set_visible(True)
-        self.three_player_button.set_visible(True)
-        self.four_player_button.set_visible(True)
+    # initiates the player select screen
+    def setup_players(self):
+        self.current_state = GameState.PLAYER_SELECT
+
+        self.two_button.set_visible(True)
+        self.three_button.set_visible(True)
+        self.four_button.set_visible(True)
+
+        button_size = WINDOW_HEIGHT // 8
+        self.two_button.set_position_and_size((WINDOW_WIDTH // 2) - button_size * 1.1,
+                                              (WINDOW_HEIGHT // 2) - button_size,
+                                              button_size, button_size)
+        self.three_button.set_position_and_size((WINDOW_WIDTH // 2),
+                                                (WINDOW_HEIGHT // 2) - button_size,
+                                                button_size, button_size)
+        self.four_button.set_position_and_size((WINDOW_WIDTH // 2) + button_size * 1.1,
+                                               (WINDOW_HEIGHT // 2) - button_size,
+                                               button_size, button_size)
+
+        self.two_button.on_click = lambda: self.setup_bots(2)
+        self.three_button.on_click = lambda: self.setup_bots(3)
+        self.four_button.on_click = lambda: self.setup_bots(4)
+
+
+    # initiates the bot select screen
+    def setup_bots(self, num_players):
+        self.current_state = GameState.BOT_SELECT
+
+        self.zero_button.set_visible(True)
+        self.one_button.set_visible(True)
+        self.two_button.set_visible(True)
+        self.three_button.set_visible(False)
+        self.four_button.set_visible(False)
+
+        if num_players >= 3:
+            self.three_button.set_visible(True)
+        if num_players >= 4:
+            self.four_button.set_visible(True)
+
+        button_size = WINDOW_HEIGHT // 8
+        self.zero_button.set_position_and_size((WINDOW_WIDTH // 2) - button_size * 2.2,
+                                              (WINDOW_HEIGHT // 2) - button_size,
+                                              button_size, button_size)
+        self.one_button.set_position_and_size((WINDOW_WIDTH // 2) - button_size * 1.1,
+                                                (WINDOW_HEIGHT // 2) - button_size,
+                                                button_size, button_size)
+        self.two_button.set_position_and_size((WINDOW_WIDTH // 2),
+                                               (WINDOW_HEIGHT // 2) - button_size,
+                                               button_size, button_size)
+        self.three_button.set_position_and_size((WINDOW_WIDTH // 2) + button_size * 1.1,
+                                              (WINDOW_HEIGHT // 2) - button_size,
+                                              button_size, button_size)
+        self.four_button.set_position_and_size((WINDOW_WIDTH // 2) + button_size * 2.2,
+                                                (WINDOW_HEIGHT // 2) - button_size,
+                                                button_size, button_size)
+
+        self.zero_button.on_click = lambda: self.reset(num_players, 0)
+        self.one_button.on_click = lambda: self.reset(num_players, 1)
+        self.two_button.on_click = lambda: self.reset(num_players, 2)
+        self.three_button.on_click = lambda: self.reset(num_players, 3)
+        self.four_button.on_click = lambda: self.reset(num_players, 4)
 
 
     # resets the game
-    def reset(self, num_players):
+    def reset(self, num_players, num_bots):
         self.num_players = num_players
-        self.num_bot_players = 2
+        self.num_bot_players = num_bots
 
-        self.two_player_button.set_visible(False)
-        self.three_player_button.set_visible(False)
-        self.four_player_button.set_visible(False)
+        self.zero_button.set_visible(False)
+        self.one_button.set_visible(False)
+        self.two_button.set_visible(False)
+        self.three_button.set_visible(False)
+        self.four_button.set_visible(False)
 
         # set positions/sizes of components
         self.component_width = (WINDOW_WIDTH - self.board.width + self.board.x_spacing) // 2
@@ -287,15 +333,27 @@ class GameView(arcade.View):
         self.clear()
         self.sprites.draw()
 
-        if self.current_state == GameState.SETUP:
+        if self.current_state == GameState.PLAYER_SELECT:
 
-            arcade.draw_text("Select number of players", WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2,
+            arcade.draw_text("Select number of total players", WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2,
                              arcade.color.BLACK, font_size=WINDOW_WIDTH / 40, anchor_x="center",
                              anchor_y="center")
 
-            self.two_player_button.on_draw()
-            self.three_player_button.on_draw()
-            self.four_player_button.on_draw()
+            self.two_button.on_draw()
+            self.three_button.on_draw()
+            self.four_button.on_draw()
+
+        elif self.current_state == GameState.BOT_SELECT:
+            arcade.draw_text("Select number of bot players", WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2,
+                             arcade.color.BLACK, font_size=WINDOW_WIDTH / 40, anchor_x="center",
+                             anchor_y="center")
+
+            self.zero_button.on_draw()
+            self.one_button.on_draw()
+            self.two_button.on_draw()
+            self.three_button.on_draw()
+            self.four_button.on_draw()
+
         else:
             self.board.draw()
             self.dice.on_draw()
@@ -342,11 +400,14 @@ class GameView(arcade.View):
         for p in self.players:
             p.on_mouse_press(x, y)
 
-        if self.current_state == GameState.SETUP:
-            self.two_player_button.on_mouse_press(x, y)
-            self.three_player_button.on_mouse_press(x, y)
-            self.four_player_button.on_mouse_press(x, y)
-        if not self.active_player.is_bot():
+        if self.current_state == GameState.PLAYER_SELECT or self.current_state == GameState.BOT_SELECT:
+            self.zero_button.on_mouse_press(x, y)
+            self.one_button.on_mouse_press(x, y)
+            self.two_button.on_mouse_press(x, y)
+            self.three_button.on_mouse_press(x, y)
+            self.four_button.on_mouse_press(x, y)
+
+        elif not self.active_player.is_bot():
             if self.current_state == GameState.START_TURN:
                 if self.board.on_mouse_press(x, y, button, self.active_player, can_build_road=not self.start_turn_settlement, can_build_settlement=self.start_turn_settlement, start_turn=0):
                     if self.start_turn_settlement:
@@ -364,16 +425,18 @@ class GameView(arcade.View):
                     self.update_player_states()
 
             elif self.current_state == GameState.ROBBER:
-                did_rob = self.board.on_mouse_press(x, y, button, self.active_player, can_build=False, can_rob=True)
+                did_rob = self.board.on_mouse_press(x, y, button, self.active_player, can_build_road=False, can_build_settlement=False, can_rob=True)
                 if did_rob:
                     self.current_state = GameState.TRADE
 
 
     def on_mouse_motion(self, x, y, dx, dy):
-        if self.current_state == GameState.SETUP:
-            self.two_player_button.on_mouse_motion(x, y)
-            self.three_player_button.on_mouse_motion(x, y)
-            self.four_player_button.on_mouse_motion(x, y)
+        if self.current_state == GameState.PLAYER_SELECT or self.current_state == GameState.BOT_SELECT:
+            self.zero_button.on_mouse_motion(x, y)
+            self.one_button.on_mouse_motion(x, y)
+            self.two_button.on_mouse_motion(x, y)
+            self.three_button.on_mouse_motion(x, y)
+            self.four_button.on_mouse_motion(x, y)
 
         else:
             for p in self.players:
