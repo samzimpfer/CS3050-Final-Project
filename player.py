@@ -46,7 +46,7 @@ class Player:
 
     game_state = None
 
-    def __init__(self, color):
+    def __init__(self, color, robot=None):
         # inventory
         self.roads = []  # used for calculating longest road is a list of nodes
         self.color = color
@@ -122,7 +122,18 @@ class Player:
         self.close_menu_button.set_position_and_size((4*self.WINDOW_WIDTH) / 5, self.WINDOW_HEIGHT / 2, 200, 100)
         self.close_menu_button.on_click = Player.close_menu
 
+        self.bot = False
+        self.robot = robot
 
+    def is_bot(self):
+        return self.bot
+    
+    def get_robot(self):
+        return self.robot
+    
+    def set_robot(self, robot):
+        self.robot = robot
+        self.bot = True
 
     def set_active_player(self, ap):
         self.active_player = ap

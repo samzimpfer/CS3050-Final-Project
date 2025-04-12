@@ -11,6 +11,7 @@ from gameobjects import *
 from board import Board
 from player import *
 from dice import Dice
+from robot import Robot
 import arcade
 
 
@@ -116,9 +117,7 @@ class GameView(arcade.View):
         #self.dev_card_stack = DevCardStack()
         self.dice = Dice(dice_x, dice_y, dice_width, dice_height)
 
-        self.players = []
-        for i in range(self.num_players):
-            p = Player(PLAYER_COLORS[i])
+        for p in self.players:
             #setting the bank/dev cards
             p.bank = self.bank
             p.dev_card_stack = self.dev_card_stack
@@ -131,7 +130,7 @@ class GameView(arcade.View):
             #testing card stuff
             p.set_longest_road(True)
             p.set_largest_army(True)
-            self.players.append(p)
+            p.set_robot(Robot(p, self.board))
 
         #Player.bank = self.bank
         #Player.dev_card_stack = self.dev_card_stack
@@ -166,7 +165,7 @@ class GameView(arcade.View):
         self.active_player.set_position_and_size(0, self.component_width,
                                                  WINDOW_HEIGHT - self.component_height,
                                                  WINDOW_HEIGHT - self.margin)
-
+        
         # set inactive player positions
         i = 2  # iterate through inactive player positions
         p = self.active_player_index + 1  # iterate through inactive players
@@ -182,6 +181,11 @@ class GameView(arcade.View):
             i -= 1
 
         self.current_state = GameState.ROLL
+        # there is almost no way this works delete it if you need main 
+        # sorry for leaving this here 
+        if self.active_player.is_bot():
+            self.dice.roll()
+            self.active_player.get_robot().play_turn()
         self.update_player_states()
 
 

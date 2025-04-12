@@ -34,9 +34,7 @@ class Board:
         self.resources = [Resource.WHEAT, Resource.WHEAT, Resource.WHEAT, Resource.WHEAT, Resource.WOOD, Resource.WOOD, Resource.WOOD, Resource.WOOD, Resource.SHEEP, Resource.SHEEP, Resource.SHEEP, Resource.SHEEP, Resource.STONE, Resource.STONE, Resource.STONE, Resource.BRICK, Resource.BRICK, Resource.BRICK, 'desert']
         self.numbers = [5, 2, 6, 8, 10, 9, 3, 3, 11, 4, 8, 4, 6, 5, 10, 11, 12, 9]
         self.players = players#players list
-        self.robber_tile = None # the tile that has the robber on it
-        self.plan = Robot(self.players[0], self)
-        
+        self.robber_tile = None # the tile that has the robber on it        
 
         # tile attributes
         self.x_spacing = 0 # this is the tile width
