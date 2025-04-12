@@ -79,7 +79,6 @@ class GameView(arcade.View):
         board_center_x = WINDOW_WIDTH // 2
         board_center_y = (self.board_space // 2) + self.margin
 
-
         # more sizing fields used for bank, dice, and player representations
         self.component_width = 0
         self.component_height = 0
@@ -94,6 +93,7 @@ class GameView(arcade.View):
 
         self.players = []
         self.num_players = 0
+        self.board = Board(board_center_x, board_center_y, self.players, height=self.board_space)
 
         #Player.bank = self.bank
         #Player.dev_card_stack = self.dev_card_stack
@@ -176,6 +176,8 @@ class GameView(arcade.View):
 
             # TODO: human vs ai here
             #p.set_robot(Robot(p, self.board))
+            self.players.append(p)
+
 
         # gameplay fields
         self.current_state = GameState.START_TURN
@@ -187,6 +189,7 @@ class GameView(arcade.View):
 
     # advances to the next player's turn, updating player UIs and updating the game state
     def next_player_turn(self):
+        print(len(self.board.players))
         # cycle active player
         self.active_player_index += self.turn_direction
 
