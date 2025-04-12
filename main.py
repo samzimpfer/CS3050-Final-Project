@@ -177,7 +177,7 @@ class GameView(arcade.View):
             p.set_largest_army(True)
 
             # TODO: human vs ai here
-            if i >= self.num_bot_players:
+            if i >= self.num_players - self.num_bot_players:
                 p.set_robot(Robot(p, self.board))
 
             self.players.append(p)
