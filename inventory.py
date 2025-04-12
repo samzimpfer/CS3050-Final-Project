@@ -12,11 +12,11 @@ class Inventory:
     }
 
     PRELOADED_RESOURCES = {
-        Resource.BRICK: 99,
-        Resource.SHEEP: 99,
-        Resource.STONE: 99,
-        Resource.WHEAT: 99,
-        Resource.WOOD: 99
+        Resource.BRICK: 100,
+        Resource.SHEEP: 100,
+        Resource.STONE: 100,
+        Resource.WHEAT: 100,
+        Resource.WOOD: 100
     }
 
     DEFAULT_LIMITS = {

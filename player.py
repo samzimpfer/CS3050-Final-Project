@@ -240,6 +240,7 @@ class Player:
     def relay_inventory(self):
         Player.update_all_player_can_trade_function(self.get_inventory)
 
+
     # updates the player's own ability to accept a trade
     def update_can_trade(self, inventory):
         if self.main_inventory.contains(inventory.get_amounts()):

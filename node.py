@@ -8,7 +8,7 @@ class Node:
         # for easy relation to position in board
         self.row = row
         self.connections = []
-        self.adjacentTiles = []
+        self.adjacent_tiles = []
         self.color = arcade.color.BLACK
         self.size = size# size of the node that is drawn
         self.originalSize = size# size of the node with no effects
@@ -33,13 +33,13 @@ class Node:
         self.connections.append(n)
 
     def add_adjacent_tile(self, t):
-        self.adjacentTiles.append(t)
+        self.adjacent_tiles.append(t)
 
     def get_connections(self):
         return self.connections
     
-    def get_adjacentTiles(self):
-        return self.adjacentTiles
+    def get_adjacent_tiles(self):
+        return self.adjacent_tiles
 
     def get_row(self):
         return self.row
@@ -76,11 +76,12 @@ class Node:
         return player_can_build
         
     # builds a town 
-    def build_settlement(self, player, board):
+    def build_settlement(self, player, board, free=False):
         if self.has_space() and self.is_touching_road(board, player) and player.can_build_settlement():
             self.color = player.get_color()
             self.building = player
-            player.build_settlement()
+            if not free:
+                player.build_settlement()
             return True
         return False
 
@@ -100,10 +101,10 @@ class Node:
         return False
     
     # checks if there was a mouse click on the node
-    def on_mouse_press(self, x, y, button, player, board):
+    def on_mouse_press(self, x, y, button, player, board, free=False):
         return_flag = False
         if self.is_touching(x, y) and button == arcade.MOUSE_BUTTON_LEFT:
-            return_flag = self.build_settlement(player, board)
+            return_flag = self.build_settlement(player, board, free)
             if not return_flag and self.build_city(player):
                 return_flag = True
         return return_flag

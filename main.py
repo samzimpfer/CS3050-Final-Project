@@ -101,6 +101,8 @@ class GameView(arcade.View):
         self.current_state = None
         self.active_player_index = 0
         self.active_player = None
+        self.turn_direction = 0
+        self.start_turn_settlement = False
 
         # start game
         self.setup()
@@ -171,8 +173,11 @@ class GameView(arcade.View):
             p.set_largest_army(True)
             self.players.append(p)
 
+        # gameplay fields
         self.current_state = GameState.START_TURN
         self.active_player_index = -1
+        self.turn_direction = 1
+        self.start_turn_settlement = False
         self.next_player_turn()
         # TODO: reset player inventories
 
@@ -180,9 +185,22 @@ class GameView(arcade.View):
     # advances to the next player's turn, updating player UIs and updating the game state
     def next_player_turn(self):
         # cycle active player
-        self.active_player_index += 1
-        if self.active_player_index >= self.num_players:
-            self.active_player_index = 0
+        self.active_player_index += self.turn_direction
+
+        if self.current_state == GameState.START_TURN:
+            if self.active_player_index >= self.num_players:
+                self.active_player_index = self.num_players - 1
+                self.turn_direction = -1
+
+            if self.active_player_index < 0:
+                self.active_player_index = 0
+                self.current_state = GameState.ROLL
+        else:
+            if self.active_player_index >= self.num_players:
+                self.active_player_index = 0
+
+            self.current_state = GameState.ROLL
+
         self.active_player = self.players[self.active_player_index]
 
         # set active player position
@@ -205,7 +223,6 @@ class GameView(arcade.View):
             p += 1
             i -= 1
 
-        self.current_state = GameState.START_TURN
         self.update_player_states()
 
 
@@ -304,7 +321,12 @@ class GameView(arcade.View):
             self.five_player_button.on_mouse_press(x, y)
 
         elif self.current_state == GameState.START_TURN:
-            pass
+            if self.board.on_mouse_press(x, y, button, self.active_player, can_build_road=not self.start_turn_settlement, start_turn=0):
+                if not self.start_turn_settlement:
+                    self.start_turn_settlement = True
+                else:
+                    self.start_turn_settlement = False
+                    self.next_player_turn()
 
         elif self.current_state == GameState.ROLL:
             self.dice.on_mouse_press(x, y)
