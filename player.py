@@ -123,6 +123,8 @@ class Player:
 
         self.bot = False
         self.robot = robot
+        self.robot_sprite = arcade.Sprite("sprites/robot.png")
+        self.sprite_list = arcade.SpriteList()
 
     def is_bot(self):
         return self.bot
