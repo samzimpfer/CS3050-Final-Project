@@ -457,12 +457,9 @@ class Board:
     def get_tiles(self):
         return self.tile_nodes
     
-    # functions need for the bot
-    def bot_build_settlement(self, bot_player, node):
-        node.build_settlement(bot_player, self)
+    def bot_build_settlement(self, node, player, start_turn):
+        node.build_settlement(player, self, start_turn=start_turn)
 
-    def bot_build_road(self, bot_player, edge):
-        edge.build_road(bot_player, self)
-
-    def bot_build_city(self, bot_player, node):
-        node.build_city(bot_player, self)
+    def bot_build_road(self, edge, player, start_turn):
+        edge.build_road(player, free=start_turn)
+        

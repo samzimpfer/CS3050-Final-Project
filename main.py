@@ -12,6 +12,7 @@ from board import Board
 from player import *
 from dice import Dice
 from robot import Robot
+from robot import Moves
 import arcade
 
 
@@ -288,6 +289,7 @@ class GameView(arcade.View):
             if self.current_state == GameState.START_TURN:
                 self.active_player.get_robot().play_first_turn()
                 print("starting")
+                self.next_player_turn()
             elif self.current_state == GameState.ROLL:
                 self.dice.roll()
                 self.active_player.get_robot().play_turn()

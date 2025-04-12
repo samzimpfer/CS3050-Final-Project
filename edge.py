@@ -29,7 +29,7 @@ class Edge:
     def has_settlement(self):
         return self.start_node.get_building() or self.end_node.get_building()
     
-    def build_road(self,player, free=False):
+    def build_road(self, player, free=False):
         if self.road is None and (free or player.can_build_road()) and self.has_settlement():
             self.road = player
             self.color = player.get_color()
