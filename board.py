@@ -5,7 +5,7 @@ from edge import Edge
 from tile import Tile
 from gameobjects import *
 import random
-from aggressive_plan import AggressivePlan
+from robot import Robot
 
 # defines a board object that contains nodes representing appropriate positions for settlements
 class Board:
@@ -35,7 +35,7 @@ class Board:
         self.numbers = [5, 2, 6, 8, 10, 9, 3, 3, 11, 4, 8, 4, 6, 5, 10, 11, 12, 9]
         self.players = players#players list
         self.robber_tile = None # the tile that has the robber on it
-        self.plan = AggressivePlan(self.players[0], self)
+        self.plan = Robot(self.players[0], self)
         
 
         # tile attributes

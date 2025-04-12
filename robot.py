@@ -10,7 +10,7 @@ class Moves(Enum):
     PLAY_DEV_CARD = 6
     WAIT = 7
 
-class AggressivePlan():
+class Robot():
     def __init__(self, player, board):
         self.player = player
         self.board = board
