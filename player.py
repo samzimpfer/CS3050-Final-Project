@@ -86,13 +86,7 @@ class Player:
         # UI elements
         self.show_resources = True # TODO: change this to False when done testing
         self.main_inventory = Inventory(False)
-        self.main_inventory.change_amounts({
-            Resource.BRICK: 99,
-            Resource.SHEEP: 99,
-            Resource.STONE: 99,
-            Resource.WHEAT: 99,
-            Resource.WOOD: 99
-        })
+        self.main_inventory.reset()
         self.give_inventory = Inventory(True)
         self.get_inventory = Inventory(True, self.relay_inventory)
 
