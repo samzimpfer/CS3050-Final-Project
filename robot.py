@@ -22,10 +22,8 @@ class Robot():
         self.action_location = None# where the action will take place if needed
 
     def play_first_turn(self):
-        options = self.plan_first_turns()
-        for node in options[0]:
-            if node.has_space():
-                self.build_settlement(node)
+        move = self.plan_first_turns()
+
         
 
     def play_turn(self):
@@ -47,36 +45,29 @@ class Robot():
 
     def plan_first_turns(self):
         inventory = self.player.return_inventory()
-        best_four_nodes = [[],[]]# the max number of nodes that can be used during the start phase
+        best_node = None
+        best_edge = None
+        best_eval = 0
         for row in self.board.get_nodes():
-            for node in range(len(row)):
-                node_eval = self.evaluate_node(row[node])
-                if len(best_four_nodes) >= 4:
-                    neighboring_best_nodes = [n for n in row[node].get_connections() if n in best_four_nodes[0]]
+            for node in row:
+                if self.evaluate_node(node) > best_eval and not node.get_building():
+                    best_eval =self.evaluate_node(node)
+                    best_node = node
 
-                    if not row[node].get_building() and node_eval > min(best_four_nodes[1]):
-                        # if there would be a building conflict chooses the better node
-                        if len(neighboring_best_nodes):
-                            for n in neighboring_best_nodes:
-                                if node_eval > self.evaluate_node(n):
-                                    pass
-                        else:
-                            if node_eval > min(best_four_nodes[1]):
-                                index = best_four_nodes[1].index(min(best_four_nodes[1]))
-                                best_four_nodes[0][index] = row[node]
-                                best_four_nodes[1][index] = node_eval
-                else:
-                    best_four_nodes[0].append(row[node])
-                    best_four_nodes[1].append(node_eval)
-        
-        for i in range(len(best_four_nodes[1]) - 1):
-            for j in range(i + 1 ,len(best_four_nodes[1])):
-                if best_four_nodes[1][i] < best_four_nodes[1][i + 1]:
-                    best_four_nodes[1][i], best_four_nodes[1][j] = best_four_nodes[1][j], best_four_nodes[1][i]
-                    best_four_nodes[0][i], best_four_nodes[0][j] = best_four_nodes[0][j], best_four_nodes[0][i]
+        # find the best edge to build on
+        best_eval = 0
+        for neighbor in best_node.get_connections():
+            this_eval = 0
+            this_eval += self.evaluate_node(neighbor)
+            for n in neighbor.get_connections():
+                if n != best_node and not n.get_building():
+                    best_eval += self.evaluate_node(n) * 0.33
+            if this_eval > best_eval:
+                best_eval = this_eval 
+                best_edge = [best_node, neighbor]
+            
 
-        return best_four_nodes
-        
+        return best_node
                 
 
 
