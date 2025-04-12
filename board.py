@@ -389,7 +389,6 @@ class Board:
 
     # calls on_mouse_press on all objects that are on the board and interactable
     def on_mouse_press(self, x, y, button, player, can_build=True, can_rob=False):
-        self.plan.plan_move()
         did_build = False
         if can_build:
             for row in self.nodes:
@@ -437,3 +436,13 @@ class Board:
     
     def get_tiles(self):
         return self.tile_nodes
+    
+    # functions need for the bot
+    def bot_build_settlement(self, bot_player, node):
+        node.build_settlement(bot_player, self)
+
+    def bot_build_road(self, bot_player, edge):
+        edge.build_road(bot_player, self)
+
+    def bot_build_city(self, bot_player, node):
+        node.build_city(bot_player, self)

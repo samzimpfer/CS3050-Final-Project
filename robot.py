@@ -21,6 +21,13 @@ class Robot():
         self.action = None# the action that is queued up 
         self.action_location = None# where the action will take place if needed
 
+    def play_first_turn(self):
+        options = self.plan_first_turns()
+        for node in options[0]:
+            if node.has_space():
+                self.build_settlement(node)
+        
+
     def play_turn(self):
         self.plan_move()
         if self.action == Moves.BUILD_SETTLEMENT:
@@ -37,6 +44,41 @@ class Robot():
             self.trade()
         else:
             pass
+
+    def plan_first_turns(self):
+        inventory = self.player.return_inventory()
+        best_four_nodes = [[],[]]# the max number of nodes that can be used during the start phase
+        for row in self.board.get_nodes():
+            for node in range(len(row)):
+                node_eval = self.evaluate_node(row[node])
+                if len(best_four_nodes) >= 4:
+                    neighboring_best_nodes = [n for n in row[node].get_connections() if n in best_four_nodes[0]]
+
+                    if not row[node].get_building() and node_eval > min(best_four_nodes[1]):
+                        # if there would be a building conflict chooses the better node
+                        if len(neighboring_best_nodes):
+                            for n in neighboring_best_nodes:
+                                if node_eval > self.evaluate_node(n):
+                                    pass
+                        else:
+                            if node_eval > min(best_four_nodes[1]):
+                                index = best_four_nodes[1].index(min(best_four_nodes[1]))
+                                best_four_nodes[0][index] = row[node]
+                                best_four_nodes[1][index] = node_eval
+                else:
+                    best_four_nodes[0].append(row[node])
+                    best_four_nodes[1].append(node_eval)
+        
+        for i in range(len(best_four_nodes[1]) - 1):
+            for j in range(i + 1 ,len(best_four_nodes[1])):
+                if best_four_nodes[1][i] < best_four_nodes[1][i + 1]:
+                    best_four_nodes[1][i], best_four_nodes[1][j] = best_four_nodes[1][j], best_four_nodes[1][i]
+                    best_four_nodes[0][i], best_four_nodes[0][j] = best_four_nodes[0][j], best_four_nodes[0][i]
+
+        return best_four_nodes
+        
+                
+
 
     def plan_move(self):
         inventory = self.player.return_inventory()
@@ -82,23 +124,21 @@ class Robot():
             if value == 0:
                 continue
 
-        match key:
-            case "settlement":
-                self.action = Moves.BUILD_SETTLEMENT
-                self.action_location = best_settlement_node
-            case "city":
-                self.action = Moves.BUILD_CITY
-                self.action_location = best_upgrade_node
-            case "road":
-                self.action = Moves.BUILD_ROAD
-                self.action_location = best_road_edge
+            match key:
+                case "settlement":
+                    self.action = Moves.BUILD_SETTLEMENT
+                    self.action_location = best_settlement_node
+                case "city":
+                    self.action = Moves.BUILD_CITY
+                    self.action_location = best_upgrade_node
+                case "road":
+                    self.action = Moves.BUILD_ROAD
+                    self.action_location = best_road_edge
 
         if self.action == None:
             self.action = Moves.WAIT
         
         return 
-
-        
     
     # finds and evaluates nodes that do not have three roads going into them
     def evaluate_incomplete_edges(self):
@@ -115,7 +155,7 @@ class Robot():
         for i in range(len(incomplete_edges[0])):
             # an edges evaluation value is just the highest node evaluation of the two nodes that make it
             incomplete_edges[1].append(max(self.evaluate_node(incomplete_edges[0][i][0]), 
-                                           self.evaluate_node(incomplete_edges[0][i][0])))
+                                           self.evaluate_node(incomplete_edges[0][i][1])))
         return incomplete_edges
 
     # finds and evaluates the nodes that are connected to roads and valid to build on
@@ -207,10 +247,11 @@ class Robot():
                         # checks if there are any opposing player roads going into nodes one road away from this node
                         if (self.board.get_edge(neighbor, n).get_road() != None and
                         self.board.get_edge(neighbor, n).get_road() != self.player):
-                            opposition_score += 2
+                            opposition_score += 1
                 print("-----------------------------")
                 print([value_sum, resource_multiplier, opposition_score])
                 print(value_sum / opposition_score * resource_multiplier)
+                return value_sum / opposition_score * resource_multiplier
 
 
     # finds the nodes with the highest evaluation and builds there
@@ -249,7 +290,7 @@ class Robot():
     def build_settlement(self, node):
         tiles = node.get_adjacentTiles()
         for tile in tiles:
-            if tile.get_resource():
+            if tile.get_resource() != "desert":
                 if tile.get_number() < 4 or tile.get_number() > 10:
                     self.resource_types_weights[tile.get_resource().value] += 0.5
                 elif tile.get_number() == 8 or tile.get_number() == 6:
@@ -257,13 +298,13 @@ class Robot():
                 else:
                     self.resource_types_weights[tile.get_resource().value] += 1
             self.settlements.append(node)
-        self.player.build_settlement(node)
+        self.board.bot_build_settlement(self, node)
 
     def build_city(self, node):
         if node not in self.settlements:
             return 
         for tile in node.get_adjacentTiles():
-            if tile.get_resource():
+            if tile.get_resource() != "desert":
                 if tile.get_number() < 4 or tile.get_number() > 10:
                     self.resource_types_weights[tile.get_resource().value] += 0.5
                 elif tile.get_number() == 8 or tile.get_number() == 6:

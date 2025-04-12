@@ -185,9 +185,8 @@ class GameView(arcade.View):
         # sorry for leaving this here 
         if self.active_player.is_bot():
             self.dice.roll()
-            self.active_player.get_robot().play_turn()
-        self.update_player_states()
-
+            #self.active_player.get_robot().play_turn()
+            self.active_player.get_robot().play_first_turn()
 
     # updates each player's ability to accept a given trade based on whether they have enough
     # resources
