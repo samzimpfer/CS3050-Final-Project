@@ -22,7 +22,21 @@ class Robot():
         self.action_location = None# where the action will take place if needed
 
     def play_turn(self):
-        pass
+        self.plan_move()
+        if self.action == Moves.BUILD_SETTLEMENT:
+            self.build_settlement(self.action_location)
+        elif self.action == Moves.BUILD_ROAD:
+            self.build_road(self.action_location)
+        elif self.action == Moves.BUILD_CITY:
+            self.build_city(self.action_location)
+        elif self.action == Moves.BUY_DEV_CARD:
+            self.buy_dev_card()
+        elif self.action == Moves.PLAY_DEV_CARD:
+            self.play_dev_card()
+        elif self.action == Moves.TRADE:
+            self.trade()
+        else:
+            pass
 
     def plan_move(self):
         inventory = self.player.return_inventory()
@@ -41,48 +55,50 @@ class Robot():
         city_weights = self.distance_from_price(CITY_COST)
         dev_card_weights = self.distance_from_price(DEV_CARD_COST)
 
-        outer_evaluations = self.evaluate_boardering_nodes()
         road_evalutations = self.evaluate_incomplete_edges()
         building_evaluations = self.evaluate_buildable_nodes()
         upgradable_evaluations = self.evaluate_upgradable_nodes()
 
         best_settlement_node = building_evaluations[0][building_evaluations[1].index(max(building_evaluations[1]))]
-        best_settlement_node_eval = max(building_evaluations[1])
+        best_settlement_eval = max(building_evaluations[1])
 
-        best_settlement_upgrade = upgradable_evaluations[0][upgradable_evaluations[1].index(max(upgradable_evaluations[1]))]
-        best_settlement_upgrade_eval = max(upgradable_evaluations[1])
+        best_upgrade_node = upgradable_evaluations[0][upgradable_evaluations[1].index(max(upgradable_evaluations[1]))]
+        best_upgrade_eval = max(upgradable_evaluations[1])
 
         best_road_edge = road_evalutations[0][road_evalutations[1].index(max(road_evalutations[1]))]
         best_road_edge_eval = max(road_evalutations[1])
-
-        for i in range(len(outer_evaluations[0])):
-            if outer_evaluations[1][i] > best_settlement_node_eval:
-                best_settlement_node = outer_evaluations[0][i]
-                best_settlement_node_eval = outer_evaluations[1][i]
         
+        ideal_candidates = {
+            "settlement": best_settlement_eval if self.player.can_build_settlement() else 0,
+            "city": best_upgrade_eval if self.player.can_build_city() else 0,
+            "road": best_road_edge_eval if self.player.can_build_road() else 0
+        }
+
+        # sorts the dict in decending order
+        ideal_candidates = sorted(ideal_candidates.items(), key=lambda item: item[1], reverse=True)
         
+        action_choice = None
+        for key, value in ideal_candidates.items():
+            if value == 0:
+                continue
 
-                
+        match key:
+            case "settlement":
+                self.action = Moves.BUILD_SETTLEMENT
+                self.action_location = best_settlement_node
+            case "city":
+                self.action = Moves.BUILD_CITY
+                self.action_location = best_upgrade_node
+            case "road":
+                self.action = Moves.BUILD_ROAD
+                self.action_location = best_road_edge
+
+        if self.action == None:
+            self.action = Moves.WAIT
+        
+        return 
 
         
-
-        
-
-        
-        
-
-    
-    # finds and evaluates all nodes that are one road segment from accessable nodes
-    def evaluate_boardering_nodes(self):
-        boardering_nodes = [[],[]]
-        for node in self.player.get_roads():
-            for neighbor in node.get_connections():
-                if neighbor != node:
-                    boardering_nodes.append(neighbor)
-
-        for i in range(len(boardering_nodes[0])):
-            boardering_nodes[1].append(self.evaluate_node(boardering_nodes[0][i]))
-        return boardering_nodes
     
     # finds and evaluates nodes that do not have three roads going into them
     def evaluate_incomplete_edges(self):
@@ -210,19 +226,17 @@ class Robot():
             # if the value is less than the price it will add distance to the price
             # this distance is 
             if value > inventory[key]:
-                this_distance = purchase[key] - value
+                this_distance = value - inventory[key]
                 if self.resource_types_weights[key.value] >= 3:
                     this_distance *= 0.5
                 elif self.resource_types_weights[key.value] < 1 and self.resource_types_weights[key.value] != 0:
                     this_distance *= 1.5
-                distance_list[key.value] = this_distance
-            elif value <= inventory[key]:
-                distance_list[key.value] = -1 * inventory[key]/value
-                if distance_list[key.value] <= -2:
+                distance_list[key.value] = -1 * this_distance
+            elif value < inventory[key]:
+                distance_list[key.value] = inventory[key]/value
+                if distance_list[key.value] >= 2 and purchase != ROAD_COST:
                     # if the player has over double the cost square the distance 
-                    distance_list[key.value] *= distance_list[key.value]
-        
-                
+                    distance_list[key.value] *=  distance_list[key.value]
         return distance_list
 
 
