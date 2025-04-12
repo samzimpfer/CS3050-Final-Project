@@ -130,7 +130,7 @@ class GameView(arcade.View):
             #testing card stuff
             p.set_longest_road(True)
             p.set_largest_army(True)
-            p.set_robot(Robot(p, self.board))
+            #p.set_robot(Robot(p, self.board))
 
         #Player.bank = self.bank
         #Player.dev_card_stack = self.dev_card_stack
