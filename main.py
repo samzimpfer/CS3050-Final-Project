@@ -251,7 +251,7 @@ class GameView(arcade.View):
                 # handle roll sum
                 roll_value = self.dice.get_sum_and_reset()
                 print(f"Roll: {roll_value}")
-                if roll_value == 7:
+                if roll_value == 13:# TODO: change to 7 set to 13 cause robber not fully done
                     self.current_state = GameState.ROBBER
                 else:
                     self.board.allocate_resources(roll_value)

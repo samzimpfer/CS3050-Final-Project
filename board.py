@@ -391,8 +391,8 @@ class Board:
 
     # calls on_mouse_press on all objects that are on the board and interactable
     def on_mouse_press(self, x, y, button, player, can_build=True, can_rob=False):
+        self.plan.plan_move()
         did_build = False
-        self.plan.evaluate_nodes()
         if can_build:
             for row in self.nodes:
                 for node in row:

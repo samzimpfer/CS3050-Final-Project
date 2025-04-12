@@ -87,11 +87,11 @@ class Player:
         self.show_resources = True # TODO: change this to False when done testing
         self.main_inventory = Inventory(False)
         self.main_inventory.change_amounts({
-            Resource.BRICK: 99,
-            Resource.SHEEP: 99,
-            Resource.STONE: 99,
-            Resource.WHEAT: 99,
-            Resource.WOOD: 99
+            Resource.BRICK: 0,
+            Resource.SHEEP: 0,
+            Resource.STONE: 0,
+            Resource.WHEAT: 0,
+            Resource.WOOD: 1
         })
         self.give_inventory = Inventory(True)
         self.get_inventory = Inventory(True, self.relay_inventory)
@@ -126,6 +126,9 @@ class Player:
 
     def set_active_player(self, ap):
         self.active_player = ap
+
+    def return_inventory(self):
+        return self.main_inventory.get_amounts()
 
 
     # sets the state of the Player based on the current game state, updates the player's

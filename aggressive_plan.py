@@ -1,12 +1,21 @@
-from enum import IntEnum
+from enum import Enum
+from gameobjects import ROAD_COST, SETTLEMENT_COST, CITY_COST, DEV_CARD_COST
 # this plan will make the com player seek to expand and take control of as many possible resources focusing on settlement count and longest road
+class Moves(Enum):
+    BUILD_SETTLEMENT = 1
+    BUILD_ROAD = 2
+    BUILD_CITY = 3
+    BUY_DEV_CARD = 4
+    TRADE = 5
+    PLAY_DEV_CARD = 6
+    WAIT = 7
+
 class AggressivePlan():
     def __init__(self, player, board):
         self.player = player
         self.board = board
         self.node_evaluations = []
         self.settlements = []# list of nodes that have settlements
-        self.cities = []# list of nodes that have cities
         self.weights = []# list of values that control what the com does
         self.resource_types_weights = [0,0,0,0,0]# number of each resource tile you have
 
@@ -14,15 +23,17 @@ class AggressivePlan():
         pass
 
     def plan_move(self):
-        best_node = 0
-        best_edge = 0
-        incomplete_edges = self.find_incomplete_edges()
-        buildable_nodes = self.find_buildable_nodes()
-        boardering_nodes = self.find_boardering_nodes()
-        if self.player.can_build_settlement():
-            for node in buildable_nodes:
-                if self.evaluate_node(node) > best_node:
-                    best_node = node
+        # calculates how far from from the price of each item the player is or isnt 
+        distances = {
+            ROAD_COST: self.distance_from_price(ROAD_COST),
+            SETTLEMENT_COST: self.distance_from_price(SETTLEMENT_COST),
+            CITY_COST: self.distance_from_price(CITY_COST),
+            DEV_CARD_COST: self.distance_from_price(DEV_CARD_COST)
+        }
+        for _, value in distances.items():
+            print(value)
+        
+
     
     # finds and evaluates all nodes that are one road segment from accessable nodes
     def evaluate_boardering_nodes(self):
@@ -55,6 +66,7 @@ class AggressivePlan():
                 buildable_nodes[0].append(node)
         for node in buildable_nodes[0]:
             pass
+    
     # TODO: deal with it later
     def trade(self):
         pass
@@ -132,39 +144,66 @@ class AggressivePlan():
 
     # finds the nodes with the highest evaluation and builds there
     def opening_move(self):
-        for i in range(2):
-            self.evaluate_nodes(True)
-            best_move = [0,0,0]
-            for row in range(len(self.board.get_nodes())):
-                for node in range(len(row)):
-                    if self.node_evaluations[row][node] > best_move[2]:
-                        best_move[0] = row
-                        best_move[1] = node
-                        best_move[2] = self.node_evaluations[row][node]
-            # build a settlement on the best node
-        
+        pass
+    
+    # calculates a distance from the price of some item. 
+    # The distance based on how many of each resource is needed and the resource_type_weights
+    # returns negative is the purchase is possible 
+    def distance_from_price(self, purchase):
+        distance = 0
+        inventory = self.player.return_inventory()
+        overkill_count = 0# the number of resources where the player has double the price
+        for key, value in purchase.items():
+            # if the value is less than the price it will add distance to the price
+            # this distance is 
+            if value > inventory[key]:
+                this_distance = purchase[key] - value
+                if self.resource_types_weights[key.value] >= 3:
+                    this_distance *= 0.5
+                elif self.resource_types_weights[key.value] < 1 and self.resource_types_weights[key.value] != 0:
+                    this_distance *= 1.5
+                distance += this_distance
+            if value * 2 <= inventory[key]:
+                overkill_count += 1
+        if overkill_count == len(purchase):
+            return -1
                 
+        return distance
+
 
     def play_dev_card(self):
         pass
 
-    def build_road(self):
-        pass
+    def build_road(self, edge):
+        self.player.build_road(edge)
 
     def build_settlement(self, node):
         tiles = node.get_adjacentTiles()
         for tile in tiles:
             if tile.get_resource():
                 if tile.get_number() < 4 or tile.get_number() > 10:
-                    self.resource_types_weights[tile.get_resource()] += 0.5
+                    self.resource_types_weights[tile.get_resource().value] += 0.5
                 elif tile.get_number() == 8 or tile.get_number() == 6:
-                    self.resource_types_weights[tile.get_resource()] += 1.5
+                    self.resource_types_weights[tile.get_resource().value] += 1.5
                 else:
-                    self.resource_types_weights[tile.get_resource()] += 1
-            self.tile.get_resource()
-            if tile.get_robber and self.player.has_knight():
-                self.player.next_move()
-            
+                    self.resource_types_weights[tile.get_resource().value] += 1
+            self.settlements.append(node)
+        self.player.build_settlement(node)
+
+    def build_city(self, node):
+        if node not in self.settlements:
+            return 
+        for tile in node.get_adjacentTiles():
+            if tile.get_resource():
+                if tile.get_number() < 4 or tile.get_number() > 10:
+                    self.resource_types_weights[tile.get_resource().value] += 0.5
+                elif tile.get_number() == 8 or tile.get_number() == 6:
+                    self.resource_types_weights[tile.get_resource().value] += 1.5
+                else:
+                    self.resource_types_weights[tile.get_resource().value] += 1
+
+        self.player.build_city(node)
+        
 
     def buy_dev_card(self):
         pass
