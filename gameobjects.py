@@ -24,6 +24,8 @@ UI_COLOR = (75, 110, 150)
 UI_OUTLINE_COLOR = (40, 80, 140)
 BUTTON_COLOR = (40, 80, 140)
 
+PLAYER_COLORS = [arcade.color.BLUE, arcade.color.GREEN, arcade.color.RED, arcade.color.YELLOW, arcade.color.ORANGE]
+
 ROAD_COST = {
     Resource.BRICK:1,
     Resource.WOOD:1
