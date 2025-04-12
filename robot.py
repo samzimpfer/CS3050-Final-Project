@@ -22,7 +22,9 @@ class Robot():
         self.action_location = None# where the action will take place if needed
 
     def play_first_turn(self):
-        move = self.plan_first_turns()
+        node, edge = self.plan_first_turns()
+        self.build_settlement(node)
+        self.build_road(edge)
 
         
 
@@ -67,7 +69,7 @@ class Robot():
                 best_edge = [best_node, neighbor]
             
 
-        return best_node
+        return best_node, best_edge
                 
 
 
