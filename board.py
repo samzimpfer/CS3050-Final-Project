@@ -250,7 +250,6 @@ class Board:
 
     # allocates resources for the start turn
     def allocate_resources_start(self, player):
-        print("here")
         for row in self.nodes:
             for node in row:
                 if node.get_building() == player:

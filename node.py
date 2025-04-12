@@ -84,8 +84,11 @@ class Node:
         if self.has_space() and (start_turn or (self.is_touching_road(board, player) and player.can_build_settlement())):
             self.color = player.get_color()
             self.building = player
-            if not start_turn:
+            if start_turn:
+                player.add_building(self)
+            else:
                 player.build_settlement()
+
             return True
         return False
 
