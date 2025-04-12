@@ -51,7 +51,7 @@ class Robot():
         for row in self.board.get_nodes():
             for node in row:
                 if self.evaluate_node(node) > best_eval and not node.get_building():
-                    best_eval =self.evaluate_node(node)
+                    best_eval = self.evaluate_node(node)
                     best_node = node
 
         # find the best edge to build on
@@ -92,11 +92,18 @@ class Robot():
         building_evaluations = self.evaluate_buildable_nodes()
         upgradable_evaluations = self.evaluate_upgradable_nodes()
 
-        best_settlement_node = building_evaluations[0][building_evaluations[1].index(max(building_evaluations[1]))]
-        best_settlement_eval = max(building_evaluations[1])
+        best_settlement_eval = 0
+        best_settlement_node = None
+        best_upgrade_eval = 0
+        best_upgrade_node = None
 
-        best_upgrade_node = upgradable_evaluations[0][upgradable_evaluations[1].index(max(upgradable_evaluations[1]))]
-        best_upgrade_eval = max(upgradable_evaluations[1])
+        if  building_evaluations:
+            best_settlement_node = building_evaluations[0][building_evaluations[1].index(max(building_evaluations[1]))]
+            best_settlement_eval = max(building_evaluations[1])
+
+        if upgradable_evaluations:
+            best_upgrade_node = upgradable_evaluations[0][upgradable_evaluations[1].index(max(upgradable_evaluations[1]))]
+            best_upgrade_eval = max(upgradable_evaluations[1])
 
         best_road_edge = road_evalutations[0][road_evalutations[1].index(max(road_evalutations[1]))]
         best_road_edge_eval = max(road_evalutations[1])
@@ -108,10 +115,10 @@ class Robot():
         }
 
         # sorts the dict in decending order
-        ideal_candidates = sorted(ideal_candidates.items(), key=lambda item: item[1], reverse=True)
+        ideal_candidates_sorted = {k: v for k, v in sorted(ideal_candidates.items(), key=lambda item: item[1])}
         
         action_choice = None
-        for key, value in ideal_candidates.items():
+        for key, value in ideal_candidates_sorted.items():
             if value == 0:
                 continue
 
@@ -124,7 +131,7 @@ class Robot():
                     self.action_location = best_upgrade_node
                 case "road":
                     self.action = Moves.BUILD_ROAD
-                    self.action_location = best_road_edge
+                    self.action_location = self.board.get_edge(best_road_edge[0], best_road_edge[1])
 
         if self.action == None:
             self.action = Moves.WAIT
@@ -151,23 +158,35 @@ class Robot():
 
     # finds and evaluates the nodes that are connected to roads and valid to build on
     def evaluate_buildable_nodes(self):
+        something_added = False
         buildable_nodes = [[],[]]# index 0 is the nodes and index 1 is the evaluation of the node in index 0 
         for node in self.player.get_roads():
             if node.get_building() == None and node.has_space():
                 buildable_nodes[0].append(node)
+                something_added = True
         for i in range(len(buildable_nodes[0])):
             buildable_nodes[1].append(self.evaluate_node(buildable_nodes[0][i]))
-        return buildable_nodes
+    
+        if something_added:
+            return buildable_nodes
+        else:
+            return None
     
     # finds and evaluates nodes that have a settlement on them
     def evaluate_upgradable_nodes(self):
+        something_added = False
         upgradable_nodes = [[],[]]
         for node in self.settlements:
-            if node.get_buidling() == self.player:
+            if node.get_building() == self.player:
                 upgradable_nodes[0].append(node)
-        
+                something_added = True
         for i in range(len(upgradable_nodes[0])):
             upgradable_nodes[1].append(self.evaluate_node(upgradable_nodes[0][i]))
+        
+        if something_added:
+            return upgradable_nodes
+        else:
+            return None
     
     # TODO: deal with it later
     def trade(self):
@@ -210,11 +229,11 @@ class Robot():
                         if resource == 0 and self.resources[0] < 2:
                             multiplier += 0.5
                         elif resource == 1 and self.resources[1] < 2:
-                            resource_multiplier += 0.325
+                            multiplier += 0.325
                         elif resource == 2 and self.resources[2] < 2:
-                            resource_multiplier += 0.25
+                            multiplier += 0.25
                         elif resource == 3 and self.resources[3] < 2:
-                            resource_multiplier += 0.325
+                            multiplier += 0.325
                         elif resource == 4 and self.resources[4] < 2:
                             resource_multiplier += 0.5
                         # if there are no resources of this type, double the multiplier
@@ -225,7 +244,10 @@ class Robot():
 
                         if tile.has_robber() and not self.player.has_knight():
                             resource_multiplier = resource_multiplier * 0.5
-
+                    else:
+                        resource_multiplier *= 0.5
+                if len(node.get_adjacent_tiles()) < 3:
+                    resource_multiplier *= 0.5
                 for neighbor in node.get_connections():
                     # checks if there are any opposing player roads going to this node
                     if (self.board.get_edge(neighbor, node).get_road() != None and 
@@ -242,7 +264,7 @@ class Robot():
                 print("-----------------------------")
                 print([value_sum, resource_multiplier, opposition_score])
                 print(value_sum / opposition_score * resource_multiplier)
-                return value_sum / opposition_score * resource_multiplier
+                return value_sum * resource_multiplier - opposition_score 
 
 
     # finds the nodes with the highest evaluation and builds there
