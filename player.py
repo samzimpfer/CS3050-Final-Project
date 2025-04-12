@@ -20,10 +20,11 @@ import math
 
 class PlayerState(Enum):
     DEFAULT = 1
-    ROLL = 2
-    TRADE_OR_BUILD = 3
-    OPEN_TRADE = 4
-    MENU = 5
+    START_TURN = 2
+    ROLL = 3
+    TRADE_OR_BUILD = 4
+    OPEN_TRADE = 5
+    MENU = 6
 
 # TODO: convert all camelcase to snakecase for pep 8 purposes
 class Player:
@@ -86,18 +87,15 @@ class Player:
         # UI elements
         self.show_resources = True # TODO: change this to False when done testing
         self.main_inventory = Inventory(False)
-        self.main_inventory.change_amounts({
-            Resource.BRICK: 0,
-            Resource.SHEEP: 0,
-            Resource.STONE: 0,
-            Resource.WHEAT: 0,
-            Resource.WOOD: 1
-        })
+        self.main_inventory.reset()
+        self.main_inventory.reset_limits()
+        self.main_inventory.set_amounts(Inventory.PRELOADED_RESOURCES) # TODO: take this out
         self.give_inventory = Inventory(True)
         self.get_inventory = Inventory(True, self.relay_inventory)
 
         self.finish_turn_button = Button("Finish turn")
         self.trade_button = Button("Trade")
+        self.cancel_trade_button = Button("Cancel trade")
         self.accept_trade_button = Button("Accept")
 
         self.view_dev_cards_button = Button("Show dev cards")
@@ -107,8 +105,9 @@ class Player:
         self.view_resources_button.on_click = Player.draw_player_resources
 
         self.finish_turn_button.on_click = Player.finish_turn_function
-        self.trade_button.on_click = \
-            lambda : Player.update_all_player_states_function(PlayerState.OPEN_TRADE)
+        self.trade_button.on_click = self.open_trade
+        self.cancel_trade_button.on_click = \
+            lambda : Player.update_all_player_states_function(PlayerState.TRADE_OR_BUILD)
         self.accept_trade_button.on_click = lambda : Player.accept_trade_function(self)
 
         self.dev_card_stack_button_params = []
@@ -127,10 +126,10 @@ class Player:
 
     def is_bot(self):
         return self.bot
-    
+
     def get_robot(self):
         return self.robot
-    
+
     def set_robot(self, robot):
         self.robot = robot
         self.bot = True
@@ -145,7 +144,9 @@ class Player:
     # sets the state of the Player based on the current game state, updates the player's
     # current state
     def set_state(self, game_state):
-        if game_state == GameState.ROLL:
+        if game_state == GameState.START_TURN:
+            self.player_state = PlayerState.START_TURN
+        elif game_state == GameState.ROLL:
             self.player_state = PlayerState.ROLL
         elif game_state == GameState.TRADE:
             self.player_state = PlayerState.TRADE_OR_BUILD
@@ -161,15 +162,15 @@ class Player:
     def handle_state(self, set_to=None):
         self.finish_turn_button.set_visible(False)
         self.trade_button.set_visible(False)
+        self.cancel_trade_button.set_visible(False)
         self.accept_trade_button.set_visible(False)
 
-        self.view_dev_cards_button.set_visible(False)
-        self.view_resources_button.set_visible(False)
-
-
-        #always able to view your cards
-        self.view_dev_cards_button.set_visible(True)
-        self.view_resources_button.set_visible(True)
+        if self.player_state == PlayerState.START_TURN:
+            self.view_dev_cards_button.set_visible(False)
+            self.view_resources_button.set_visible(False)
+        else:
+            self.view_dev_cards_button.set_visible(True)
+            self.view_resources_button.set_visible(True)
 
         if set_to is not None:
             self.player_state = set_to
@@ -180,6 +181,7 @@ class Player:
 
         elif self.player_state == PlayerState.OPEN_TRADE:
             if self.active_player:
+                self.cancel_trade_button.set_visible(True)
                 self.give_inventory.set_limits(self.main_inventory.get_amounts())
             else:
                 self.accept_trade_button.set_visible(True)
@@ -219,6 +221,7 @@ class Player:
             y2 = self.bottom + (3 * (button_height * 0.8))
 
             self.trade_button.set_position_and_size(x1, y, button_width, button_height)
+            self.cancel_trade_button.set_position_and_size(x2, y, button_width, button_height)
             self.finish_turn_button.set_position_and_size(x2, y, button_width, button_height)
             self.accept_trade_button.set_position_and_size(x2, y, button_width, button_height)
 
@@ -240,10 +243,19 @@ class Player:
                                                            self.center_y, usable_width * 0.7,
                                                            usable_width * 0.2)
 
+
+    # resets the player's trading inventories and opens a trade to other players
+    def open_trade(self):
+        self.give_inventory.reset()
+        self.get_inventory.reset()
+        Player.update_all_player_states_function(PlayerState.OPEN_TRADE)
+
+
     # while trading, relays the "get" inventory to main class so other players know whether they
     # have the resources necessary to make the trade
     def relay_inventory(self):
         Player.update_all_player_can_trade_function(self.get_inventory)
+
 
     # updates the player's own ability to accept a trade
     def update_can_trade(self, inventory):
@@ -285,7 +297,7 @@ class Player:
 
     def get_color(self):
         return self.color
-    
+
     # TODO: just here so I can test the bot
     def has_knight(self):
         return True
@@ -414,6 +426,7 @@ class Player:
         if self.active_player:
             self.finish_turn_button.on_draw()
             self.trade_button.on_draw()
+            self.cancel_trade_button.on_draw()
 
             self.view_dev_cards_button.on_draw()
             self.view_resources_button.on_draw()
@@ -449,6 +462,7 @@ class Player:
     def on_mouse_press(self, x, y):
         self.finish_turn_button.on_mouse_press(x, y)
         self.trade_button.on_mouse_press(x, y)
+        self.cancel_trade_button.on_mouse_press(x, y)
         self.accept_trade_button.on_mouse_press(x, y)
 
         self.main_inventory.on_mouse_press(x, y)
@@ -463,6 +477,7 @@ class Player:
     def on_mouse_motion(self, x, y):
         self.finish_turn_button.on_mouse_motion(x, y)
         self.trade_button.on_mouse_motion(x, y)
+        self.cancel_trade_button.on_mouse_motion(x, y)
         self.accept_trade_button.on_mouse_motion(x, y)
 
         self.main_inventory.on_mouse_motion(x, y)

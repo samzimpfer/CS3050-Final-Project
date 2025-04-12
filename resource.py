@@ -63,6 +63,16 @@ class ResourceGraphic:
         self.limit = limit
 
 
+    # sets the amount of this resource
+    def set_amount(self, amt):
+        if amt > self.limit:
+            self.amount = self.limit
+        elif amt < 0:
+            self.amount = 0
+        else:
+            self.amount = amt
+
+
     # changes the amount of this resource by a specified amount
     def change_amount(self, change):
         if change < 0:

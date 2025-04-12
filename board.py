@@ -33,7 +33,7 @@ class Board:
         self.tile_nodes = []
         self.resources = [Resource.WHEAT, Resource.WHEAT, Resource.WHEAT, Resource.WHEAT, Resource.WOOD, Resource.WOOD, Resource.WOOD, Resource.WOOD, Resource.SHEEP, Resource.SHEEP, Resource.SHEEP, Resource.SHEEP, Resource.STONE, Resource.STONE, Resource.STONE, Resource.BRICK, Resource.BRICK, Resource.BRICK, 'desert']
         self.numbers = [5, 2, 6, 8, 10, 9, 3, 3, 11, 4, 8, 4, 6, 5, 10, 11, 12, 9]
-        self.players = players#players list
+        self.players = players
         self.robber_tile = None # the tile that has the robber on it        
 
         # tile attributes
@@ -247,6 +247,15 @@ class Board:
         self.y_pos = self.center_y - (h // 2)
 
         self.reset_board()
+
+    # allocates resources for the start turn
+    def allocate_resources_start(self, player):
+        for row in self.nodes:
+            for node in row:
+                if node.get_building() == player:
+                    for tile in node.get_adjacent_tiles():
+                        if tile.get_resource() != "desert":
+                            player.add_resources({tile.get_resource() : 1})
     
     # gives out resources to the players that have buildings touching a tile with the number rolled
     def allocate_resources(self, roll):
@@ -388,16 +397,21 @@ class Board:
         self.set_size(h / Board.BOARD_SCALE_FACTOR, h)
 
     # calls on_mouse_press on all objects that are on the board and interactable
-    def on_mouse_press(self, x, y, button, player, can_build=True, can_rob=False):
+    # start turn = -1 indicates regular gameplay
+    # start turn = 0 indicates the first start turn
+    # start turn = 1 indicates the second start turn
+    def on_mouse_press(self, x, y, button, player, can_build_road=True, can_build_settlement=True, can_rob=False, start_turn=-1):
         did_build = False
-        if can_build:
+
+        if can_build_settlement:
             for row in self.nodes:
                 for node in row:
-                    if node.on_mouse_press(x, y, button, player, self):
+                    if node.on_mouse_press(x, y, button, player, self, (start_turn >= 0)):
                         did_build = True
 
+        if can_build_road:
             for edge in self.edges:
-                if edge.on_mouse_press(x, y, button, player):
+                if edge.on_mouse_press(x, y, button, player, (start_turn >= 0)):
                     did_build = True
 
         if can_rob:
@@ -408,6 +422,10 @@ class Board:
                         self.robber_tile.set_robber(False)
                     self.robber_tile = robber_location
                     return True
+
+        if start_turn == 0 and did_build:
+            self.allocate_resources_start(player)
+
         return did_build
 
     # calls on_mouse_motion on all objects that should have a hover effect

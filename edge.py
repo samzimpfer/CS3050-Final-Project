@@ -25,12 +25,18 @@ class Edge:
     
     def get_road(self):
         return self.road
+
+    def has_settlement(self):
+        return self.start_node.get_building() or self.end_node.get_building()
     
-    def build_road(self,player):
-        if self.road is None and player.can_build_road():
+    def build_road(self,player, free=False):
+        if self.road is None and (free or player.can_build_road()) and self.has_settlement():
             self.road = player
             self.color = player.get_color()
-            player.build_road(self.start_node, self.end_node)
+            if free:
+                player.add_road(self.start_node, self.end_node)
+            else:
+                player.build_road(self.start_node, self.end_node)
 
             return True
         return False
@@ -55,9 +61,9 @@ class Edge:
             return True
         return False
     
-    def on_mouse_press(self, x, y, button, player):
+    def on_mouse_press(self, x, y, button, player, free=False):
         if self.is_touching(x, y) and button == arcade.MOUSE_BUTTON_LEFT:
-            return self.build_road(player)
+            return self.build_road(player, free)
         return False
 
     def on_mouse_motion(self, x, y):
