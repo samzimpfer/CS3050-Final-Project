@@ -189,7 +189,7 @@ class Robot():
                 value_sum = 0
                 resource_multiplier = 1
                 opposition_score = 1
-                for tile in node.get_adjacentTiles():
+                for tile in node.get_adjacent_tiles():
                     # adds the number of dice configurations 
                     # that can make the number to the value_sum
                     number = tile.get_number()
@@ -278,10 +278,10 @@ class Robot():
         pass
 
     def build_road(self, edge):
-        self.player.build_road(edge)
+        self.board.bot_build_road(edge)
 
     def build_settlement(self, node):
-        tiles = node.get_adjacentTiles()
+        tiles = node.get_adjacent_tiles()
         for tile in tiles:
             if tile.get_resource() != "desert":
                 if tile.get_number() < 4 or tile.get_number() > 10:

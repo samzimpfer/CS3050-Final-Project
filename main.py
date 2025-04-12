@@ -241,8 +241,11 @@ class GameView(arcade.View):
         if self.active_player.is_bot():
             if self.current_state == GameState.START_TURN:
                 self.active_player.get_robot().play_first_turn()
+                print("starting")
             elif self.current_state == GameState.ROLL:
                 self.dice.roll()
+                self.active_player.get_robot().play_turn()
+                print("playing")
 
 
     # updates each player's ability to accept a given trade based on whether they have enough
@@ -343,27 +346,27 @@ class GameView(arcade.View):
             self.two_player_button.on_mouse_press(x, y)
             self.three_player_button.on_mouse_press(x, y)
             self.four_player_button.on_mouse_press(x, y)
+        if not self.active_player.is_bot():
+            if self.current_state == GameState.START_TURN:
+                if self.board.on_mouse_press(x, y, button, self.active_player, can_build_road=not self.start_turn_settlement, can_build_settlement=self.start_turn_settlement, start_turn=0):
+                    if self.start_turn_settlement:
+                        self.start_turn_settlement = False
+                    else:
+                        self.start_turn_settlement = True
+                        self.next_player_turn()
 
-        elif self.current_state == GameState.START_TURN:
-            if self.board.on_mouse_press(x, y, button, self.active_player, can_build_road=not self.start_turn_settlement, can_build_settlement=self.start_turn_settlement, start_turn=0):
-                if self.start_turn_settlement:
-                    self.start_turn_settlement = False
-                else:
-                    self.start_turn_settlement = True
-                    self.next_player_turn()
+            elif self.current_state == GameState.ROLL:
+                self.dice.on_mouse_press(x, y)
 
-        elif self.current_state == GameState.ROLL:
-            self.dice.on_mouse_press(x, y)
+            elif self.current_state == GameState.TRADE or self.current_state == GameState.BUILD:
+                if self.board.on_mouse_press(x, y, button, self.active_player):
+                    self.current_state = GameState.BUILD
+                    self.update_player_states()
 
-        elif self.current_state == GameState.TRADE or self.current_state == GameState.BUILD:
-            if self.board.on_mouse_press(x, y, button, self.active_player):
-                self.current_state = GameState.BUILD
-                self.update_player_states()
-
-        elif self.current_state == GameState.ROBBER:
-            did_rob = self.board.on_mouse_press(x, y, button, self.active_player, can_build=False, can_rob=True)
-            if did_rob:
-                self.current_state = GameState.TRADE
+            elif self.current_state == GameState.ROBBER:
+                did_rob = self.board.on_mouse_press(x, y, button, self.active_player, can_build=False, can_rob=True)
+                if did_rob:
+                    self.current_state = GameState.TRADE
 
 
     def on_mouse_motion(self, x, y, dx, dy):
