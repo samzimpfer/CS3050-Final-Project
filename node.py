@@ -76,11 +76,11 @@ class Node:
         return player_can_build
         
     # builds a town 
-    def build_settlement(self, player, board, free=False):
-        if self.has_space() and self.is_touching_road(board, player) and (free or player.can_build_settlement()):
+    def build_settlement(self, player, board, start_turn=False):
+        if self.has_space() and (start_turn or (self.is_touching_road(board, player) and player.can_build_settlement())):
             self.color = player.get_color()
             self.building = player
-            if not free:
+            if not start_turn:
                 player.build_settlement()
             return True
         return False

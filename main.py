@@ -178,7 +178,7 @@ class GameView(arcade.View):
         self.current_state = GameState.START_TURN
         self.active_player_index = -1
         self.turn_direction = 1
-        self.start_turn_settlement = False
+        self.start_turn_settlement = True
         self.next_player_turn()
 
 
@@ -321,11 +321,11 @@ class GameView(arcade.View):
             self.five_player_button.on_mouse_press(x, y)
 
         elif self.current_state == GameState.START_TURN:
-            if self.board.on_mouse_press(x, y, button, self.active_player, can_build_road=not self.start_turn_settlement, start_turn=0):
-                if not self.start_turn_settlement:
-                    self.start_turn_settlement = True
-                else:
+            if self.board.on_mouse_press(x, y, button, self.active_player, can_build_road=not self.start_turn_settlement, can_build_settlement=self.start_turn_settlement, start_turn=0):
+                if self.start_turn_settlement:
                     self.start_turn_settlement = False
+                else:
+                    self.start_turn_settlement = True
                     self.next_player_turn()
 
         elif self.current_state == GameState.ROLL:
