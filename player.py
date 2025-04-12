@@ -121,20 +121,19 @@ class Player:
         self.close_menu_button.set_position_and_size((4*self.WINDOW_WIDTH) / 5, self.WINDOW_HEIGHT / 2, 200, 100)
         self.close_menu_button.on_click = Player.close_menu
 
-        self.bot = False
         self.robot = robot
         self.robot_sprite = arcade.Sprite("sprites/robot.png")
-        self.sprite_list = arcade.SpriteList()
+        self.sprites = arcade.SpriteList()
+        self.sprites.append(self.robot_sprite)
 
     def is_bot(self):
-        return self.bot
+        return self.robot is not None
 
     def get_robot(self):
         return self.robot
 
     def set_robot(self, robot):
         self.robot = robot
-        self.bot = True
 
     def set_active_player(self, ap):
         self.active_player = ap
@@ -244,6 +243,13 @@ class Player:
             self.accept_trade_button.set_position_and_size(self.left + (usable_width / 2),
                                                            self.center_y, usable_width * 0.7,
                                                            usable_width * 0.2)
+
+        if self.is_bot():
+            size = usable_width / 5
+            self.robot_sprite.center_x = l + size
+            self.robot_sprite.center_y = b + size
+            self.robot_sprite.width = size
+            self.robot_sprite.height = size
 
 
     # resets the player's trading inventories and opens a trade to other players
@@ -459,6 +465,9 @@ class Player:
         else:
             if self.player_state == PlayerState.OPEN_TRADE:
                 self.accept_trade_button.on_draw()
+
+        if self.is_bot():
+            self.sprites.draw()
 
 
     def on_mouse_press(self, x, y):
