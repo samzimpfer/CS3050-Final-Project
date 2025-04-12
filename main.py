@@ -93,6 +93,7 @@ class GameView(arcade.View):
 
         self.players = []
         self.num_players = 0
+        self.num_bot_players = 0
         self.board = Board(board_center_x, board_center_y, self.players, height=self.board_space)
 
         #Player.bank = self.bank
@@ -120,6 +121,7 @@ class GameView(arcade.View):
     # resets the game
     def reset(self, num_players):
         self.num_players = num_players
+        self.num_bot_players = 2
 
         self.two_player_button.set_visible(False)
         self.three_player_button.set_visible(False)
@@ -175,7 +177,9 @@ class GameView(arcade.View):
             p.set_largest_army(True)
 
             # TODO: human vs ai here
-            #p.set_robot(Robot(p, self.board))
+            if i >= self.num_bot_players:
+                p.set_robot(Robot(p, self.board))
+
             self.players.append(p)
 
 
@@ -189,7 +193,8 @@ class GameView(arcade.View):
 
     # advances to the next player's turn, updating player UIs and updating the game state
     def next_player_turn(self):
-        print(len(self.board.players))
+        # this happens once during turn transition
+
         # cycle active player
         self.active_player_index += self.turn_direction
 
@@ -234,9 +239,11 @@ class GameView(arcade.View):
         # there is almost no way this works delete it if you need main
         # sorry for leaving this here
         if self.active_player.is_bot():
-            self.dice.roll()
-            #self.active_player.get_robot().play_turn()
-            self.active_player.get_robot().play_first_turn()
+            if self.current_state == GameState.START_TURN:
+                self.active_player.get_robot().play_first_turn()
+            elif self.current_state == GameState.ROLL:
+                self.dice.roll()
+
 
     # updates each player's ability to accept a given trade based on whether they have enough
     # resources
@@ -305,14 +312,19 @@ class GameView(arcade.View):
 
 
     def on_update(self, delta_time: float):
+        # this loops frequently
+
         # manage game state
         if self.current_state == GameState.ROLL:
             self.dice.on_update(delta_time)
 
-            if self.dice.ready:
+            if self.dice.ready: # this happens once per turn
                 # handle roll sum
                 roll_value = self.dice.get_sum_and_reset()
-                print(f"Roll: {roll_value}")
+
+                if self.active_player.is_bot():
+                    self.active_player.get_robot().play_turn()
+
                 if roll_value == 13:# TODO: change to 7 set to 13 cause robber not fully done
                     self.current_state = GameState.ROBBER
                 else:
