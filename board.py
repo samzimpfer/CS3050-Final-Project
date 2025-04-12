@@ -401,18 +401,19 @@ class Board:
     # start turn = 0 indicates the first start turn
     # start turn = 1 indicates the second start turn
     def on_mouse_press(self, x, y, button, player, can_build_road=True, can_build_settlement=True, can_rob=False, start_turn=-1):
-        did_build = False
+        did_build_settlement = False
+        did_build_road = False
 
         if can_build_settlement:
             for row in self.nodes:
                 for node in row:
                     if node.on_mouse_press(x, y, button, player, self, (start_turn >= 0)):
-                        did_build = True
+                        did_build_settlement = True
 
         if can_build_road:
             for edge in self.edges:
                 if edge.on_mouse_press(x, y, button, player, (start_turn >= 0)):
-                    did_build = True
+                    did_build_road = True
 
         if can_rob:
             for tile in self.tile_nodes:
@@ -423,10 +424,10 @@ class Board:
                     self.robber_tile = robber_location
                     return True
 
-        if start_turn == 0 and did_build:
+        if start_turn == 0 and did_build_settlement:
             self.allocate_resources_start(player)
 
-        return did_build
+        return did_build_settlement or did_build_road
 
     # calls on_mouse_motion on all objects that should have a hover effect
     def on_mouse_move(self, x, y):
