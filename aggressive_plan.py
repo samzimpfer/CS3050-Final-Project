@@ -30,8 +30,6 @@ class AggressivePlan():
             CITY_COST: self.distance_from_price(CITY_COST),
             DEV_CARD_COST: self.distance_from_price(DEV_CARD_COST)
         }
-        for _, value in distances.items():
-            print(value)
         
 
     
