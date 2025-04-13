@@ -242,11 +242,15 @@ class GameView(arcade.View):
         # this happens once during turn transition
 
         # cycle active player
+        print()
+        if self.active_player_index < -4:
+            self.turn_direction = 1
         self.active_player_index += self.turn_direction
 
         if self.current_state == GameState.START_TURN:
             if self.active_player_index >= self.num_players:
                 self.active_player_index = self.num_players - 1
+                print(self.active_player_index)
                 self.turn_direction = -1
 
             if self.active_player_index < 0:
@@ -259,6 +263,7 @@ class GameView(arcade.View):
             self.current_state = GameState.ROLL
 
         self.active_player = self.players[self.active_player_index]
+        
 
         # set active player position
         self.active_player.set_active_player(True)
@@ -287,7 +292,6 @@ class GameView(arcade.View):
         if self.active_player.is_bot():
             if self.current_state == GameState.START_TURN:
                 self.active_player.get_robot().play_first_turn()
-                print("starting")
                 self.next_player_turn()
             elif self.current_state == GameState.ROLL:
                 self.dice.roll()
