@@ -13,6 +13,7 @@ class GameState(Enum):
     TRADE = 4
     BUILD = 5
     ROBBER = 6
+    WINNER = 7
 
 INSTRUCTIONS = {
     GameState.START_TURN: "Place a settlement and then a road",
@@ -35,7 +36,8 @@ UI_OUTLINE_COLOR = (40, 80, 140)
 BUTTON_COLOR = (40, 80, 140)
 TEXT_COLOR = (255, 200, 10)
 
-PLAYER_COLORS = [arcade.color.BLUE, arcade.color.GREEN, arcade.color.RED, arcade.color.YELLOW, arcade.color.ORANGE]
+PLAYER_COLORS = [arcade.color.BLUE, arcade.color.GREEN, arcade.color.RED, arcade.color.YELLOW]
+PLAYER_COLOR_NAMES = ["Blue", "Green", "Red", "Yellow"]
 
 ROAD_COST = {
     Resource.BRICK:1,

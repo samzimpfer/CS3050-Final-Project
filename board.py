@@ -418,9 +418,6 @@ class Board:
                     self.robber_tile = robber_location
                     return True
 
-        if start_turn == 0 and did_build_settlement:
-            self.allocate_resources_start(player)
-
         return did_build_settlement or did_build_road
 
     # calls on_mouse_motion on all objects that should have a hover effect
