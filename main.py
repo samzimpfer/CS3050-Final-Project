@@ -243,7 +243,7 @@ class GameView(arcade.View):
 
         # cycle active player
         print()
-        if self.active_player_index < -4:
+        if self.active_player_index < 0:
             self.turn_direction = 1
         self.active_player_index += self.turn_direction
 
