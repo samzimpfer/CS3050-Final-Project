@@ -41,25 +41,34 @@ PLAYER_COLOR_NAMES = ["Blue", "Green", "Red", "Yellow"]
 
 ROAD_COST = {
     Resource.BRICK:1,
+    Resource.SHEEP:0,
+    Resource.STONE:0,
+    Resource.WHEAT:0,
     Resource.WOOD:1
 }
 
 SETTLEMENT_COST = {
     Resource.BRICK:1,
     Resource.SHEEP:1,
+    Resource.STONE:0,
     Resource.WHEAT:1,
     Resource.WOOD:1
 }
 
 CITY_COST = {
+    Resource.BRICK:0,
+    Resource.SHEEP:0,
+    Resource.STONE:3,
     Resource.WHEAT:2,
-    Resource.STONE:3
+    Resource.WOOD:0
 }
 
 DEV_CARD_COST = {
-    Resource.WHEAT:1,
-    Resource.STONE:1,
+    Resource.BRICK:0,
     Resource.SHEEP:1,
+    Resource.STONE:1,
+    Resource.WHEAT:1,
+    Resource.WOOD:0
 }
 
 # All dev card types, basically structs.  Subclasses of DevCard.  Each has the number of them(amt), name, and description.
