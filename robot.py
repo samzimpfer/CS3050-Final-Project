@@ -1,5 +1,5 @@
 from enum import Enum
-from gameobjects import ROAD_COST, SETTLEMENT_COST, CITY_COST, DEV_CARD_COST
+from gameobjects import *
 from inventory import Inventory
 
 
@@ -42,7 +42,7 @@ class Robot():
         elif self.action == Moves.PLAY_DEV_CARD:
             self.play_dev_card()
         elif self.action == Moves.TRADE:
-            self.trade()
+            self.trade() # TODO: pass in price of what needs to built
         else:
             pass
         return 
@@ -192,13 +192,28 @@ class Robot():
         else:
             return None
 
-
+    # TODO: could add additional price arguments for future turns in this
     def trade(self, price):
+        get = self.player.get_inventory
+        give = self.player.give_inventory
+
         # TODO: test distance_from_price_absolute to make sure it works right
         needed = self.distance_from_price_absolute(price)
         self.player.open_trade()
-        self.player.get_inventory.set_amounts(needed)
-        # self.player.give_inventory.set_amounts(dont_need) # TODO: need a way to determine dont_need
+        get.set_amounts(needed) # this function automatically ignores negatives
+
+        # loop to set give inventory to same cardinality of unneeded resources
+        while give.get_total_amount() < get.get_total_amount():
+            change = Inventory.ALL_ZERO.copy()
+            min_key = Resource.BRICK
+            min_val = needed[Resource.BRICK]
+            # add the most abundant resource at each pass to the give inventory
+            for t, r in needed.items():
+                if r < min_val:
+                    min_key = t
+                    min_val = r
+            change[min_key] = 1
+            give.change_amounts(change)
 
         # this should open a trade to any players who can trade
 

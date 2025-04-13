@@ -3,13 +3,15 @@ from resource import ResourceGraphic
 
 class Inventory:
 
-    DEFAULT_AMOUNTS = {
+    ALL_ZERO = {
         Resource.BRICK: 0,
         Resource.SHEEP: 0,
         Resource.STONE: 0,
         Resource.WHEAT: 0,
         Resource.WOOD: 0
     }
+
+    DEFAULT_AMOUNTS = ALL_ZERO
 
     PRELOADED_RESOURCES = {
         Resource.BRICK: 100,
@@ -102,6 +104,14 @@ class Inventory:
         for t, r in self.inventory.items():
             amts[t] = r.amount
         return amts
+
+
+    # returns the total number of resource contained in the inventory
+    def get_total_amount(self):
+        total = 0
+        for t, r in self.inventory.items():
+            total += r.amount
+        return total
 
 
     # checks if this inventory contains a certain set of resources specified
