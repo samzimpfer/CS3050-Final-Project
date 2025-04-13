@@ -295,7 +295,7 @@ class GameView(arcade.View):
             elif self.current_state == GameState.ROLL:
                 self.dice.roll()
                 self.active_player.get_robot().play_turn()
-                print("playing")
+                self.next_player_turn()
 
 
     # updates each player's ability to accept a given trade based on whether they have enough
