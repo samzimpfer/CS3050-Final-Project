@@ -39,7 +39,7 @@ class Robot():
                 case Moves.BUILD_ROAD:
                     self.build_road(action[1])
                 case Moves.BUILD_CITY:
-                    pass
+                    self.build_city(action[1])
                 case Moves.TRADE:
                     pass
                 case Moves.WAIT:
@@ -132,7 +132,12 @@ class Robot():
             self.actions.append([Moves.BUILD_CITY, city_location])
 
         if len(self.actions):
-            self.actions.append([Moves.TRADE, self.actions[0][0]])
+            if self.actions[0][0] == Moves.BUILD_CITY:
+                self.actions.append([Moves.TRADE, CITY_COST])
+            elif self.actions[0][0] == Moves.BUILD_SETTLEMENT:
+                self.actions.append([Moves.TRADE, SETTLEMENT_COST])
+            elif self.action[0][0] == Moves.BUILD_ROAD:
+                self.actions.append([Moves.TRADE, ROAD_COST])
         self.actions.append([Moves.WAIT, None])
 
 

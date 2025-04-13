@@ -457,7 +457,7 @@ class Board:
         edge.build_road(player, start_turn=start_turn)
 
     def bot_build_city(self, node, player):
-        pass
+        node.build_city(player)
 
     def bot_place_robber(self, tile):
         if self.robber_tile:
