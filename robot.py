@@ -349,7 +349,6 @@ class Robot():
                             if (self.board.get_edge(neighbor, n).get_road() != None and
                             self.board.get_edge(neighbor, n).get_road() != self.player):
                                 opposition_score += 0.5
-                                
                 return value_sum * resource_multiplier / opposition_score 
     
     # calculates the distance from the price per resource then returns a list of distances 
