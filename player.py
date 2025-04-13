@@ -88,6 +88,7 @@ class Player:
 
         self.active_player = False
         self.player_state = PlayerState.DEFAULT
+        self.can_trade = False
 
         # UI elements
         self.show_resources = True # TODO: change this to False when done testing
@@ -208,15 +209,15 @@ class Player:
                     else:
                         self.rob_nobody_button.set_visible(True)
 
-                else:
-                    if self.is_next_to_robber() and not self.main_inventory.is_empty():
-                        self.rob_button.set_visible(True)
-
             elif self.player_state == PlayerState.MENU:
                 self.close_menu_button.set_visible(True)
 
             elif self.player_state == PlayerState.DEFAULT:
                 self.finish_turn_button.set_visible(True)
+
+        if self.player_state == PlayerState.ROBBER and not self.active_player:
+            if self.is_next_to_robber() and not self.main_inventory.is_empty():
+                self.rob_button.set_visible(True)
 
 
     # positions the player representation UI and it's components on the screen
@@ -296,8 +297,10 @@ class Player:
     def update_can_trade(self, inventory):
         if self.main_inventory.contains(inventory.get_amounts()):
             self.accept_trade_button.set_visible(True)
+            self.can_trade = True
         else:
             self.accept_trade_button.set_visible(False)
+            self.can_trade = False
 
 
     # adds a set of resources to the player's inventory
@@ -337,6 +340,7 @@ class Player:
             self.use_resources(random_resource)
 
         return random_resource
+
 
     def add_road(self,start_node, end_node):
         if start_node not in self.roads:

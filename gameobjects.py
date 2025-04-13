@@ -14,6 +14,14 @@ class GameState(Enum):
     BUILD = 5
     ROBBER = 6
 
+INSTRUCTIONS = {
+    GameState.START_TURN: "Place a settlement and then a road",
+    GameState.ROLL: "Click the dice to roll",
+    GameState.TRADE: "You may trade with other players or click on the board to build",
+    GameState.ROBBER: "You've activated the robber by rolling a 7! Click any tile next to another "
+                      "player's settlement and take a random resource from them",
+}
+
 class Resource(Enum):
     BRICK = 0
     SHEEP = 1
@@ -25,6 +33,7 @@ class Resource(Enum):
 UI_COLOR = (75, 110, 150)
 UI_OUTLINE_COLOR = (40, 80, 140)
 BUTTON_COLOR = (40, 80, 140)
+TEXT_COLOR = (255, 200, 10)
 
 PLAYER_COLORS = [arcade.color.BLUE, arcade.color.GREEN, arcade.color.RED, arcade.color.YELLOW, arcade.color.ORANGE]
 
