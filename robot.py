@@ -21,6 +21,7 @@ class Robot():
         self.settlements = []# list of nodes that have settlements
         self.resource_types_weights = [0,0,0,0,0]# number of each resource tile you have
         self.actions = []# the action that is queued up 
+        self.freeze_spending = [False, False, False, False, False]# can freeze spending of a resource 
         self.road_plans = []
         self.planned_settlement = None
         self.planned_city = None
@@ -112,8 +113,16 @@ class Robot():
 
         if self.planned_settlement and settlement_distance > -2:
             self.actions.append([Moves.BUILD_SETTLEMENT, self.planned_settlement])
+            freeze = True
+            for value in SETTLEMENT_COST.values:
+                if not value > 0: 
+                    freeze = False
+            self.freeze_spending[0] = True
+            self.freeze_spending[1] = True
+            self.freeze_spending[3] = True
+            self.freeze_spending[4] = True
 
-        elif self.player.can_build_road():
+        elif self.player.can_build_road() and not(self):
             if self.resource_types_weights[0] == 0:
                 path = self.find_path_to_resource(Resource.BRICK)
             elif self.resource_types_weights[4] == 0:
@@ -130,13 +139,15 @@ class Robot():
 
         if city_distance > -2 and city_location:
             self.actions.append([Moves.BUILD_CITY, city_location])
+            self.freeze_spending[2] = True
+            self.freeze_spending[3] = True
 
         if len(self.actions):
             if self.actions[0][0] == Moves.BUILD_CITY:
                 self.actions.append([Moves.TRADE, CITY_COST])
             elif self.actions[0][0] == Moves.BUILD_SETTLEMENT:
                 self.actions.append([Moves.TRADE, SETTLEMENT_COST])
-            elif self.action[0][0] == Moves.BUILD_ROAD:
+            elif self.actions[0][0] == Moves.BUILD_ROAD:
                 self.actions.append([Moves.TRADE, ROAD_COST])
         self.actions.append([Moves.WAIT, None])
 
@@ -197,9 +208,9 @@ class Robot():
                         if not degree_3_neighbor.has_space() or degree_3_neighbor == neighbor:
                             continue
                         else:
-                            for tile in degree_3_neighbor.get_adjacent_nodes():
+                            for tile in degree_3_neighbor.get_adjacent_tiles():
                                 if tile.get_resource() == resource:
-                                    this_degree_3_score = tile.get_resource()
+                                    this_degree_3_score = tile.get_number()
                                     if this_degree_3_score > best_degree_3_score:
                                         this_degree_3_score = tile.get_number()
                                         degree_3_path = [node, neighbor, degree_2_neighbor, degree_3_neighbor]
@@ -338,9 +349,7 @@ class Robot():
                             if (self.board.get_edge(neighbor, n).get_road() != None and
                             self.board.get_edge(neighbor, n).get_road() != self.player):
                                 opposition_score += 0.5
-                print("------------------")
-                print(value_sum, resource_multiplier, opposition_score)
-                print(value_sum * resource_multiplier / opposition_score)
+                                
                 return value_sum * resource_multiplier / opposition_score 
     
     # calculates the distance from the price per resource then returns a list of distances 
@@ -440,6 +449,8 @@ class Robot():
                     self.resource_types_weights[tile.get_resource().value] += 1
 
         self.player.build_city(node)
+        self.freeze_spending[2] = False
+        self.freeze_spending[3] = False
         
 
     def buy_dev_card(self):
