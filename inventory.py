@@ -5,9 +5,9 @@ class Inventory:
 
     DEFAULT_AMOUNTS = {
         Resource.BRICK: 0,
-        Resource.SHEEP: 0,
+        Resource.SHEEP: 1,
         Resource.STONE: 0,
-        Resource.WHEAT: 0,
+        Resource.WHEAT: 1,
         Resource.WOOD: 0
     }
 
@@ -108,6 +108,29 @@ class Inventory:
             if self.inventory[r].amount < req:
                 return False
         return True
+
+
+    # returns true if this inventory is empty
+    def is_empty(self):
+        return self.get_amounts() == {
+            Resource.BRICK: 0,
+            Resource.SHEEP: 0,
+            Resource.STONE: 0,
+            Resource.WHEAT: 0,
+            Resource.WOOD: 0
+        }
+
+
+    # returns a random resource contained in this inventory
+    def get_random_resource(self):
+        output = None
+        if not self.is_empty():
+            non_zero = {}
+            for t, r in self.get_amounts().items():
+                if r != 0:
+                    non_zero[t] = r
+            output = random.choice(list(non_zero.items()))
+        return output
 
 
     def on_draw(self):

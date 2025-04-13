@@ -24,7 +24,8 @@ class PlayerState(Enum):
     ROLL = 3
     TRADE_OR_BUILD = 4
     OPEN_TRADE = 5
-    MENU = 6
+    ROBBER = 6
+    MENU = 7
 
 # TODO: convert all camelcase to snakecase for pep 8 purposes
 class Player:
@@ -44,6 +45,7 @@ class Player:
     update_all_player_states_function = None
     update_all_player_can_trade_function = None
     accept_trade_function = None
+    rob_function = None
 
     game_state = None
 
@@ -98,6 +100,7 @@ class Player:
         self.trade_button = Button("Trade")
         self.cancel_trade_button = Button("Cancel trade")
         self.accept_trade_button = Button("Accept")
+        self.rob_button = Button("Rob")
 
         self.view_dev_cards_button = Button("Show dev cards")
         self.view_dev_cards_button.on_click = Player.draw_view_dev_cards
@@ -110,6 +113,7 @@ class Player:
         self.cancel_trade_button.on_click = \
             lambda : Player.update_all_player_states_function(PlayerState.TRADE_OR_BUILD)
         self.accept_trade_button.on_click = lambda : Player.accept_trade_function(self)
+        self.rob_button.on_click = lambda : Player.rob_function(self)
 
         self.dev_card_stack_button_params = []
 
@@ -154,6 +158,8 @@ class Player:
             self.player_state = PlayerState.TRADE_OR_BUILD
         elif game_state == GameState.BUILD:
             self.player_state = PlayerState.DEFAULT
+        elif game_state == GameState.ROBBER:
+            self.player_state = PlayerState.ROBBER
         elif game_state == PlayerState.MENU:
             self.player_state = PlayerState.MENU
 
@@ -166,6 +172,7 @@ class Player:
         self.trade_button.set_visible(False)
         self.cancel_trade_button.set_visible(False)
         self.accept_trade_button.set_visible(False)
+        self.rob_button.set_visible(False)
 
         if self.player_state == PlayerState.START_TURN:
             self.view_dev_cards_button.set_visible(False)
@@ -187,6 +194,12 @@ class Player:
                 self.give_inventory.set_limits(self.main_inventory.get_amounts())
             else:
                 self.accept_trade_button.set_visible(True)
+
+        elif self.player_state == PlayerState.ROBBER:
+            if self.active_player:
+                pass
+            else:
+                self.rob_button.set_visible(True)
 
         elif self.player_state == PlayerState.MENU:
             self.close_menu_button.set_visible(True)
@@ -225,7 +238,6 @@ class Player:
             self.trade_button.set_position_and_size(x1, y, button_width, button_height)
             self.cancel_trade_button.set_position_and_size(x2, y, button_width, button_height)
             self.finish_turn_button.set_position_and_size(x2, y, button_width, button_height)
-            self.accept_trade_button.set_position_and_size(x2, y, button_width, button_height)
 
             self.view_dev_cards_button.set_position_and_size(x1, y2, button_width, button_height)
             self.view_resources_button.set_position_and_size(x2, y2, button_width, button_height)
@@ -244,6 +256,8 @@ class Player:
             self.accept_trade_button.set_position_and_size(self.left + (usable_width / 2),
                                                            self.center_y, usable_width * 0.7,
                                                            usable_width * 0.2)
+            self.rob_button.set_position_and_size(self.left + (usable_width / 2), self.center_y,
+                                                  usable_width * 0.5, usable_width * 0.2)
 
         if self.is_bot():
             size = usable_width / 5
@@ -281,8 +295,9 @@ class Player:
 
 
     # subtracts a set of resources from the player's inventory
-    def use_resources(self, amts):
-        Player.bank.ReturnResources(amts)
+    def use_resources(self, a):
+        amts = a.copy()
+        #Player.bank.ReturnResources(amts)
         for r, a in amts.items():
             amts[r] = -a
         self.main_inventory.change_amounts(amts)
@@ -292,6 +307,16 @@ class Player:
     def has_resources(self, amts):
         return self.main_inventory.contains(amts)
 
+
+    # decrements a random resource from this player and returns it
+    def rob(self):
+        output = self.main_inventory.get_random_resource()
+        if output:
+            output = { output[0]: output[1] }
+            self.use_resources(output)
+
+        print(output)
+        return output
 
     def add_road(self,start_node, end_node):
         if start_node not in self.roads:
@@ -471,6 +496,8 @@ class Player:
         else:
             if self.player_state == PlayerState.OPEN_TRADE:
                 self.accept_trade_button.on_draw()
+            elif self.player_state == PlayerState.ROBBER:
+                self.rob_button.on_draw()
 
         if self.is_bot():
             self.sprites.draw()
@@ -480,7 +507,9 @@ class Player:
         self.finish_turn_button.on_mouse_press(x, y)
         self.trade_button.on_mouse_press(x, y)
         self.cancel_trade_button.on_mouse_press(x, y)
+
         self.accept_trade_button.on_mouse_press(x, y)
+        self.rob_button.on_mouse_press(x, y)
 
         self.main_inventory.on_mouse_press(x, y)
         self.give_inventory.on_mouse_press(x, y)
@@ -495,7 +524,9 @@ class Player:
         self.finish_turn_button.on_mouse_motion(x, y)
         self.trade_button.on_mouse_motion(x, y)
         self.cancel_trade_button.on_mouse_motion(x, y)
+
         self.accept_trade_button.on_mouse_motion(x, y)
+        self.rob_button.on_mouse_motion(x, y)
 
         self.main_inventory.on_mouse_motion(x, y)
         self.give_inventory.on_mouse_motion(x, y)

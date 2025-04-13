@@ -65,6 +65,7 @@ class GameView(arcade.View):
         Player.update_all_player_states_function = self.update_player_states
         Player.update_all_player_can_trade_function = self.update_players_can_trade
         Player.accept_trade_function = self.execute_trade
+        Player.rob_function = self.execute_rob
 
         board_center_x = WINDOW_WIDTH // 2
         board_center_y = (self.board_space // 2) + self.margin
@@ -231,7 +232,8 @@ class GameView(arcade.View):
 
 
         # gameplay fields
-        self.current_state = GameState.START_TURN
+        # self.current_state = GameState.START_TURN
+        self.current_state = GameState.ROLL # TODO: take this out
         self.active_player_index = -1
         self.turn_direction = 1
         self.start_turn_number = 0
@@ -316,6 +318,11 @@ class GameView(arcade.View):
         self.update_player_states()
 
 
+    # executes the active player taking a single random resource from another player
+    def execute_rob(self, player2):
+        self.active_player.add_resources(player2.rob())
+
+
     # updates each players state, either based on the current game state, or to a specific
     # player state if specified
     def update_player_states(self, set_to=None):
@@ -392,7 +399,7 @@ class GameView(arcade.View):
                 if self.active_player.is_bot():
                     self.active_player.get_robot().play_turn()
 
-                if roll_value == 13:# TODO: change to 7 set to 13 cause robber not fully done
+                if True or roll_value == 7:
                     self.current_state = GameState.ROBBER
                 else:
                     self.board.allocate_resources(roll_value)
@@ -434,9 +441,10 @@ class GameView(arcade.View):
                     self.update_player_states()
 
             elif self.current_state == GameState.ROBBER:
-                did_rob = self.board.on_mouse_press(x, y, button, self.active_player, can_build_road=False, can_build_settlement=False, can_rob=True)
-                if did_rob:
-                    self.current_state = GameState.TRADE
+                if self.board.on_mouse_press(x, y, button, self.active_player,
+                                             can_build_road=False, can_build_settlement=False,
+                                             can_rob=True):
+                    self.update_player_states()
 
 
     def on_mouse_motion(self, x, y, dx, dy):
