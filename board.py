@@ -450,8 +450,6 @@ class Board:
     
     def bot_build_settlement(self, node, player, start_turn, is_first=False):
         node.build_settlement(player, self, start_turn=start_turn)
-        if start_turn and is_first:
-            self.allocate_resources_start(player)
 
     def bot_build_road(self, edge, player, start_turn):
         edge.build_road(player, start_turn=start_turn)

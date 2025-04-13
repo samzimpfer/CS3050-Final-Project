@@ -317,8 +317,8 @@ class GameView(arcade.View):
         if self.active_player.is_bot():
             if self.current_state == GameState.START_TURN:
                 self.active_player.get_robot().play_first_turn()
-                #if self.start_turn_number == 0:
-                    #self.board.allocate_resources_start(self.active_player)
+                if self.start_turn_number == 0:
+                    self.board.allocate_resources_start(self.active_player)
                 self.next_player_turn()
             elif self.current_state == GameState.ROLL:
                 self.dice.roll()
