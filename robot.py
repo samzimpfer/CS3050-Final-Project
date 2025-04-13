@@ -317,7 +317,10 @@ class Robot():
                 else:
                     self.resource_types_weights[tile.get_resource().value] += 1
             self.settlements.append(node)
+        if len(self.settlements) == 0:
+            self.board.bot_build_settlement(node, self.player, start_turn=start_turn, is_first=True)
         self.board.bot_build_settlement(node, self.player, start_turn=start_turn)
+        
 
     def build_city(self, node):
         if node not in self.settlements:
