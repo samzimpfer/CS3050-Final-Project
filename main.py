@@ -234,8 +234,7 @@ class GameView(arcade.View):
 
 
         # gameplay fields
-        # self.current_state = GameState.START_TURN
-        self.current_state = GameState.ROLL # TODO: take this out
+        self.current_state = GameState.START_TURN
         self.active_player_index = -1
         self.turn_direction = 1
         self.start_turn_number = 0
@@ -248,7 +247,6 @@ class GameView(arcade.View):
         # this happens once during turn transition
 
         # cycle active player
-        print()
         if self.active_player_index < 0:
             self.turn_direction = 1
         self.active_player_index += self.turn_direction
@@ -422,7 +420,7 @@ class GameView(arcade.View):
                 if self.active_player.is_bot():
                     self.active_player.get_robot().play_turn()
 
-                if True or roll_value == 7:
+                if roll_value == 7:
                     self.current_state = GameState.ROBBER
                 else:
                     self.board.allocate_resources(roll_value)
