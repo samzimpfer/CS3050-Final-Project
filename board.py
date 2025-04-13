@@ -273,11 +273,6 @@ class Board:
     # main function that calls the sub functions on all players
     # TODO: Fix the path_length function recursion is not work right 
     def find_longest_road(self):
-        print("longest road")
-        print(self.players)
-        for row in self.nodes:
-            for node in row:
-                node.set_color(arcade.color.BLACK) #TODO: REMOVE
         for player in self.players:
             nodes_of_interest = self.find_nodes_of_intrest(player)
             segments = self.find_segment_lengths(nodes_of_interest, player.get_roads())
@@ -286,14 +281,25 @@ class Board:
             lengths = []
             for segment in segments:
                 if segment[0] in endpoints:
-                    lengths_2 = (self.construct_longest_path(segment[0], segments))
+                    segments_2 = segments.copy()
+                    lengths_2 = (self.construct_longest_path(segment[0], segments_2))
                     for length in lengths_2:
                         lengths.append(length)
             if lengths != []:
                 longest_road = max(lengths)
             else:
                 longest_road = 0
-            print(f'LONGEST ROAD: {longest_road}')
+            player.set_longest_road_value(longest_road)
+        for player in self.players:
+            max_len = 0
+            changes = []
+            if player.get_longest_road_value() > 5 and player.get_longest_road_value() > max_len:
+                max_len = player.get_longest_road_value()
+                changes.append(player)
+        if changes != []:
+            for player in self.players:
+                player.set_longest_road(False)
+            changes[-1].set_longest_road(True)
 
 
 
@@ -301,18 +307,13 @@ class Board:
     def construct_longest_path(self, seed, segments, length=0, lengths=None):
         if lengths is None:
             lengths = []
-        print(f'segments:{segments}')
-        print(seed)
         for segment in segments:
             if segment[0] == seed:
                 length += segment[1]
+                lengths.append(length)
                 segments.pop(segments.index(segment))
                 segments.pop(segments.index([segment[2], segment[1], segment[0]]))
-                print("recurse")
-                return self.construct_longest_path(segment[2],segments, length)
-            else:
-                lengths.append(length)
-        print(lengths)
+                return self.construct_longest_path(segment[2],segments, length, lengths)
         return lengths
 
     def find_endpoints(self, player):
@@ -329,13 +330,11 @@ class Board:
     def find_nodes_of_intrest(self, player):
         nodes_of_intrest = []
         roads = player.get_roads()
-        print(roads)
         for node in roads:
             count = len([connection for connection in node.get_connections() if connection in roads])
             # if a node does not have two road connections then it is either an endpoint or an intersection
             if count != 2:
                 nodes_of_intrest.append(node)
-        print(f'nodes_of_intrest: {nodes_of_intrest}')
         return nodes_of_intrest
     
     # finds the lengths of all segments which is just a path between two nodes_of_intrest
@@ -343,24 +342,18 @@ class Board:
         checked_segments = []
         for node in nodes_of_importance:
             connections = [connection for connection in node.get_connections() if connection in roads]
-            print(f'connections: {connections}')
             for connection in connections:
-                print("-----")
                 path = self.path_length(node, connection, nodes_of_importance, roads)
-                print("-----")
-                checked_segments.append([path[0],len(path),path[-1]])
+                checked_segments.append([path[0],len(path) - 1,path[-1]])
         return checked_segments
 
     # finds the length of a path given a direction(the next param) until the next node_of_intrest
     # still WIP
     def path_length(self, start, next, nodes_of_importance, roads, path=None):
-        start.set_color(arcade.color.RED)
-        self.draw()
         if path is None:
-            path = []
+            path = [start]
         if next in nodes_of_importance:
             path.append(next)
-            start.set_color(arcade.color.BLACK)
             return path
         else:
             path.append(next)
@@ -368,10 +361,7 @@ class Board:
             for node in next.get_connections():
                 if node in roads and node != start:
                     new_next = node
-            start.set_color(arcade.color.BLACK)
             return self.path_length(next, new_next, nodes_of_importance, roads, path)
-            print(len(path))
-            return self.path_length(next, new_next, nodes_of_importance, roads, path=path) 
         
     def rob_tile(self, player, tile):
         for node in tile.get_nodes():

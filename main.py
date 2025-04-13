@@ -410,6 +410,8 @@ class GameView(arcade.View):
         for p in self.players:
             p.on_mouse_press(x, y)
 
+        self.board.find_longest_road()
+
         if self.current_state == GameState.PLAYER_SELECT or self.current_state == GameState.BOT_SELECT:
             self.zero_button.on_mouse_press(x, y)
             self.one_button.on_mouse_press(x, y)

@@ -65,6 +65,8 @@ class Player:
         self.has_longest_road = False
         self.has_largest_army = False
 
+        self.longest_road = 0
+
         self.victory_points = 0
 
         self.visible_points = 0
@@ -126,6 +128,11 @@ class Player:
         self.robot_sprite = arcade.Sprite("sprites/robot.png")
         self.sprites = arcade.SpriteList()
         self.sprites.append(self.robot_sprite)
+
+    def set_longest_road_value(self, longest_road):
+        self.longest_road = longest_road
+    def get_longest_road_value(self):
+        return self.longest_road
 
     def is_bot(self):
         return self.robot is not None
