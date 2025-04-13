@@ -1,5 +1,6 @@
 from enum import Enum
 from gameobjects import ROAD_COST, SETTLEMENT_COST, CITY_COST, DEV_CARD_COST
+import random
 # this plan will make the com player seek to expand and take control of as many possible resources focusing on settlement count and longest road
 class Moves(Enum):
     BUILD_SETTLEMENT = 1
@@ -228,7 +229,7 @@ class Robot():
 
                     # adds to the resource_multiplier depending on the resource type and how many are possed
                     # higher weights for wood and brick so they can expand faster
-                    multiplier = 0
+                    multiplier = 1
                     resource = tile.get_resource()
                     if resource != 'desert':
                         if resource == 0 and self.resources[0] < 2:
@@ -245,6 +246,11 @@ class Robot():
                         if self.resource_types_weights[resource.value] == 0:
                             multiplier *= 2
 
+                        if max(node_resources) == 2:
+                            multiplier *= 0.7
+                        elif max(node_resources) == 3:
+                            multiplier *= 0.5
+
                         resource_multiplier += multiplier
 
                         if tile.has_robber() and not self.player.has_knight():
@@ -260,16 +266,18 @@ class Robot():
                     # checks if there are any opposing player roads going to this node
                     if (self.board.get_edge(neighbor, node).get_road() != None and 
                     self.board.get_edge(neighbor, node).get_road() != self.player):
-                        opposition_score += 2
+                        opposition_score += 1
                     for n in neighbor.get_connections():
                         # checks if any of the nodes two roads away have an opposing settlement or city
                         if n != node and (n.get_building() and n.get_building() != self.player) :
-                            opposition_score += 1
+                            opposition_score += 0.5
                         # checks if there are any opposing player roads going into nodes one road away from this node
                         if (self.board.get_edge(neighbor, n).get_road() != None and
                         self.board.get_edge(neighbor, n).get_road() != self.player):
-                            opposition_score += 1
-                
+                            opposition_score += 0.5
+                print("------------------")
+                print(value_sum, resource_multiplier, opposition_score)
+                print(value_sum * resource_multiplier - opposition_score)
                 return value_sum * resource_multiplier - opposition_score 
 
 
@@ -298,6 +306,37 @@ class Robot():
                     # if the player has over double the cost square the distance 
                     distance_list[key.value] *=  distance_list[key.value]
         return distance_list
+    
+    def place_robber(self):
+        best_tile = None
+        best_eval = 0
+        best_victims = []
+        for tile in self.board.get_tiles():
+            this_eval = 0
+            these_victims = []
+            if tile.has_robber():
+                continue
+            for node in tile.get_nodes():
+                if node.get_building == self.player:
+                    this_eval = -1000
+                elif node.get_building():
+                    these_victims.append(node.get_building)
+                    this_eval += self.evaluate_node(node)
+
+            if this_eval > best_eval:
+                best_victims = these_victims
+                best_tile = tile
+                best_eval = this_eval
+        
+        self.board.bot_place_robber(best_tile)
+        # randomly chooses a player 
+        if len(best_victims):
+            best_victims = random.shuffle(best_victims)
+            return best_victims[1]
+        else:
+            return None
+        
+                
 
 
     def play_dev_card(self):
