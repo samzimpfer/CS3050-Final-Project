@@ -81,7 +81,7 @@ class Node:
         
     # builds a town 
     def build_settlement(self, player, board, start_turn=False):
-        if self.has_space() and (start_turn or (self.is_touching_road(board, player) and player.can_build_settlement())):
+        if self.has_space() and (start_turn or (self.is_touching_road(board, player) and player.can_build_settlement())) and not self.building:
             self.color = player.get_color()
             self.building = player
             if start_turn:
@@ -125,6 +125,6 @@ class Node:
 
     def draw(self):
         if self.city:
-            arcade.draw_point(self.x, self.y, self.size, self.color)
+            arcade.draw_circle_filled(self.x, self.y, self.size * 2, self.color)
         else:
             arcade.draw_circle_filled(self.x, self.y, self.size, self.color)

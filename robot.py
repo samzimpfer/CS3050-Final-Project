@@ -22,7 +22,6 @@ class Robot():
         self.resource_types_weights = [0,0,0,0,0]# number of each resource tile you have
         self.actions = []# the action that is queued up 
         self.freeze_spending = [False, False, False, False, False]# can freeze spending of a resource 
-        self.road_plans = []
         self.planned_settlement = None
         self.planned_city = None
 
@@ -105,11 +104,12 @@ class Robot():
         city_location = self.evaluate_city_locations()
         destination = self.find_road_destination()
         path = None
+        self.planned_settlement = self.evaluate_settlement_locations()
 
         if self.planned_settlement and settlement_distance > -2:
             self.actions.append([Moves.BUILD_SETTLEMENT, self.planned_settlement])
 
-        elif self.player.can_build_road():
+        if self.player.can_build_road():
             if self.resource_types_weights[0] == 0:
                 path = self.find_path_to_resource(Resource.BRICK)
             elif self.resource_types_weights[4] == 0:
@@ -117,12 +117,14 @@ class Robot():
             else:
                 path = self.find_path_to_destination(destination)
 
+            path_edges = []
             if path:
                 for i in range(len(path) - 1):
-                    self.road_plans.append(self.board.get_edge(path[i], path[i+1]))
+                    path_edges.append(self.board.get_edge(path[i], path[i+1]))
+
             
-            for i in range(len(self.road_plans)):
-                self.actions.append([Moves.BUILD_ROAD, self.road_plans[i]])
+            for i in range(len(path_edges)):
+                self.actions.append([Moves.BUILD_ROAD, path_edges[i]])
 
         if city_distance > -2 and city_location:
             self.actions.append([Moves.BUILD_CITY, city_location])
@@ -142,22 +144,31 @@ class Robot():
         best_location = None
         for node in self.settlements:
             this_eval = self.evaluate_node(node, opposition=False)
-            if this_eval > best_eval:
+            if this_eval > best_eval and not node.is_city() and not node.get_building() != self.player:
                 best_location = node
                 best_eval = this_eval
 
         return best_location
     
     def evaluate_settlement_locations(self):
+        best_eval = 0
+        best_node = None
         for node in self.player.get_roads():
-            if node.has_space():
-                pass
+            if node.has_space() and not node.get_building():
+                this_eval = self.evaluate_node(node)
+                if this_eval > best_eval:
+                    best_eval = this_eval
+                    best_node = node
+        return best_node
+                
 
     
     def find_path_to_destination(self, destination):
         end_points = self.board.find_endpoints(self.player)
         for node in end_points:
             for neighbor in node.get_connections():
+                if self.board.get_edge(node, neighbor).get_road():
+                    continue
                 for degree_2_neighbor in neighbor.get_connections():
                     if degree_2_neighbor.get_building():
                         continue
@@ -179,6 +190,8 @@ class Robot():
         best_degree_3_score = 0
         for node in self.board.find_endpoints(self.player):
             for neighbor in node.get_connections():
+                if self.board.get_edge(node, neighbor).get_road:
+                    continue
                 for degree_2_neighbor in neighbor.get_connections():
                     if not degree_2_neighbor.has_space() or degree_2_neighbor == node:
                         continue
@@ -216,7 +229,7 @@ class Robot():
         best_degree_2_eval = 0
         best_degree_3_node = None
         best_degree_3_eval = 0
-        for node in self.settlements:
+        for node in self.board.find_endpoints(self.player):
             for neighbor in node.get_connections():
                 for degree_2_neigbor in neighbor.get_connections():
                     # scans two edges away
@@ -417,7 +430,7 @@ class Robot():
         
 
     def build_city(self, node):
-        if node not in self.settlements:
+        if node not in self.settlements or not self.player.can_build_city():
             return 
         for tile in node.get_adjacent_tiles():
             if tile.get_resource() != "desert":
@@ -428,7 +441,7 @@ class Robot():
                 else:
                     self.resource_types_weights[tile.get_resource().value] += 1
 
-        self.player.build_city(node)
+        self.board.bot_build_city(node, self.player)
         self.freeze_spending[2] = False
         self.freeze_spending[3] = False
         
