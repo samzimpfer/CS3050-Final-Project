@@ -238,6 +238,7 @@ class Robot():
     # TODO: could add additional price arguments for future turns in this
     def trade(self, price):
         print("INITIATE TRADE")
+        print(price)
         get = self.player.get_inventory
         give = self.player.give_inventory
 
