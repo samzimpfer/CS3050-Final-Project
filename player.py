@@ -179,7 +179,7 @@ class Player:
         self.accept_trade_button.set_visible(False)
         self.rob_button.set_visible(False)
 
-        if self.player_state == PlayerState.START_TURN:
+        if self.player_state == PlayerState.START_TURN or self.is_bot():
             self.view_dev_cards_button.set_visible(False)
             self.view_resources_button.set_visible(False)
         else:
@@ -189,33 +189,34 @@ class Player:
         if set_to is not None:
             self.player_state = set_to
 
-        if self.player_state == PlayerState.TRADE_OR_BUILD:
-            self.trade_button.set_visible(True)
-            self.finish_turn_button.set_visible(True)
+        if not self.is_bot():
+            if self.player_state == PlayerState.TRADE_OR_BUILD:
+                self.trade_button.set_visible(True)
+                self.finish_turn_button.set_visible(True)
 
-        elif self.player_state == PlayerState.OPEN_TRADE:
-            if self.active_player:
-                self.cancel_trade_button.set_visible(True)
-                self.give_inventory.set_limits(self.main_inventory.get_amounts())
-            else:
-                self.accept_trade_button.set_visible(True)
-
-        elif self.player_state == PlayerState.ROBBER:
-            if self.active_player:
-                if Player.can_rob_function():
-                    self.rob_nobody_button.set_visible(False)
+            elif self.player_state == PlayerState.OPEN_TRADE:
+                if self.active_player:
+                    self.cancel_trade_button.set_visible(True)
+                    self.give_inventory.set_limits(self.main_inventory.get_amounts())
                 else:
-                    self.rob_nobody_button.set_visible(True)
+                    self.accept_trade_button.set_visible(True)
 
-            else:
-                if self.is_next_to_robber() and not self.main_inventory.is_empty():
-                    self.rob_button.set_visible(True)
+            elif self.player_state == PlayerState.ROBBER:
+                if self.active_player:
+                    if Player.can_rob_function():
+                        self.rob_nobody_button.set_visible(False)
+                    else:
+                        self.rob_nobody_button.set_visible(True)
 
-        elif self.player_state == PlayerState.MENU:
-            self.close_menu_button.set_visible(True)
+                else:
+                    if self.is_next_to_robber() and not self.main_inventory.is_empty():
+                        self.rob_button.set_visible(True)
 
-        elif self.player_state == PlayerState.DEFAULT:
-            self.finish_turn_button.set_visible(True)
+            elif self.player_state == PlayerState.MENU:
+                self.close_menu_button.set_visible(True)
+
+            elif self.player_state == PlayerState.DEFAULT:
+                self.finish_turn_button.set_visible(True)
 
 
     # positions the player representation UI and it's components on the screen
@@ -478,7 +479,6 @@ class Player:
 
         #visible_points_text = arcade.Text(f"Victory Points: {self.visible_points}")
 
-        #self.view_dev_cards_button.on_draw()
         # draw resources
         if self.show_resources:
             self.main_inventory.on_draw()
