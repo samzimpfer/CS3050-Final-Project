@@ -301,8 +301,8 @@ class GameView(arcade.View):
                 self.next_player_turn()
             elif self.current_state == GameState.ROLL:
                 self.dice.roll()
-                self.active_player.get_robot().play_turn()
-                self.next_player_turn()
+                #self.active_player.get_robot().play_turn()
+                #self.next_player_turn()
 
 
     # updates each player's ability to accept a given trade based on whether they have enough
@@ -419,6 +419,7 @@ class GameView(arcade.View):
 
                 if self.active_player.is_bot():
                     self.active_player.get_robot().play_turn()
+                    self.next_player_turn()
 
                 if roll_value == 7:
                     self.current_state = GameState.ROBBER
