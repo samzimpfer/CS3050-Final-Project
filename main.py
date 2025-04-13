@@ -56,6 +56,13 @@ class GameView(arcade.View):
         self.three_button = Button("3")
         self.four_button = Button("4")
 
+        self.play_again_button = Button("Play again")
+        button_height = WINDOW_HEIGHT // 8
+        button_width = button_height * 3
+        self.play_again_button.set_position_and_size(WINDOW_WIDTH // 2, (WINDOW_HEIGHT // 2) -
+                                                     button_height, button_width, button_height)
+        self.play_again_button.on_click = self.setup_players
+
         # TODO: take these out
         # these are here only so board can create a player class for testing. More organized to
         # have them below
@@ -103,6 +110,7 @@ class GameView(arcade.View):
         self.current_state = None
         self.active_player_index = 0
         self.active_player = None
+        self.winner = None
         self.turn_direction = 0
         self.start_turn_number = 0
         self.start_turn_settlement = False
@@ -115,6 +123,7 @@ class GameView(arcade.View):
     def setup_players(self):
         self.current_state = GameState.PLAYER_SELECT
 
+        self.play_again_button.set_visible(False)
         self.two_button.set_visible(True)
         self.three_button.set_visible(True)
         self.four_button.set_visible(True)
@@ -367,7 +376,8 @@ class GameView(arcade.View):
     def check_winner(self):
         for p in self.players:
             if p.get_points() >= 11:
-                print(f"{p.get_color()} player wins!")
+                self.winner = p
+                self.current_state = GameState.WINNER
 
 
     def on_draw(self):
@@ -394,6 +404,13 @@ class GameView(arcade.View):
             self.two_button.on_draw()
             self.three_button.on_draw()
             self.four_button.on_draw()
+
+        elif self.current_state == GameState.WINNER:
+            color = PLAYER_COLOR_NAMES[PLAYER_COLORS.index(self.winner.get_color())]
+            arcade.draw_text(f"{color} player wins!", WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2,
+                             arcade.color.BLACK, font_size=WINDOW_HEIGHT // 30, anchor_x="center",
+                             anchor_y="center", font_name="Bavex")
+            self.play_again_button.on_draw()
 
         else:
             self.board.draw()

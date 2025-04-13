@@ -52,6 +52,12 @@ class Player:
     game_state = None
 
     def __init__(self, color, robot=None):
+        # robot
+        self.robot = robot
+        self.robot_sprite = arcade.Sprite("sprites/robot.png")
+        self.sprites = arcade.SpriteList()
+        self.sprites.append(self.robot_sprite)
+
         # inventory
         self.roads = []  # used for calculating longest road is a list of nodes
         self.buildings = [] # used primarily for start turns
@@ -96,8 +102,8 @@ class Player:
         self.main_inventory.reset()
         self.main_inventory.reset_limits()
         # self.main_inventory.set_amounts(Inventory.PRELOADED_RESOURCES) # TODO: take this out
-        self.give_inventory = Inventory(True)
-        self.get_inventory = Inventory(True, self.relay_inventory)
+        self.get_inventory = Inventory(not self.is_bot(), self.relay_inventory)
+        self.give_inventory = Inventory(not self.is_bot())
 
         self.finish_turn_button = Button("Finish turn")
         self.trade_button = Button("Trade")
@@ -131,10 +137,6 @@ class Player:
         self.close_menu_button.set_position_and_size((4*self.WINDOW_WIDTH) / 5, self.WINDOW_HEIGHT / 2, 200, 100)
         self.close_menu_button.on_click = Player.close_menu
 
-        self.robot = robot
-        self.robot_sprite = arcade.Sprite("sprites/robot.png")
-        self.sprites = arcade.SpriteList()
-        self.sprites.append(self.robot_sprite)
 
     def is_bot(self):
         return self.robot is not None
@@ -257,11 +259,11 @@ class Player:
 
             self.trading_title_height = (self.top - self.bottom) * 0.1
             self.trading_panel_width = (self.right - self.left) * self.trading_panel_width_ratio
-            self.give_inventory.set_position_and_size(self.right + (self.trading_panel_width / 2),
+            self.get_inventory.set_position_and_size(self.right + (self.trading_panel_width / 2),
                                                       (self.top - self.trading_title_height
                                                        - self.trading_panel_width / 8),
                                                       self.trading_panel_width)
-            self.get_inventory.set_position_and_size(self.right + (self.trading_panel_width / 2),
+            self.give_inventory.set_position_and_size(self.right + (self.trading_panel_width / 2),
                                                       (self.center_y - self.trading_title_height
                                                        - self.trading_panel_width / 8),
                                                       self.trading_panel_width)
