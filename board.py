@@ -448,7 +448,8 @@ class Board:
         for n in self.tile_nodes:
             n.draw()
             if n.get_resource() != 'desert':
-                arcade.draw_text(str(n.get_number()), n.get_x() - 10, n.get_y() - 10,arcade.color.BLACK, 20)
+                arcade.draw_text(str(n.get_number()), n.get_x(), n.get_y(),arcade.color.BLACK,
+                                 20, anchor_x='center', anchor_y='center')
 
     def get_nodes(self):
         return self.nodes
