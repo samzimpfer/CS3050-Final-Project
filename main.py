@@ -14,6 +14,7 @@ from dice import Dice
 from robot import Robot
 from robot import Moves
 import arcade
+from gameobjects import Resource
 
 
 screen_width, screen_height = arcade.get_display_size()
@@ -206,8 +207,8 @@ class GameView(arcade.View):
         self.dev_card_sprite.height = self.component_height
 
         # initialize game objects
-        # self.bank = Bank()
-        # self.dev_card_stack = DevCardStack()
+        #self.bank = Bank()
+        #self.dev_card_stack = DevCardStack()
         self.dice = Dice(dice_x, dice_y, dice_width, dice_height)
 
         self.players.clear()
@@ -223,6 +224,7 @@ class GameView(arcade.View):
                 self.dev_card_sprite.width,
                 self.dev_card_sprite.height,
             ]
+
             #testing card stuff
             p.set_longest_road(True)
             p.set_largest_army(True)
@@ -232,7 +234,8 @@ class GameView(arcade.View):
 
             self.players.append(p)
 
-
+        Player.bank = Bank()
+        Player.game_dev_cards = DevCardStack()
         # gameplay fields
         self.current_state = GameState.START_TURN
         self.active_player_index = -1
@@ -350,6 +353,16 @@ class GameView(arcade.View):
             else:
                 p.handle_state(set_to)
 
+    def execute_monopoly(self, resource):
+        total_gained = 0
+        for player in self.players:
+            if not player.active_player:
+                player_inventory = player.return_inventory()
+                player_has = player_inventory[resource]
+                total_gained += player_has
+                player.use_resources({resource:player_has})
+        self.active_player.add_resources({resource:total_gained})
+        self.active_player.set_state(self.current_state)
 
     # checks for a winner
     def check_winner(self):
@@ -359,6 +372,7 @@ class GameView(arcade.View):
 
 
     def on_draw(self):
+        #print("main on draw called")
         self.clear()
         self.sprites.draw()
 
@@ -384,8 +398,12 @@ class GameView(arcade.View):
             self.four_button.on_draw()
 
         else:
-            self.board.draw()
-
+            state_number = self.active_player.get_state()
+            if state_number.value < 6:
+                self.board.draw()
+            if self.active_player.get_state() == PlayerState.MONOPOLY_CONCLUSION:
+                self.execute_monopoly(self.active_player.get_monopoly_selection())
+            #print(self.current_state)
             if self.current_state != GameState.START_TURN:
                 self.dice.on_draw()
 
