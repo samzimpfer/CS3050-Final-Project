@@ -59,6 +59,12 @@ class Player:
 
 
     def __init__(self, color, robot=None):
+        # robot
+        self.robot = robot
+        self.robot_sprite = arcade.Sprite("sprites/robot.png")
+        self.sprites = arcade.SpriteList()
+        self.sprites.append(self.robot_sprite)
+
         # inventory
         self.roads = []  # used for calculating longest road is a list of nodes
         self.buildings = [] # used primarily for start turns
@@ -98,15 +104,17 @@ class Player:
 
         self.active_player = False
         self.player_state = PlayerState.DEFAULT
+        self.can_trade = False
 
         # UI elements
         self.show_resources = True # TODO: change this to False when done testing
         self.main_inventory = Inventory(False)
         self.main_inventory.reset()
         self.main_inventory.reset_limits()
-        self.main_inventory.set_amounts(Inventory.PRELOADED_RESOURCES) # TODO: take this out
-        self.give_inventory = Inventory(True)
-        self.get_inventory = Inventory(True, self.relay_inventory)
+        self.main_inventory.set_amounts(Inventory.DEFAULT_AMOUNTS) # TODO: take this out
+        #self.main_inventory.set_amounts(Inventory.PRELOADED_RESOURCES) # TODO: take this out
+        self.get_inventory = Inventory(not self.is_bot(), self.relay_inventory)
+        self.give_inventory = Inventory(not self.is_bot())
 
         self.finish_turn_button = Button("Finish turn")
         self.trade_button = Button("Trade")
@@ -135,8 +143,6 @@ class Player:
         self.rob_button.on_click = lambda : Player.rob_function(self)
 
         self.dev_card_stack_button_params = []
-        self.longest_road_card_params = []
-        self.largest_army_card_params = []
 
 
         #universal close menu button, put in main?
@@ -155,10 +161,6 @@ class Player:
 
 
 
-        self.robot = robot
-        self.robot_sprite = arcade.Sprite("sprites/robot.png")
-        self.sprites = arcade.SpriteList()
-        self.sprites.append(self.robot_sprite)
 
     def is_bot(self):
         return self.robot is not None
@@ -303,11 +305,11 @@ class Player:
 
             self.trading_title_height = (self.top - self.bottom) * 0.1
             self.trading_panel_width = (self.right - self.left) * self.trading_panel_width_ratio
-            self.give_inventory.set_position_and_size(self.right + (self.trading_panel_width / 2),
+            self.get_inventory.set_position_and_size(self.right + (self.trading_panel_width / 2),
                                                       (self.top - self.trading_title_height
                                                        - self.trading_panel_width / 8),
                                                       self.trading_panel_width)
-            self.get_inventory.set_position_and_size(self.right + (self.trading_panel_width / 2),
+            self.give_inventory.set_position_and_size(self.right + (self.trading_panel_width / 2),
                                                       (self.center_y - self.trading_title_height
                                                        - self.trading_panel_width / 8),
                                                       self.trading_panel_width)
@@ -343,8 +345,10 @@ class Player:
     def update_can_trade(self, inventory):
         if self.main_inventory.contains(inventory.get_amounts()):
             self.accept_trade_button.set_visible(True)
+            self.can_trade = True
         else:
             self.accept_trade_button.set_visible(False)
+            self.can_trade = False
 
 
     # adds a set of resources to the player's inventory
@@ -360,17 +364,6 @@ class Player:
         for r, a in amts.items():
             amts[r] = -a
         self.main_inventory.change_amounts(amts)
-
-    def use_resources2(self, amts: dict):
-        for r, val in amts.items():
-            if self.resources[r] - val < 0:
-                return False
-        for r, val in amts.items():
-            self.resources[r] -= val
-        #no idea if these are the same
-        #Player.bank.ReturnResources(amts)
-        self.bank.ReturnResources(amts)
-        return True
 
 
     # returns True if the player owns at least a certain set of resources, and False otherwise
@@ -487,14 +480,6 @@ class Player:
         return False
 
 
-    # def BuyDevCard(self):
-    #     if self.can_buy_dev_card():
-    #         self.
-    #     if self.use_resources2(DEV_CARD_COST):
-    #         drawn_dev_card = self.game_dev_cards.DrawCard()
-    #         print(drawn_dev_card)
-    #         self.player_dev_cards.append(drawn_dev_card)
-    #         self.handle_state(PlayerState.SINGLE_CARD_MENU)
 
 
     # sets the value of has_longest_road for this player
@@ -521,8 +506,6 @@ class Player:
 
 
     def on_draw(self):
-        if self.active_player:
-            print(f"active player state: {self.player_state}")
         # draw player representation
         arcade.draw_lrbt_rectangle_filled(self.left, self.right, self.bottom, self.top, UI_COLOR)
         arcade.draw_lrbt_rectangle_outline(self.left, self.right, self.bottom, self.top,
@@ -593,32 +576,7 @@ class Player:
 
 
 
-            # if self.player_state == PlayerState.OPEN_TRADE:
-            #     arcade.draw_lrbt_rectangle_filled(self.right, self.right + self.trading_panel_width,
-            #                                       self.bottom, self.top, UI_COLOR)
-            #     arcade.draw_lrbt_rectangle_outline(self.right, (self.right
-            #                                                     + self.trading_panel_width),
-            #                                        self.bottom, self.top, UI_OUTLINE_COLOR, 6)
-            #
-            #     arcade.draw_lrbt_rectangle_filled(self.right, self.right + self.trading_panel_width,
-            #                                       self.top - self.trading_title_height, self.top,
-            #                                       UI_OUTLINE_COLOR)
-            #     arcade.draw_lrbt_rectangle_filled(self.right, self.right + self.trading_panel_width,
-            #                                       self.center_y - self.trading_title_height,
-            #                                       self.center_y, UI_OUTLINE_COLOR)
-            #
-            #     arcade.draw_text("Give", self.right + (self.trading_panel_width / 2),
-            #                      self.top - (self.trading_title_height / 2), arcade.color.BLACK,
-            #                      self.trading_title_height / 2, anchor_x="center", anchor_y="center")
-            #     arcade.draw_text("Get", self.right + (self.trading_panel_width / 2),
-            #                      self.center_y - (self.trading_title_height / 2), arcade.color.BLACK,
-            #                      self.trading_title_height / 2, anchor_x="center", anchor_y="center")
-            #
-            #     self.give_inventory.on_draw()
-            #     self.get_inventory.on_draw()
-            #
-            # elif self.player_state == PlayerState.ROBBER:
-            #     self.rob_nobody_button.on_draw()
+
 
         else:
             if self.player_state == PlayerState.OPEN_TRADE:
@@ -744,25 +702,7 @@ class Player:
         arcade.draw_sprite(single_sprite)
         self.handle_state(PlayerState.SINGLE_CARD_MENU)
 
-    #this is for monopoly and YOP
-    #TODO: add buttons and functions
-    # def draw_resource_select(self):
-    #     l = self.WINDOW_WIDTH / 4
-    #     r = (3 * self.WINDOW_WIDTH) / 4
-    #     b = (2 * self.WINDOW_HEIGHT) / 5
-    #     t = (3 * self.WINDOW_HEIGHT) / 5
-    #     r_select_width = r - l
-    #     r_select_height = t - b
-    #     r_select_section = r_select_width / 5
-    #     center_align_offset = r_select_height / 2
-    #     arcade.draw_lrbt_rectangle_filled(l, r, b, t, arcade.color.GRAY)
-    #     for i, e in self.resource_sprites.values():
-    #         select_sprite = e
-    #         select_sprite.center_x = (l + (i * r_select_section)) - center_align_offset
-    #         select_sprite.center_y = self.WINDOW_HEIGHT / 2
-    #         select_sprite.width = r_select_section
-    #         select_sprite.height = r_select_height
-    #         arcade.draw_sprite(select_sprite)
+
 
     #TODO: this correctly displays player resource count, it just needs to be properly implemented into the draw flow
     def draw_player_resources(self):

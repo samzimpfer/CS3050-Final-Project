@@ -7,6 +7,9 @@ template.
 If Python and Arcade are installed, this example can be run from the command line with:
 python -m arcade.examples.starting_template
 """
+from encodings import search_function
+from idlelib.run import install_recursionlimit_wrappers
+
 from gameobjects import *
 from board import Board
 from player import *
@@ -54,6 +57,13 @@ class GameView(arcade.View):
         self.three_button = Button("3")
         self.four_button = Button("4")
 
+        self.play_again_button = Button("Play again")
+        button_height = WINDOW_HEIGHT // 8
+        button_width = button_height * 3
+        self.play_again_button.set_position_and_size(WINDOW_WIDTH // 2, (WINDOW_HEIGHT // 2) -
+                                                     button_height, button_width, button_height)
+        self.play_again_button.on_click = self.setup_players
+
         # TODO: take these out
         # these are here only so board can create a player class for testing. More organized to
         # have them below
@@ -78,10 +88,14 @@ class GameView(arcade.View):
         self.component_height = 0
         self.other_player_width = 0
         self.other_player_height = 0
+        self.instructions_x = 0
+        self.instructions_y = 0
+        self.instructions_width = 0
 
         self.longest_road_sprite = arcade.Sprite("sprites/longest_road_card.png")
         self.largest_army_sprite = arcade.Sprite("sprites/largest_army_card.png")
         self.dev_card_sprite = arcade.Sprite("sprites/dev_card_img.png")
+        arcade.load_font("fonts/Bavex.ttf")
 
         self.dice = None
 
@@ -97,6 +111,7 @@ class GameView(arcade.View):
         self.current_state = None
         self.active_player_index = 0
         self.active_player = None
+        self.winner = None
         self.turn_direction = 0
         self.start_turn_number = 0
         self.start_turn_settlement = False
@@ -109,6 +124,7 @@ class GameView(arcade.View):
     def setup_players(self):
         self.current_state = GameState.PLAYER_SELECT
 
+        self.play_again_button.set_visible(False)
         self.two_button.set_visible(True)
         self.three_button.set_visible(True)
         self.four_button.set_visible(True)
@@ -185,10 +201,15 @@ class GameView(arcade.View):
         self.other_player_width = (WINDOW_WIDTH - self.board.width) * 0.4
         self.other_player_height = ((WINDOW_HEIGHT - self.component_height - (self.margin * 5))
                                     // (self.num_players - 1))
+
         dice_width = (WINDOW_WIDTH - self.board.width - (self.margin * 2)) // 2
         dice_height = dice_width * 0.52
         dice_x = WINDOW_WIDTH - (self.margin * 2) - (dice_width // 2)
         dice_y = (self.margin * 2) + (dice_height // 2)
+
+        self.instructions_width = (WINDOW_WIDTH - self.board.width - (self.margin * 4)) // 2
+        self.instructions_x = WINDOW_WIDTH - self.margin - (self.instructions_width // 2)
+        self.instructions_y = WINDOW_HEIGHT - self.component_height - (self.margin * 2)
 
         # longest road/army card stuff
         self.longest_road_sprite.center_x = WINDOW_WIDTH - ((5 * self.component_width) / 6)
@@ -207,8 +228,8 @@ class GameView(arcade.View):
         self.dev_card_sprite.height = self.component_height
 
         # initialize game objects
-        #self.bank = Bank()
-        #self.dev_card_stack = DevCardStack()
+        # self.bank = Bank()
+        # self.dev_card_stack = DevCardStack()
         self.dice = Dice(dice_x, dice_y, dice_width, dice_height)
 
         self.players.clear()
@@ -224,7 +245,6 @@ class GameView(arcade.View):
                 self.dev_card_sprite.width,
                 self.dev_card_sprite.height,
             ]
-
             #testing card stuff
             p.set_longest_road(True)
             p.set_largest_army(True)
@@ -295,14 +315,25 @@ class GameView(arcade.View):
 
         self.update_player_states()
 
-        # there is almost no way this works delete it if you need main
-        # sorry for leaving this here
+        # handle next turn for bots
         if self.active_player.is_bot():
             if self.current_state == GameState.START_TURN:
                 self.active_player.get_robot().play_first_turn()
+                if self.start_turn_number == 0:
+                    self.board.allocate_resources_start(self.active_player)
                 self.next_player_turn()
             elif self.current_state == GameState.ROLL:
                 self.dice.roll()
+
+
+    # updates each players state, either based on the current game state, or to a specific
+    # player state if specified
+    def update_player_states(self, set_to=None):
+        for p in self.players:
+            if set_to is None:
+                p.set_state(self.current_state)
+            else:
+                p.handle_state(set_to)
 
 
     # updates each player's ability to accept a given trade based on whether they have enough
@@ -338,7 +369,7 @@ class GameView(arcade.View):
         self.exit_robber()
 
 
-    # prevents robber from taking any resources from other players
+    # exits the robber state without taking any resources from other players
     def exit_robber(self):
         self.current_state = GameState.TRADE
         self.update_player_states()
@@ -368,11 +399,11 @@ class GameView(arcade.View):
     def check_winner(self):
         for p in self.players:
             if p.get_points() >= 11:
-                print(f"{p.get_color()} player wins!")
+                self.winner = p
+                self.current_state = GameState.WINNER
 
 
     def on_draw(self):
-        #print("main on draw called")
         self.clear()
         self.sprites.draw()
 
@@ -380,7 +411,7 @@ class GameView(arcade.View):
 
             arcade.draw_text("Select number of total players", WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2,
                              arcade.color.BLACK, font_size=WINDOW_WIDTH / 40, anchor_x="center",
-                             anchor_y="center")
+                             anchor_y="center", font_name="Bavex")
 
             self.two_button.on_draw()
             self.three_button.on_draw()
@@ -389,7 +420,7 @@ class GameView(arcade.View):
         elif self.current_state == GameState.BOT_SELECT:
             arcade.draw_text("Select number of bot players", WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2,
                              arcade.color.BLACK, font_size=WINDOW_WIDTH / 40, anchor_x="center",
-                             anchor_y="center")
+                             anchor_y="center", font_name="Bavex")
 
             self.zero_button.on_draw()
             self.one_button.on_draw()
@@ -397,7 +428,20 @@ class GameView(arcade.View):
             self.three_button.on_draw()
             self.four_button.on_draw()
 
+        elif self.current_state == GameState.WINNER:
+            color = PLAYER_COLOR_NAMES[PLAYER_COLORS.index(self.winner.get_color())]
+            arcade.draw_text(f"{color} player wins!", WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2,
+                             arcade.color.BLACK, font_size=WINDOW_HEIGHT // 30, anchor_x="center",
+                             anchor_y="center", font_name="Bavex")
+            self.play_again_button.on_draw()
+
         else:
+            if self.current_state in INSTRUCTIONS and not self.active_player.is_bot():
+                arcade.draw_text(INSTRUCTIONS[self.current_state], self.instructions_x,
+                                 self.instructions_y, TEXT_COLOR, font_size=20,
+                                 width=self.instructions_width, anchor_x="center", anchor_y="top",
+                                 multiline=True, font_name="Bavex")
+
             state_number = self.active_player.get_state()
             if state_number.value < 6:
                 self.board.draw()
@@ -433,16 +477,23 @@ class GameView(arcade.View):
                 # handle roll sum
                 roll_value = self.dice.get_sum_and_reset()
 
-                if self.active_player.is_bot():
-                    self.active_player.get_robot().play_turn()
-                    self.next_player_turn()
-
-                if roll_value == 7:
+                if roll_value == 10000000000000:
                     self.current_state = GameState.ROBBER
+                    self.update_player_states()
                 else:
                     self.board.allocate_resources(roll_value)
                     self.current_state = GameState.TRADE
                     self.update_player_states()
+
+                if self.active_player.is_bot():
+                    if self.current_state == GameState.ROBBER:
+                        victim = self.active_player.get_robot().place_robber()
+                        if victim:
+                            self.execute_rob(victim)
+
+                    self.active_player.get_robot().play_turn()
+                    self.next_player_turn()
+
 
         self.check_winner()
 
@@ -466,9 +517,12 @@ class GameView(arcade.View):
                                              start_turn=self.start_turn_number):
                     if self.start_turn_settlement:
                         self.start_turn_settlement = False
+                        if self.start_turn_number == 0:
+                            self.board.allocate_resources_start(self.active_player)
                     else:
                         self.start_turn_settlement = True
                         self.next_player_turn()
+
 
             elif self.current_state == GameState.ROLL:
                 self.dice.on_mouse_press(x, y)

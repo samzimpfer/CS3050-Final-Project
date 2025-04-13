@@ -13,6 +13,15 @@ class GameState(Enum):
     TRADE = 4
     BUILD = 5
     ROBBER = 6
+    WINNER = 7
+
+INSTRUCTIONS = {
+    GameState.START_TURN: "Place a settlement and then a road",
+    GameState.ROLL: "Click the dice to roll",
+    GameState.TRADE: "You may trade with other players or click on the board to build",
+    GameState.ROBBER: "You've activated the robber by rolling a 7! Click any tile next to another "
+                      "player's settlement and take a random resource from them",
+}
 
 class Resource(Enum):
     BRICK = 0
@@ -25,30 +34,41 @@ class Resource(Enum):
 UI_COLOR = (75, 110, 150)
 UI_OUTLINE_COLOR = (40, 80, 140)
 BUTTON_COLOR = (40, 80, 140)
+TEXT_COLOR = (255, 200, 10)
 
-PLAYER_COLORS = [arcade.color.BLUE, arcade.color.GREEN, arcade.color.RED, arcade.color.YELLOW, arcade.color.ORANGE]
+PLAYER_COLORS = [arcade.color.BLUE, arcade.color.GREEN, arcade.color.RED, arcade.color.YELLOW]
+PLAYER_COLOR_NAMES = ["Blue", "Green", "Red", "Yellow"]
 
 ROAD_COST = {
     Resource.BRICK:1,
+    Resource.SHEEP:0,
+    Resource.STONE:0,
+    Resource.WHEAT:0,
     Resource.WOOD:1
 }
 
 SETTLEMENT_COST = {
     Resource.BRICK:1,
     Resource.SHEEP:1,
+    Resource.STONE:0,
     Resource.WHEAT:1,
     Resource.WOOD:1
 }
 
 CITY_COST = {
+    Resource.BRICK:0,
+    Resource.SHEEP:0,
+    Resource.STONE:3,
     Resource.WHEAT:2,
-    Resource.STONE:3
+    Resource.WOOD:0
 }
 
 DEV_CARD_COST = {
-    Resource.WHEAT:1,
-    Resource.STONE:1,
+    Resource.BRICK:0,
     Resource.SHEEP:1,
+    Resource.STONE:1,
+    Resource.WHEAT:1,
+    Resource.WOOD:0
 }
 
 
