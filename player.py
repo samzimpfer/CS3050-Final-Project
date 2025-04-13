@@ -521,8 +521,8 @@ class Player:
 
 
     def on_draw(self):
-        # if self.active_player:
-        #     print(f"active player state: {self.player_state}")
+        if self.active_player:
+            print(f"active player state: {self.player_state}")
         # draw player representation
         arcade.draw_lrbt_rectangle_filled(self.left, self.right, self.bottom, self.top, UI_COLOR)
         arcade.draw_lrbt_rectangle_outline(self.left, self.right, self.bottom, self.top,
