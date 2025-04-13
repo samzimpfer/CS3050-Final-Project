@@ -254,7 +254,6 @@ class GameView(arcade.View):
         if self.current_state == GameState.START_TURN:
             if self.active_player_index >= self.num_players:
                 self.active_player_index = self.num_players - 1
-                print(self.active_player_index)
                 self.turn_direction = -1
                 self.start_turn_number += 1
 
@@ -301,8 +300,6 @@ class GameView(arcade.View):
                 self.next_player_turn()
             elif self.current_state == GameState.ROLL:
                 self.dice.roll()
-                #self.active_player.get_robot().play_turn()
-                #self.next_player_turn()
 
 
     # updates each player's ability to accept a given trade based on whether they have enough
@@ -407,6 +404,7 @@ class GameView(arcade.View):
 
 
     def on_update(self, delta_time: float):
+        print(self.current_state)
         # this loops frequently
 
         # manage game state
