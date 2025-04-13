@@ -463,6 +463,7 @@ class Board:
         pass
 
     def bot_place_robber(self, tile):
-        self.robber_tile.set_robber(False)
+        if self.robber_tile:
+            self.robber_tile.set_robber(False)
         tile.set_robber
         
