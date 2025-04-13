@@ -42,7 +42,7 @@ class Robot():
                 case Moves.BUILD_CITY:
                     self.build_city(action[1])
                 case Moves.TRADE:
-                    pass
+                    self.trade(action[1])
                 case Moves.WAIT:
                     return
 
@@ -252,6 +252,7 @@ class Robot():
 
     # TODO: could add additional price arguments for future turns in this
     def trade(self, price):
+        print("INITIATE TRADE")
         get = self.player.get_inventory
         give = self.player.give_inventory
 
