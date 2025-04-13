@@ -94,6 +94,7 @@ class GameView(arcade.View):
         self.active_player_index = 0
         self.active_player = None
         self.turn_direction = 0
+        self.start_turn_number = 0
         self.start_turn_settlement = False
 
         # start game
@@ -233,6 +234,7 @@ class GameView(arcade.View):
         self.current_state = GameState.START_TURN
         self.active_player_index = -1
         self.turn_direction = 1
+        self.start_turn_number = 0
         self.start_turn_settlement = True
         self.next_player_turn()
 
@@ -248,6 +250,7 @@ class GameView(arcade.View):
             if self.active_player_index >= self.num_players:
                 self.active_player_index = self.num_players - 1
                 self.turn_direction = -1
+                self.start_turn_number += 1
 
             if self.active_player_index < 0:
                 self.active_player_index = 0
@@ -357,7 +360,9 @@ class GameView(arcade.View):
 
         else:
             self.board.draw()
-            self.dice.on_draw()
+
+            if self.current_state != GameState.START_TURN:
+                self.dice.on_draw()
 
             #bank won't be drawn, only dev card stack
             arcade.draw_lrbt_rectangle_filled(WINDOW_WIDTH - self.component_width, WINDOW_WIDTH, WINDOW_HEIGHT - self.component_height, WINDOW_HEIGHT, arcade.color.GRAY)
@@ -410,7 +415,10 @@ class GameView(arcade.View):
 
         elif not self.active_player.is_bot():
             if self.current_state == GameState.START_TURN:
-                if self.board.on_mouse_press(x, y, button, self.active_player, can_build_road=not self.start_turn_settlement, can_build_settlement=self.start_turn_settlement, start_turn=0):
+                if self.board.on_mouse_press(x, y, button, self.active_player,
+                                             can_build_road=not self.start_turn_settlement,
+                                             can_build_settlement=self.start_turn_settlement,
+                                             start_turn=self.start_turn_number):
                     if self.start_turn_settlement:
                         self.start_turn_settlement = False
                     else:
