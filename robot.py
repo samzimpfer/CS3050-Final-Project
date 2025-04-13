@@ -42,6 +42,7 @@ class Robot():
             self.trade()
         else:
             pass
+        return 
 
     def plan_first_turns(self):
         inventory = self.player.return_inventory()
@@ -50,7 +51,7 @@ class Robot():
         best_eval = 0
         for row in self.board.get_nodes():
             for node in row:
-                if self.evaluate_node(node) > best_eval and not node.get_building():
+                if self.evaluate_node(node) > best_eval and not node.get_building() and node.has_space():
                     best_eval = self.evaluate_node(node)
                     best_node = node
 
@@ -256,14 +257,13 @@ class Robot():
                     for n in neighbor.get_connections():
                         # checks if any of the nodes two roads away have an opposing settlement or city
                         if n != node and (n.get_building() and n.get_building() != self.player) :
-                            opposition_score += 2
+                            opposition_score += 1
                         # checks if there are any opposing player roads going into nodes one road away from this node
                         if (self.board.get_edge(neighbor, n).get_road() != None and
                         self.board.get_edge(neighbor, n).get_road() != self.player):
                             opposition_score += 1
-                print("-----------------------------")
-                print([value_sum, resource_multiplier, opposition_score])
-                print(value_sum / opposition_score * resource_multiplier)
+                print("--------------------")
+                print(value_sum, resource_multiplier, opposition_score)
                 return value_sum * resource_multiplier - opposition_score 
 
 
@@ -316,7 +316,7 @@ class Robot():
     def build_city(self, node):
         if node not in self.settlements:
             return 
-        for tile in node.get_adjacentTiles():
+        for tile in node.get_adjacent_tiles():
             if tile.get_resource() != "desert":
                 if tile.get_number() < 4 or tile.get_number() > 10:
                     self.resource_types_weights[tile.get_resource().value] += 0.5
