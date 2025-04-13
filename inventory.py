@@ -5,9 +5,9 @@ class Inventory:
 
     DEFAULT_AMOUNTS = {
         Resource.BRICK: 0,
-        Resource.SHEEP: 1,
+        Resource.SHEEP: 0,
         Resource.STONE: 0,
-        Resource.WHEAT: 1,
+        Resource.WHEAT: 0,
         Resource.WOOD: 0
     }
 

@@ -46,6 +46,7 @@ class Player:
     update_all_player_can_trade_function = None
     accept_trade_function = None
     rob_function = None
+    rob_nobody_function = None
 
     game_state = None
 
@@ -92,13 +93,14 @@ class Player:
         self.main_inventory = Inventory(False)
         self.main_inventory.reset()
         self.main_inventory.reset_limits()
-        self.main_inventory.set_amounts(Inventory.DEFAULT_AMOUNTS) # TODO: take this out
+        self.main_inventory.set_amounts(Inventory.PRELOADED_RESOURCES) # TODO: take this out
         self.give_inventory = Inventory(True)
         self.get_inventory = Inventory(True, self.relay_inventory)
 
         self.finish_turn_button = Button("Finish turn")
         self.trade_button = Button("Trade")
         self.cancel_trade_button = Button("Cancel trade")
+        self.rob_nobody_button = Button("Rob nobody")
         self.accept_trade_button = Button("Accept")
         self.rob_button = Button("Rob")
 
@@ -112,6 +114,7 @@ class Player:
         self.trade_button.on_click = self.open_trade
         self.cancel_trade_button.on_click = \
             lambda : Player.update_all_player_states_function(PlayerState.TRADE_OR_BUILD)
+        self.rob_nobody_button.on_click = Player.rob_nobody_function
         self.accept_trade_button.on_click = lambda : Player.accept_trade_function(self)
         self.rob_button.on_click = lambda : Player.rob_function(self)
 
@@ -171,6 +174,7 @@ class Player:
         self.finish_turn_button.set_visible(False)
         self.trade_button.set_visible(False)
         self.cancel_trade_button.set_visible(False)
+        self.rob_nobody_button.set_visible(False)
         self.accept_trade_button.set_visible(False)
         self.rob_button.set_visible(False)
 
@@ -197,9 +201,10 @@ class Player:
 
         elif self.player_state == PlayerState.ROBBER:
             if self.active_player:
-                pass
+                self.rob_nobody_button.set_visible(True)
             else:
-                self.rob_button.set_visible(True)
+                if self.is_next_to_robber() and not self.main_inventory.is_empty():
+                    self.rob_button.set_visible(True)
 
         elif self.player_state == PlayerState.MENU:
             self.close_menu_button.set_visible(True)
@@ -237,6 +242,7 @@ class Player:
 
             self.trade_button.set_position_and_size(x1, y, button_width, button_height)
             self.cancel_trade_button.set_position_and_size(x2, y, button_width, button_height)
+            self.rob_nobody_button.set_position_and_size(x2, y, button_width, button_height)
             self.finish_turn_button.set_position_and_size(x2, y, button_width, button_height)
 
             self.view_dev_cards_button.set_position_and_size(x1, y2, button_width, button_height)
@@ -308,15 +314,23 @@ class Player:
         return self.main_inventory.contains(amts)
 
 
+    # returns true if this player has a settlement/city next to the robber
+    def is_next_to_robber(self):
+        for node in self.buildings:
+            for tile in node.adjacent_tiles:
+                if tile.has_robber():
+                    return True
+        return False
+
+
     # decrements a random resource from this player and returns it
     def rob(self):
-        output = self.main_inventory.get_random_resource()
-        if output:
-            output = { output[0]: output[1] }
-            self.use_resources(output)
+        random_resource = self.main_inventory.get_random_resource()
+        if random_resource:
+            random_resource = { random_resource[0]: 1 }
+            self.use_resources(random_resource)
 
-        print(output)
-        return output
+        return random_resource
 
     def add_road(self,start_node, end_node):
         if start_node not in self.roads:
@@ -379,19 +393,21 @@ class Player:
         return False
 
 
-    def build_settlement(self):
+    def build_settlement(self, node):
         if self.can_build_settlement():
             self.use_resources(SETTLEMENT_COST)
             self.settlement_count += 1
+            self.add_building(node)
             return True
         return False
 
 
-    def build_city(self):
+    def build_city(self, node):
         if self.can_build_city():
             self.use_resources(CITY_COST)
             self.city_count += 1
             self.settlement_count -= 1
+            self.add_building(node)
             return True
         return False
 
@@ -493,6 +509,10 @@ class Player:
 
                 self.give_inventory.on_draw()
                 self.get_inventory.on_draw()
+
+            elif self.player_state == PlayerState.ROBBER:
+                self.rob_nobody_button.on_draw()
+
         else:
             if self.player_state == PlayerState.OPEN_TRADE:
                 self.accept_trade_button.on_draw()
@@ -507,6 +527,7 @@ class Player:
         self.finish_turn_button.on_mouse_press(x, y)
         self.trade_button.on_mouse_press(x, y)
         self.cancel_trade_button.on_mouse_press(x, y)
+        self.rob_nobody_button.on_mouse_press(x, y)
 
         self.accept_trade_button.on_mouse_press(x, y)
         self.rob_button.on_mouse_press(x, y)
@@ -524,6 +545,7 @@ class Player:
         self.finish_turn_button.on_mouse_motion(x, y)
         self.trade_button.on_mouse_motion(x, y)
         self.cancel_trade_button.on_mouse_motion(x, y)
+        self.rob_nobody_button.on_mouse_motion(x, y)
 
         self.accept_trade_button.on_mouse_motion(x, y)
         self.rob_button.on_mouse_motion(x, y)

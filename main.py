@@ -66,6 +66,7 @@ class GameView(arcade.View):
         Player.update_all_player_can_trade_function = self.update_players_can_trade
         Player.accept_trade_function = self.execute_trade
         Player.rob_function = self.execute_rob
+        Player.rob_nobody_function = self.exit_robber
 
         board_center_x = WINDOW_WIDTH // 2
         board_center_y = (self.board_space // 2) + self.margin
@@ -321,6 +322,13 @@ class GameView(arcade.View):
     # executes the active player taking a single random resource from another player
     def execute_rob(self, player2):
         self.active_player.add_resources(player2.rob())
+        self.exit_robber()
+
+
+    # prevents robber from taking any resources from other players
+    def exit_robber(self):
+        self.current_state = GameState.TRADE
+        self.update_player_states()
 
 
     # updates each players state, either based on the current game state, or to a specific
