@@ -42,7 +42,7 @@ class Robot():
                 case Moves.BUILD_CITY:
                     self.build_city(action[1])
                 case Moves.TRADE:
-                    #self.trade(action[1])
+                    self.trade(action[1])
                     pass
                 case Moves.WAIT:
                     return
@@ -238,13 +238,10 @@ class Robot():
     # TODO: could add additional price arguments for future turns in this
     def trade(self, price):
         print("INITIATE TRADE")
-        print(price)
-        get = self.player.get_inventory
-        give = self.player.give_inventory
-
-        # TODO: test distance_from_price_absolute to make sure it works right
         needed = self.distance_from_price_absolute(price)
         self.player.open_trade()
+        get = self.player.get_inventory
+        give = self.player.give_inventory
         get.set_amounts(needed) # this function automatically ignores negatives
 
         # loop to set give inventory to same cardinality of unneeded resources
