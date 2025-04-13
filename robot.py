@@ -1,5 +1,5 @@
 from enum import Enum
-from gameobjects import ROAD_COST, SETTLEMENT_COST, CITY_COST, DEV_CARD_COST
+from gameobjects import ROAD_COST, SETTLEMENT_COST, CITY_COST, DEV_CARD_COST, Resource
 import random
 # this plan will make the com player seek to expand and take control of as many possible resources focusing on settlement count and longest road
 class Moves(Enum):
@@ -15,12 +15,12 @@ class Robot():
     def __init__(self, player, board):
         self.player = player
         self.board = board
-        self.node_evaluations = []
         self.settlements = []# list of nodes that have settlements
-        self.weights = []# list of values that control what the com does
         self.resource_types_weights = [0,0,0,0,0]# number of each resource tile you have
-        self.action = None# the action that is queued up 
-        self.action_location = None# where the action will take place if needed
+        self.actions = []# the action that is queued up 
+        self.road_plans = []
+        self.planned_settlement = None
+        self.planned_city = None
 
     def play_first_turn(self):
         node, edge = self.plan_first_turns()
@@ -29,21 +29,18 @@ class Robot():
         
     def play_turn(self):
         self.plan_move()
-        if self.action == Moves.BUILD_SETTLEMENT:
-            self.build_settlement(self.action_location)
-        elif self.action == Moves.BUILD_ROAD:
-            self.build_road(self.action_location)
-        elif self.action == Moves.BUILD_CITY:
-            self.build_city(self.action_location)
-        elif self.action == Moves.BUY_DEV_CARD:
-            self.buy_dev_card()
-        elif self.action == Moves.PLAY_DEV_CARD:
-            self.play_dev_card()
-        elif self.action == Moves.TRADE:
-            self.trade()
-        else:
-            pass
-        return 
+        for action in self.actions:
+            match action[0]:
+                case Moves.BUILD_SETTLEMENT:
+                    self.build_settlement(action[1])
+                case Moves.BUILD_ROAD:
+                    self.build_road(action[1])
+                case Moves.BUILD_CITY:
+                    pass
+                case Moves.TRADE:
+                    pass
+                case Moves.WAIT:
+                    return
 
     def plan_first_turns(self):
         inventory = self.player.return_inventory()
@@ -79,7 +76,8 @@ class Robot():
 
     def plan_move(self):
         inventory = self.player.return_inventory()
-
+        self.road_plans = []
+        self.actions = []
         # checks if the player can be robbed if they have more than 7 cards
         can_be_robbed = False
         number_of_resource_cards = 0
@@ -89,21 +87,126 @@ class Robot():
             can_be_robbed = True
         
         # calculates how far from from the price of each item the player is or isnt 
-        road_weights = self.distance_from_price(ROAD_COST)
-        settlement_weights = self.distance_from_price(SETTLEMENT_COST)
-        city_weights = self.distance_from_price(CITY_COST)
+        settlement_distance_weights = self.distance_from_price(SETTLEMENT_COST)
+        city_distance_weights = self.distance_from_price(CITY_COST)
         dev_card_weights = self.distance_from_price(DEV_CARD_COST)
 
+        settlement_distance = 0
+        for value in settlement_distance_weights:
+            if value < 0:
+                settlement_distance += value
+
+        city_distance = 0
+        for value in city_distance_weights:
+            if value < 0:
+                city_distance += value
+
+        
+        #find destination
+        city_location = self.evaluate_city_locations()
+        destination = self.find_road_destination()
+        path = None
+
+        if self.planned_settlement and settlement_distance > -2:
+            self.actions.append([Moves.BUILD_SETTLEMENT, self.planned_settlement])
+
+        elif self.player.can_build_road():
+            if self.resource_types_weights[0] == 0:
+                path = self.find_path_to_resource(Resource.BRICK)
+            elif self.resource_types_weights[4] == 0:
+                path = self.find_path_to_resource(Resource.WOOD)
+            else:
+                path = self.find_path_to_destination(destination)
+
+            if path:
+                for i in range(len(path) - 1):
+                    self.road_plans.append(self.board.get_edge(path[i], path[i+1]))
+            
+            for i in range(len(self.road_plans)):
+                self.actions.append([Moves.BUILD_ROAD, self.road_plans[i]])
+
+        if city_distance > -2 and city_location:
+            self.actions.append([Moves.BUILD_CITY, city_location])
+
+        if len(self.actions):
+            self.actions.append([Moves.TRADE, self.actions[0][0]])
+        self.actions.append([Moves.WAIT, None])
 
 
-        return 
+    def evaluate_city_locations(self):
+        best_eval = 0
+        best_location = None
+        for node in self.settlements:
+            this_eval = self.evaluate_node(node, opposition=False)
+            if this_eval > best_eval:
+                best_location = node
+                best_eval = this_eval
+
+        return best_location
     
-    def find_distance_to_destination(self):
+    def evaluate_settlement_locations(self):
+        for node in self.player.get_roads():
+            if node.has_space():
+                pass
+
+    
+    def find_path_to_destination(self, destination):
         end_points = self.board.find_endpoints(self.player)
         for node in end_points:
-            pass
+            for neighbor in node.get_connections():
+                for degree_2_neighbor in neighbor.get_connections():
+                    if degree_2_neighbor.get_building():
+                        continue
+                    elif degree_2_neighbor == destination:
+                        return [node, neighbor, degree_2_neighbor]
+                    for degree_3_neighbor in degree_2_neighbor.get_connections():
+                        if degree_3_neighbor.get_building():
+                            continue
+                        elif degree_3_neighbor == destination:
+                            return [node, neighbor, degree_2_neighbor, degree_3_neighbor]
+        return
+                        
+    def find_path_to_resource(self, resource):
+        best_node = None
+        best_score = 0
+        degree_2_path = []
+        degree_3_path = []
+        best_degree_2_score = 0
+        best_degree_3_score = 0
+        for node in self.board.find_endpoints(self.player):
+            for neighbor in node.get_connections():
+                for degree_2_neighbor in neighbor.get_connections():
+                    if not degree_2_neighbor.has_space() or degree_2_neighbor == node:
+                        continue
+                    else:
+                        for tile in degree_2_neighbor.get_adjacent_tiles():
+                            if tile.get_resource() == resource:
+                                this_degree_2_score = tile.get_number()
+                                if this_degree_2_score > best_degree_2_score:
+                                    best_degree_2_score = this_degree_2_score
+                                    degree_2_path = [node, neighbor, degree_2_neighbor]
+                    for degree_3_neighbor in degree_2_neighbor.get_connections():
+                        if not degree_3_neighbor.has_space() or degree_3_neighbor == neighbor:
+                            continue
+                        else:
+                            for tile in degree_3_neighbor.get_adjacent_nodes():
+                                if tile.get_resource() == resource:
+                                    this_degree_3_score = tile.get_resource()
+                                    if this_degree_3_score > best_degree_3_score:
+                                        this_degree_3_score = tile.get_number()
+                                        degree_3_path = [node, neighbor, degree_2_neighbor, degree_3_neighbor]
+        
+        if best_degree_3_score > best_degree_2_score * 1.25:
+            return degree_3_path
+        else:
+            return degree_2_path
 
-    
+                        
+    def get_value_score(self, n):
+        return 7 - abs(7 - n)
+
+
+
     def find_road_destination(self):
         best_degree_2_node = None
         best_degree_2_eval = 0
@@ -114,13 +217,13 @@ class Robot():
                 for degree_2_neigbor in neighbor.get_connections():
                     # scans two edges away
                     this_degree_2_eval = self.evaluate_node(degree_2_neigbor)
-                    if this_degree_2_eval > best_degree_2_eval and degree_2_neigbor != neighbor:
+                    if this_degree_2_eval > best_degree_2_eval and degree_2_neigbor != node and not degree_2_neigbor.has_space():
                         best_degree_2_eval = this_degree_2_eval
                         best_degree_2_node = degree_2_neigbor
                     for degree_3_neighbor in degree_2_neigbor.get_connections():
                         # scans three edges away
                         this_degree_3_eval = self.evaluate_node(degree_3_neighbor)
-                        if  this_degree_3_eval > best_degree_3_eval and degree_3_neighbor != degree_2_neigbor:
+                        if  this_degree_3_eval > best_degree_3_eval and degree_3_neighbor != neighbor and not degree_3_neighbor.has_space():
                             best_degree_3_eval = this_degree_3_eval
                             best_degree_3_node = degree_3_neighbor
         if best_degree_3_eval > best_degree_2_eval * 1.25:
@@ -134,7 +237,7 @@ class Robot():
         pass
 
     # checks if the node is valid to build on and if it is worth it to build on
-    def evaluate_node(self, node):
+    def evaluate_node(self, node, opposition=True):
         # useless if someone has already built there 
         if node.get_building() and (node not in self.settlements):
             return -2 
@@ -154,17 +257,8 @@ class Robot():
                 for tile in node.get_adjacent_tiles():
                     # adds the number of dice configurations 
                     # that can make the number to the value_sum
-                    number = tile.get_number()
-                    if number == 2 or number == 12:
-                        value_sum += 2
-                    elif number == 3 or number == 11:
-                        value_sum += 3
-                    elif number == 4 or number == 10:
-                        value_sum += 4
-                    elif number == 5 or number == 9:
-                        value_sum += 5
-                    else:
-                        value_sum += 6
+                    if tile.get_number():
+                        value_sum += self.get_value_score(tile.get_number())
 
                     # adds to the resource_multiplier depending on the resource type and how many are possed
                     # higher weights for wood and brick so they can expand faster
@@ -199,19 +293,21 @@ class Robot():
                         resource_multiplier *= 0.9
                     else:
                         resource_multiplier *= 0.7
-                for neighbor in node.get_connections():
-                    # checks if there are any opposing player roads going to this node
-                    if (self.board.get_edge(neighbor, node).get_road() != None and 
-                    self.board.get_edge(neighbor, node).get_road() != self.player):
-                        opposition_score += 1
-                    for n in neighbor.get_connections():
-                        # checks if any of the nodes two roads away have an opposing settlement or city
-                        if n != node and (n.get_building() and n.get_building() != self.player) :
-                            opposition_score += 0.5
-                        # checks if there are any opposing player roads going into nodes one road away from this node
-                        if (self.board.get_edge(neighbor, n).get_road() != None and
-                        self.board.get_edge(neighbor, n).get_road() != self.player):
-                            opposition_score += 0.5
+                # dont need to care about the opposition when building a city
+                if opposition:
+                    for neighbor in node.get_connections():
+                        # checks if there are any opposing player roads going to this node
+                        if (self.board.get_edge(neighbor, node).get_road() != None and 
+                        self.board.get_edge(neighbor, node).get_road() != self.player):
+                            opposition_score += 1
+                        for n in neighbor.get_connections():
+                            # checks if any of the nodes two roads away have an opposing settlement or city
+                            if n != node and (n.get_building() and n.get_building() != self.player) :
+                                opposition_score += 0.5
+                            # checks if there are any opposing player roads going into nodes one road away from this node
+                            if (self.board.get_edge(neighbor, n).get_road() != None and
+                            self.board.get_edge(neighbor, n).get_road() != self.player):
+                                opposition_score += 0.5
                 print("------------------")
                 print(value_sum, resource_multiplier, opposition_score)
                 print(value_sum * resource_multiplier / opposition_score)

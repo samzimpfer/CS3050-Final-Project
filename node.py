@@ -124,4 +124,7 @@ class Node:
             self.size = self.originalSize
 
     def draw(self):
-        arcade.draw_circle_filled(self.x, self.y, self.size, self.color)
+        if self.city:
+            arcade.draw_point(self.x, self.y, self.size, self.color)
+        else:
+            arcade.draw_circle_filled(self.x, self.y, self.size, self.color)
