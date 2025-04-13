@@ -41,7 +41,7 @@ class Robot():
                 case Moves.BUILD_CITY:
                     pass
                 case Moves.TRADE:
-                    pass
+                    self.trade(action[1])
                 case Moves.WAIT:
                     return
 
