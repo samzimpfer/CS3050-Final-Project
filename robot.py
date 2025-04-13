@@ -136,7 +136,7 @@ class Robot():
                 self.actions.append([Moves.TRADE, CITY_COST])
             elif self.actions[0][0] == Moves.BUILD_SETTLEMENT:
                 self.actions.append([Moves.TRADE, SETTLEMENT_COST])
-            elif self.action[0][0] == Moves.BUILD_ROAD:
+            elif self.actions[0][0] == Moves.BUILD_ROAD:
                 self.actions.append([Moves.TRADE, ROAD_COST])
         self.actions.append([Moves.WAIT, None])
 
