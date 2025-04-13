@@ -313,11 +313,12 @@ class GameView(arcade.View):
 
         self.update_player_states()
 
-        # there is almost no way this works delete it if you need main
-        # sorry for leaving this here
+        # handle next turn for bots
         if self.active_player.is_bot():
             if self.current_state == GameState.START_TURN:
                 self.active_player.get_robot().play_first_turn()
+                #if self.start_turn_number == 0:
+                    #self.board.allocate_resources_start(self.active_player)
                 self.next_player_turn()
             elif self.current_state == GameState.ROLL:
                 self.dice.roll()
@@ -447,16 +448,19 @@ class GameView(arcade.View):
                 # handle roll sum
                 roll_value = self.dice.get_sum_and_reset()
 
-                if self.active_player.is_bot():
-                    self.active_player.get_robot().play_turn()
-                    self.next_player_turn()
-
                 if roll_value == 7:
                     self.current_state = GameState.ROBBER
+                    self.update_player_states()
                 else:
                     self.board.allocate_resources(roll_value)
                     self.current_state = GameState.TRADE
                     self.update_player_states()
+
+                if self.active_player.is_bot():
+                    if self.current_state == GameState.ROBBER:
+                        self.active_player.get_robot.place_robber() # TODO: add this
+                    self.active_player.get_robot().play_turn()
+                    self.next_player_turn()
 
         self.check_winner()
 
@@ -480,9 +484,12 @@ class GameView(arcade.View):
                                              start_turn=self.start_turn_number):
                     if self.start_turn_settlement:
                         self.start_turn_settlement = False
+                        if self.start_turn_number == 0:
+                            self.board.allocate_resources_start(self.active_player)
                     else:
                         self.start_turn_settlement = True
                         self.next_player_turn()
+
 
             elif self.current_state == GameState.ROLL:
                 self.dice.on_mouse_press(x, y)
