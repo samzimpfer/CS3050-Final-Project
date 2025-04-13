@@ -90,9 +90,9 @@ class Robot():
             can_be_robbed = True
         
         # calculates how far from from the price of each item the player is or isnt 
-        settlement_distance_weights = self.distance_from_price(SETTLEMENT_COST)
-        city_distance_weights = self.distance_from_price(CITY_COST)
-        dev_card_weights = self.distance_from_price(DEV_CARD_COST)
+        settlement_distance_weights = self.distance_from_price_relative(SETTLEMENT_COST)
+        city_distance_weights = self.distance_from_price_relative(CITY_COST)
+        dev_card_weights = self.distance_from_price_relative(DEV_CARD_COST)
 
         settlement_distance = 0
         for value in settlement_distance_weights:
