@@ -404,7 +404,7 @@ class GameView(arcade.View):
 
 
     def on_update(self, delta_time: float):
-        print(self.current_state)
+        # print(self.current_state)
         # this loops frequently
 
         # manage game state

@@ -479,7 +479,6 @@ class Player:
 
         #visible_points_text = arcade.Text(f"Victory Points: {self.visible_points}")
 
-        #self.view_dev_cards_button.on_draw()
         # draw resources
         if self.show_resources:
             self.main_inventory.on_draw()
