@@ -46,6 +46,7 @@ class Player:
     update_all_player_can_trade_function = None
     accept_trade_function = None
     rob_function = None
+    can_rob_function = None
     rob_nobody_function = None
 
     game_state = None
@@ -201,7 +202,11 @@ class Player:
 
         elif self.player_state == PlayerState.ROBBER:
             if self.active_player:
-                self.rob_nobody_button.set_visible(True)
+                if Player.can_rob_function():
+                    self.rob_nobody_button.set_visible(False)
+                else:
+                    self.rob_nobody_button.set_visible(True)
+
             else:
                 if self.is_next_to_robber() and not self.main_inventory.is_empty():
                     self.rob_button.set_visible(True)

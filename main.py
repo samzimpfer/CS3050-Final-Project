@@ -66,6 +66,7 @@ class GameView(arcade.View):
         Player.update_all_player_can_trade_function = self.update_players_can_trade
         Player.accept_trade_function = self.execute_trade
         Player.rob_function = self.execute_rob
+        Player.can_rob_function = self.player_can_rob
         Player.rob_nobody_function = self.exit_robber
 
         board_center_x = WINDOW_WIDTH // 2
@@ -257,6 +258,7 @@ class GameView(arcade.View):
 
             if self.active_player_index < 0:
                 self.active_player_index = 0
+                self.turn_direction = 1
                 self.current_state = GameState.ROLL
         else:
             if self.active_player_index >= self.num_players:
@@ -317,6 +319,15 @@ class GameView(arcade.View):
 
         self.current_state = GameState.BUILD
         self.update_player_states()
+
+
+    # returns true if the robber is currently next to some player
+    def player_can_rob(self):
+        for p in self.players:
+            if p != self.active_player:
+                if p.is_next_to_robber():
+                    return True
+        return False
 
 
     # executes the active player taking a single random resource from another player
