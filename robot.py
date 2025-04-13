@@ -204,9 +204,13 @@ class Robot():
             if settlements_next_door:
                 return -1
             else:
+                node_resources = [0,0,0,0,0]
                 value_sum = 0
                 resource_multiplier = 1
                 opposition_score = 1
+                for tile in node.get_adjacent_tiles():
+                    if tile.get_resource() != "desert":
+                        node_resources[tile.get_resource().value] += 1
                 for tile in node.get_adjacent_tiles():
                     # adds the number of dice configurations 
                     # that can make the number to the value_sum
@@ -246,9 +250,12 @@ class Robot():
                         if tile.has_robber() and not self.player.has_knight():
                             resource_multiplier = resource_multiplier * 0.5
                     else:
-                        resource_multiplier *= 0.5
+                        resource_multiplier *= 0.8
                 if len(node.get_adjacent_tiles()) < 3:
-                    resource_multiplier *= 0.5
+                    if len(node.get_adjacent_tiles()) == 2:
+                        resource_multiplier *= 0.9
+                    else:
+                        resource_multiplier *= 0.7
                 for neighbor in node.get_connections():
                     # checks if there are any opposing player roads going to this node
                     if (self.board.get_edge(neighbor, node).get_road() != None and 
@@ -262,8 +269,7 @@ class Robot():
                         if (self.board.get_edge(neighbor, n).get_road() != None and
                         self.board.get_edge(neighbor, n).get_road() != self.player):
                             opposition_score += 1
-                print("--------------------")
-                print(value_sum, resource_multiplier, opposition_score)
+                
                 return value_sum * resource_multiplier - opposition_score 
 
 
