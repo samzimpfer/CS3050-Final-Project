@@ -1,6 +1,9 @@
 from enum import Enum
-from gameobjects import ROAD_COST, SETTLEMENT_COST, CITY_COST, DEV_CARD_COST, Resource
 import random
+from gameobjects import *
+from inventory import Inventory
+
+
 # this plan will make the com player seek to expand and take control of as many possible resources focusing on settlement count and longest road
 class Moves(Enum):
     BUILD_SETTLEMENT = 1
@@ -230,11 +233,33 @@ class Robot():
             return best_degree_3_node
         else:
             return best_degree_2_node
-                        
-    
-    # TODO: deal with it later
-    def trade(self):
-        pass
+
+    # TODO: could add additional price arguments for future turns in this
+    def trade(self, price):
+        get = self.player.get_inventory
+        give = self.player.give_inventory
+
+        # TODO: test distance_from_price_absolute to make sure it works right
+        needed = self.distance_from_price_absolute(price)
+        self.player.open_trade()
+        get.set_amounts(needed) # this function automatically ignores negatives
+
+        # loop to set give inventory to same cardinality of unneeded resources
+        while give.get_total_amount() < get.get_total_amount():
+            change = Inventory.ALL_ZERO.copy()
+            min_key = Resource.BRICK
+            min_val = needed[Resource.BRICK]
+            # add the most abundant resource at each pass to the give inventory
+            for t, r in needed.items():
+                if r < min_val:
+                    min_key = t
+                    min_val = r
+            change[min_key] = 1
+            give.change_amounts(change)
+
+        # this should open a trade to any players who can trade
+
+
 
     # checks if the node is valid to build on and if it is worth it to build on
     def evaluate_node(self, node, opposition=True):
@@ -315,7 +340,7 @@ class Robot():
     
     # calculates the distance from the price per resource then returns a list of distances 
     # if the distance is negative it means the player is over the cost of that resource
-    def distance_from_price(self, purchase):
+    def distance_from_price_relative(self, purchase):
         distance_list = [0,0,0,0,0]# each index is a resources type
         inventory = self.player.return_inventory()
         for key, value in purchase.items():
@@ -365,6 +390,14 @@ class Robot():
             return None
         
                 
+
+
+    def distance_from_price_absolute(self, purchase):
+        distance_dict = {}
+        inventory = self.player.return_inventory()
+        for key, value in purchase.items():
+            distance_dict[key] = value - inventory[key]
+        return distance_dict
 
 
     def play_dev_card(self):
