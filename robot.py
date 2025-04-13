@@ -109,7 +109,7 @@ class Robot():
         if self.planned_settlement and settlement_distance > -2:
             self.actions.append([Moves.BUILD_SETTLEMENT, self.planned_settlement])
 
-        elif self.player.can_build_road() and not(self):
+        elif self.player.can_build_road():
             if self.resource_types_weights[0] == 0:
                 path = self.find_path_to_resource(Resource.BRICK)
             elif self.resource_types_weights[4] == 0:
