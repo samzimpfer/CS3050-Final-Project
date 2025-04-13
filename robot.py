@@ -58,8 +58,10 @@ class Robot():
 
         # find the best edge to build on
         best_eval = 0
+        best_edge_backup = None# theres an error that sometimes returns best_edge as None
         for neighbor in best_node.get_connections():
             this_eval = 0
+            best_edge_backup = [best_node, neighbor]
             this_eval += self.evaluate_node(neighbor)
             for n in neighbor.get_connections():
                 if n != best_node and not n.get_building():
@@ -68,6 +70,8 @@ class Robot():
                 best_eval = this_eval 
                 best_edge = [best_node, neighbor]
             
+        if best_edge == None:
+            return best_node, best_edge_backup
 
         return best_node, best_edge
                 
@@ -90,105 +94,40 @@ class Robot():
         city_weights = self.distance_from_price(CITY_COST)
         dev_card_weights = self.distance_from_price(DEV_CARD_COST)
 
-        road_evalutations = self.evaluate_incomplete_edges()
-        building_evaluations = self.evaluate_buildable_nodes()
-        upgradable_evaluations = self.evaluate_upgradable_nodes()
 
-        best_settlement_eval = 0
-        best_settlement_node = None
-        best_upgrade_eval = 0
-        best_upgrade_node = None
 
-        if  building_evaluations:
-            best_settlement_node = building_evaluations[0][building_evaluations[1].index(max(building_evaluations[1]))]
-            best_settlement_eval = max(building_evaluations[1])
-
-        if upgradable_evaluations:
-            best_upgrade_node = upgradable_evaluations[0][upgradable_evaluations[1].index(max(upgradable_evaluations[1]))]
-            best_upgrade_eval = max(upgradable_evaluations[1])
-
-        best_road_edge = road_evalutations[0][road_evalutations[1].index(max(road_evalutations[1]))]
-        best_road_edge_eval = max(road_evalutations[1])
-        
-        ideal_candidates = {
-            "settlement": best_settlement_eval if self.player.can_build_settlement() else 0,
-            "city": best_upgrade_eval if self.player.can_build_city() else 0,
-            "road": best_road_edge_eval if self.player.can_build_road() else 0
-        }
-
-        # sorts the dict in decending order
-        ideal_candidates_sorted = {k: v for k, v in sorted(ideal_candidates.items(), key=lambda item: item[1])}
-        
-        action_choice = None
-        for key, value in ideal_candidates_sorted.items():
-            if value == 0:
-                continue
-
-            match key:
-                case "settlement":
-                    self.action = Moves.BUILD_SETTLEMENT
-                    self.action_location = best_settlement_node
-                case "city":
-                    self.action = Moves.BUILD_CITY
-                    self.action_location = best_upgrade_node
-                case "road":
-                    self.action = Moves.BUILD_ROAD
-                    self.action_location = self.board.get_edge(best_road_edge[0], best_road_edge[1])
-
-        if self.action == None:
-            self.action = Moves.WAIT
-        
         return 
     
-    # finds and evaluates nodes that do not have three roads going into them
-    def evaluate_incomplete_edges(self):
-        incomplete_edges = [[],[]]
-        for node in self.player.get_roads():
-            count = []
-            for n in node.get_connections():
-                if self.board.get_edge(node, n).get_road() == None:
-                    count.append(n)
-            if len(count) < 3:
-                for n in count:
-                    incomplete_edges[0].append([node, n])
+    def find_distance_to_destination(self):
+        end_points = self.board.find_endpoints(self.player)
+        for node in end_points:
+            pass
 
-        for i in range(len(incomplete_edges[0])):
-            # an edges evaluation value is just the highest node evaluation of the two nodes that make it
-            incomplete_edges[1].append(max(self.evaluate_node(incomplete_edges[0][i][0]), 
-                                           self.evaluate_node(incomplete_edges[0][i][1])))
-        return incomplete_edges
-
-    # finds and evaluates the nodes that are connected to roads and valid to build on
-    def evaluate_buildable_nodes(self):
-        something_added = False
-        buildable_nodes = [[],[]]# index 0 is the nodes and index 1 is the evaluation of the node in index 0 
-        for node in self.player.get_roads():
-            if node.get_building() == None and node.has_space():
-                buildable_nodes[0].append(node)
-                something_added = True
-        for i in range(len(buildable_nodes[0])):
-            buildable_nodes[1].append(self.evaluate_node(buildable_nodes[0][i]))
     
-        if something_added:
-            return buildable_nodes
-        else:
-            return None
-    
-    # finds and evaluates nodes that have a settlement on them
-    def evaluate_upgradable_nodes(self):
-        something_added = False
-        upgradable_nodes = [[],[]]
+    def find_road_destination(self):
+        best_degree_2_node = None
+        best_degree_2_eval = 0
+        best_degree_3_node = None
+        best_degree_3_eval = 0
         for node in self.settlements:
-            if node.get_building() == self.player:
-                upgradable_nodes[0].append(node)
-                something_added = True
-        for i in range(len(upgradable_nodes[0])):
-            upgradable_nodes[1].append(self.evaluate_node(upgradable_nodes[0][i]))
-        
-        if something_added:
-            return upgradable_nodes
+            for neighbor in node.get_connections():
+                for degree_2_neigbor in neighbor.get_connections():
+                    # scans two edges away
+                    this_degree_2_eval = self.evaluate_node(degree_2_neigbor)
+                    if this_degree_2_eval > best_degree_2_eval and degree_2_neigbor != neighbor:
+                        best_degree_2_eval = this_degree_2_eval
+                        best_degree_2_node = degree_2_neigbor
+                    for degree_3_neighbor in degree_2_neigbor.get_connections():
+                        # scans three edges away
+                        this_degree_3_eval = self.evaluate_node(degree_3_neighbor)
+                        if  this_degree_3_eval > best_degree_3_eval and degree_3_neighbor != degree_2_neigbor:
+                            best_degree_3_eval = this_degree_3_eval
+                            best_degree_3_node = degree_3_neighbor
+        if best_degree_3_eval > best_degree_2_eval * 1.25:
+            return best_degree_3_node
         else:
-            return None
+            return best_degree_2_node
+                        
     
     # TODO: deal with it later
     def trade(self):
@@ -233,7 +172,7 @@ class Robot():
                     resource = tile.get_resource()
                     if resource != 'desert':
                         if resource == 0 and self.resources[0] < 2:
-                            multiplier += 0.5
+                            multiplier += 0.75
                         elif resource == 1 and self.resources[1] < 2:
                             multiplier += 0.325
                         elif resource == 2 and self.resources[2] < 2:
@@ -241,7 +180,7 @@ class Robot():
                         elif resource == 3 and self.resources[3] < 2:
                             multiplier += 0.325
                         elif resource == 4 and self.resources[4] < 2:
-                            resource_multiplier += 0.5
+                            resource_multiplier += 0.75
                         # if there are no resources of this type, double the multiplier
                         if self.resource_types_weights[resource.value] == 0:
                             multiplier *= 2
@@ -253,8 +192,6 @@ class Robot():
 
                         resource_multiplier += multiplier
 
-                        if tile.has_robber() and not self.player.has_knight():
-                            resource_multiplier = resource_multiplier * 0.5
                     else:
                         resource_multiplier *= 0.8
                 if len(node.get_adjacent_tiles()) < 3:
@@ -277,13 +214,8 @@ class Robot():
                             opposition_score += 0.5
                 print("------------------")
                 print(value_sum, resource_multiplier, opposition_score)
-                print(value_sum * resource_multiplier - opposition_score)
-                return value_sum * resource_multiplier - opposition_score 
-
-
-    # finds the nodes with the highest evaluation and builds there
-    def opening_move(self):
-        pass
+                print(value_sum * resource_multiplier / opposition_score)
+                return value_sum * resource_multiplier / opposition_score 
     
     # calculates the distance from the price per resource then returns a list of distances 
     # if the distance is negative it means the player is over the cost of that resource
@@ -320,7 +252,7 @@ class Robot():
                 if node.get_building == self.player:
                     this_eval = -1000
                 elif node.get_building():
-                    these_victims.append(node.get_building)
+                    these_victims.append(node.get_building())
                     this_eval += self.evaluate_node(node)
 
             if this_eval > best_eval:
@@ -331,8 +263,8 @@ class Robot():
         self.board.bot_place_robber(best_tile)
         # randomly chooses a player 
         if len(best_victims):
-            best_victims = random.shuffle(best_victims)
-            return best_victims[1]
+            random.shuffle(best_victims)
+            return best_victims[0]
         else:
             return None
         
