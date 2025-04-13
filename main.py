@@ -7,6 +7,9 @@ template.
 If Python and Arcade are installed, this example can be run from the command line with:
 python -m arcade.examples.starting_template
 """
+from encodings import search_function
+from idlelib.run import install_recursionlimit_wrappers
+
 from gameobjects import *
 from board import Board
 from player import *
@@ -77,10 +80,14 @@ class GameView(arcade.View):
         self.component_height = 0
         self.other_player_width = 0
         self.other_player_height = 0
+        self.instructions_x = 0
+        self.instructions_y = 0
+        self.instructions_width = 0
 
         self.longest_road_sprite = arcade.Sprite("sprites/longest_road_card.png")
         self.largest_army_sprite = arcade.Sprite("sprites/largest_army_card.png")
         self.dev_card_sprite = arcade.Sprite("sprites/dev_card_img.png")
+        arcade.load_font("fonts/Bavex.ttf")
 
         self.dice = None
 
@@ -184,10 +191,15 @@ class GameView(arcade.View):
         self.other_player_width = (WINDOW_WIDTH - self.board.width) * 0.4
         self.other_player_height = ((WINDOW_HEIGHT - self.component_height - (self.margin * 5))
                                     // (self.num_players - 1))
+
         dice_width = (WINDOW_WIDTH - self.board.width - (self.margin * 2)) // 2
         dice_height = dice_width * 0.52
         dice_x = WINDOW_WIDTH - (self.margin * 2) - (dice_width // 2)
         dice_y = (self.margin * 2) + (dice_height // 2)
+
+        self.instructions_width = (WINDOW_WIDTH - self.board.width - (self.margin * 4)) // 2
+        self.instructions_x = WINDOW_WIDTH - self.margin - (self.instructions_width // 2)
+        self.instructions_y = WINDOW_HEIGHT - self.component_height - (self.margin * 2)
 
         # longest road/army card stuff
         self.longest_road_sprite.center_x = WINDOW_WIDTH - ((5 * self.component_width) / 6)
@@ -335,7 +347,7 @@ class GameView(arcade.View):
         self.exit_robber()
 
 
-    # prevents robber from taking any resources from other players
+    # exits the robber state without taking any resources from other players
     def exit_robber(self):
         self.current_state = GameState.TRADE
         self.update_player_states()
@@ -366,7 +378,7 @@ class GameView(arcade.View):
 
             arcade.draw_text("Select number of total players", WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2,
                              arcade.color.BLACK, font_size=WINDOW_WIDTH / 40, anchor_x="center",
-                             anchor_y="center")
+                             anchor_y="center", font_name="Bavex")
 
             self.two_button.on_draw()
             self.three_button.on_draw()
@@ -375,7 +387,7 @@ class GameView(arcade.View):
         elif self.current_state == GameState.BOT_SELECT:
             arcade.draw_text("Select number of bot players", WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2,
                              arcade.color.BLACK, font_size=WINDOW_WIDTH / 40, anchor_x="center",
-                             anchor_y="center")
+                             anchor_y="center", font_name="Bavex")
 
             self.zero_button.on_draw()
             self.one_button.on_draw()
@@ -385,12 +397,15 @@ class GameView(arcade.View):
 
         else:
             self.board.draw()
+            if self.current_state in INSTRUCTIONS and not self.active_player.is_bot():
+                arcade.draw_text(INSTRUCTIONS[self.current_state], self.instructions_x,
+                                 self.instructions_y, TEXT_COLOR, font_size=20,
+                                 width=self.instructions_width, anchor_x="center", anchor_y="top",
+                                 multiline=True, font_name="Bavex")
 
             if self.current_state != GameState.START_TURN:
                 self.dice.on_draw()
 
-            #bank won't be drawn, only dev card stack
-            arcade.draw_lrbt_rectangle_filled(WINDOW_WIDTH - self.component_width, WINDOW_WIDTH, WINDOW_HEIGHT - self.component_height, WINDOW_HEIGHT, arcade.color.GRAY)
             arcade.draw_sprite(self.dev_card_sprite)
             for p in self.players:
                 p.on_draw()

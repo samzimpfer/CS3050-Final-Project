@@ -371,13 +371,7 @@ class Board:
             start.set_color(arcade.color.BLACK)
             return self.path_length(next, new_next, nodes_of_importance, roads, path)
             print(len(path))
-            return self.path_length(next, new_next, nodes_of_importance, roads, path=path) 
-        
-    def rob_tile(self, player, tile):
-        for node in tile.get_nodes():
-            if node.get_buidling() and node.get_building() != player:
-                node.get_building().remove_resources(1)
-                # TODO: figure out the resource transfer
+            return self.path_length(next, new_next, nodes_of_importance, roads, path=path)
     
     # returns the edge with the matching start_node and end_node
     def get_edge(self, start_node, end_node):
