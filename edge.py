@@ -29,17 +29,17 @@ class Edge:
     def has_settlement(self):
         return self.start_node.get_building() or self.end_node.get_building()
     
-    def build_road(self, player, free=False):
-        if (self.road is None and (free or player.can_build_road()) and
-                (self.start_node == player.buildings[-1] or self.end_node == player.buildings[-1])):
-            self.road = player
-            self.color = player.get_color()
-            if free:
-                player.add_road(self.start_node, self.end_node)
-            else:
-                player.build_road(self.start_node, self.end_node)
+    def build_road(self, player, start_turn=False):
+        if self.road is None and (start_turn or player.can_build_road()):
+            if not start_turn or self.start_node == player.buildings[-1] or self.end_node == player.buildings[-1]:
+                self.road = player
+                self.color = player.get_color()
+                if start_turn:
+                    player.add_road(self.start_node, self.end_node)
+                else:
+                    player.build_road(self.start_node, self.end_node)
 
-            return True
+                return True
         return False
 
     # helper function for center tile point calculations
@@ -62,9 +62,9 @@ class Edge:
             return True
         return False
     
-    def on_mouse_press(self, x, y, button, player, free=False):
+    def on_mouse_press(self, x, y, button, player, start_turn=False):
         if self.is_touching(x, y) and button == arcade.MOUSE_BUTTON_LEFT:
-            return self.build_road(player, free)
+            return self.build_road(player, start_turn=start_turn)
         return False
 
     def on_mouse_motion(self, x, y):
