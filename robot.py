@@ -42,7 +42,8 @@ class Robot():
                 case Moves.BUILD_CITY:
                     self.build_city(action[1])
                 case Moves.TRADE:
-                    self.trade(action[1])
+                    #self.trade(action[1])
+                    pass
                 case Moves.WAIT:
                     return
 
@@ -95,15 +96,9 @@ class Robot():
         city_distance_weights = self.distance_from_price_relative(CITY_COST)
         dev_card_weights = self.distance_from_price_relative(DEV_CARD_COST)
 
-        settlement_distance = 0
-        for value in settlement_distance_weights:
-            if value < 0:
-                settlement_distance += value
+        settlement_distance = sum(settlement_distance_weights)
 
-        city_distance = 0
-        for value in city_distance_weights:
-            if value < 0:
-                city_distance += value
+        city_distance = sum(city_distance_weights)
 
         
         #find destination
@@ -113,14 +108,6 @@ class Robot():
 
         if self.planned_settlement and settlement_distance > -2:
             self.actions.append([Moves.BUILD_SETTLEMENT, self.planned_settlement])
-            freeze = True
-            for value in SETTLEMENT_COST.values:
-                if not value > 0: 
-                    freeze = False
-            self.freeze_spending[0] = True
-            self.freeze_spending[1] = True
-            self.freeze_spending[3] = True
-            self.freeze_spending[4] = True
 
         elif self.player.can_build_road() and not(self):
             if self.resource_types_weights[0] == 0:
@@ -139,8 +126,6 @@ class Robot():
 
         if city_distance > -2 and city_location:
             self.actions.append([Moves.BUILD_CITY, city_location])
-            self.freeze_spending[2] = True
-            self.freeze_spending[3] = True
 
         if len(self.actions):
             if self.actions[0][0] == Moves.BUILD_CITY:
@@ -358,6 +343,8 @@ class Robot():
         distance_list = [0,0,0,0,0]# each index is a resources type
         inventory = self.player.return_inventory()
         for key, value in purchase.items():
+            if value == 0:
+                continue
             # if the value is less than the price it will add distance to the price
             # this distance is 
             if value > inventory[key]:
@@ -367,11 +354,6 @@ class Robot():
                 elif self.resource_types_weights[key.value] < 1 and self.resource_types_weights[key.value] != 0:
                     this_distance *= 1.5
                 distance_list[key.value] = -1 * this_distance
-            elif value < inventory[key]:
-                distance_list[key.value] = inventory[key]/value
-                if distance_list[key.value] >= 2 and purchase != ROAD_COST:
-                    # if the player has over double the cost square the distance 
-                    distance_list[key.value] *=  distance_list[key.value]
         return distance_list
     
     def place_robber(self):
