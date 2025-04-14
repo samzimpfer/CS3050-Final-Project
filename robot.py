@@ -18,12 +18,16 @@ class Robot():
     def __init__(self, player, board):
         self.player = player
         self.board = board
+
         self.settlements = []# list of nodes that have settlements
         self.resource_types_weights = [0,0,0,0,0]# number of each resource tile you have
         self.actions = []# the action that is queued up 
-        self.freeze_spending = [False, False, False, False, False]# can freeze spending of a resource 
+
         self.planned_settlement = None
         self.planned_city = None
+
+        self.turns_since_road = 0
+        self.turn_since_settlement = 0
 
     def play_first_turn(self):
         node, edge = self.plan_first_turns()
@@ -107,6 +111,10 @@ class Robot():
         self.planned_settlement = self.evaluate_settlement_locations()
 
         if self.planned_settlement and settlement_distance > -2:
+            if sum(list(self.distance_from_price_absolute(SETTLEMENT_COST).values())) < 3:
+                for resource in SETTLEMENT_COST.keys():
+                    if self.resource_types_weights[resource.value] == 0:
+                        self.four_for_one(SETTLEMENT_COST, resource)
             self.actions.append([Moves.BUILD_SETTLEMENT, self.planned_settlement])
 
         if self.player.can_build_road():
@@ -114,6 +122,12 @@ class Robot():
                 path = self.find_path_to_resource(Resource.BRICK)
             elif self.resource_types_weights[4] == 0:
                 path = self.find_path_to_resource(Resource.WOOD)
+            elif self.resource_types_weights[1] == 0:
+                path = self.find_path_to_resource(Resource.SHEEP)
+            elif self.resource_types_weights[2] == 0:
+                path = self.find_path_to_resource(Resource.STONE)
+            elif self.resource_types_weights[3] == 0:
+                path = self.find_path_to_resource(Resource.WHEAT)
             else:
                 path = self.find_path_to_destination(destination)
 
@@ -137,6 +151,12 @@ class Robot():
             elif self.actions[0][0] == Moves.BUILD_ROAD:
                 self.actions.append([Moves.TRADE, ROAD_COST])
         self.actions.append([Moves.WAIT, None])
+
+    def force_settlement(self):
+        pass
+
+    def force_road(self):
+        pass
 
 
     def evaluate_city_locations(self):
@@ -396,19 +416,26 @@ class Robot():
         else:
             return None
         
-                
-
-
     def distance_from_price_absolute(self, purchase):
         distance_dict = {}
         inventory = self.player.return_inventory()
         for key, value in purchase.items():
             distance_dict[key] = value - inventory[key]
         return distance_dict
-
-
-    def play_dev_card(self):
-        pass
+    
+    def four_for_one(self, cost, goal):
+        for value, key in self.player.return_inventory():
+            if value >= 4 and key not in cost.keys:
+                self.player.use_resources({key:4})
+                self.player.add_resources({goal:1})
+                print("this actually worked")
+                return True
+            elif value >=5:
+                self.player.use_resources({key:4})
+                self.player.add_resources({goal:1})
+                print("this actually worked")
+                return True
+        return False
 
     def build_road(self, edge, start_turn=False):
         self.board.bot_build_road(edge, self.player, start_turn=start_turn)
@@ -442,8 +469,6 @@ class Robot():
                     self.resource_types_weights[tile.get_resource().value] += 1
 
         self.board.bot_build_city(node, self.player)
-        self.freeze_spending[2] = False
-        self.freeze_spending[3] = False
         
 
     def buy_dev_card(self):

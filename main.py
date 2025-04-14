@@ -477,7 +477,7 @@ class GameView(arcade.View):
                 # handle roll sum
                 roll_value = self.dice.get_sum_and_reset()
 
-                if roll_value == 10000000000000:
+                if roll_value == 7:
                     self.current_state = GameState.ROBBER
                     self.update_player_states()
                 else:
