@@ -492,7 +492,7 @@ class GameView(arcade.View):
                     self.instructions_x,
                     self.instructions_y,
                     TEXT_COLOR,
-                    font_size=20,
+                    font_size=WINDOW_HEIGHT // 40,
                     width=self.instructions_width,
                     anchor_x="center",
                     anchor_y="top",
