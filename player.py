@@ -542,10 +542,10 @@ class Player:
                                                       self.center_y - self.trading_title_height,
                                                       self.center_y, UI_OUTLINE_COLOR)
 
-                    arcade.draw_text("Give", self.right + (self.trading_panel_width / 2),
+                    arcade.draw_text("Get", self.right + (self.trading_panel_width / 2),
                                      self.top - (self.trading_title_height / 2), arcade.color.BLACK,
                                      self.trading_title_height / 2, anchor_x="center", anchor_y="center")
-                    arcade.draw_text("Get", self.right + (self.trading_panel_width / 2),
+                    arcade.draw_text("Give", self.right + (self.trading_panel_width / 2),
                                      self.center_y - (self.trading_title_height / 2), arcade.color.BLACK,
                                      self.trading_title_height / 2, anchor_x="center", anchor_y="center")
 
