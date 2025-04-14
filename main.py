@@ -324,6 +324,16 @@ class GameView(arcade.View):
                 self.dice.roll()
 
 
+    # updates each players state, either based on the current game state, or to a specific
+    # player state if specified
+    def update_player_states(self, set_to=None):
+        for p in self.players:
+            if set_to is None:
+                p.set_state(self.current_state)
+            else:
+                p.handle_state(set_to)
+
+
     # updates each player's ability to accept a given trade based on whether they have enough
     # resources
     def update_players_can_trade(self, inventory):
@@ -361,16 +371,6 @@ class GameView(arcade.View):
     def exit_robber(self):
         self.current_state = GameState.TRADE
         self.update_player_states()
-
-
-    # updates each players state, either based on the current game state, or to a specific
-    # player state if specified
-    def update_player_states(self, set_to=None):
-        for p in self.players:
-            if set_to is None:
-                p.set_state(self.current_state)
-            else:
-                p.handle_state(set_to)
 
 
     # checks for a winner
