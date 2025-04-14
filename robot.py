@@ -28,6 +28,8 @@ class Robot():
 
         self.turns_since_road = 0
         self.turn_since_settlement = 0
+        self.last_settlement_list_size = 0
+        self.last_road_list_size = 0
 
     def play_first_turn(self):
         node, edge = self.plan_first_turns()
@@ -45,10 +47,12 @@ class Robot():
                 case Moves.BUILD_CITY:
                     self.build_city(action[1])
                 case Moves.TRADE:
-                    self.trade(action[1])
+                    #self.trade(action[1])
                     pass
                 case Moves.WAIT:
-                    return
+                    pass
+
+        
 
     def plan_first_turns(self):
         inventory = self.player.return_inventory()
@@ -108,13 +112,10 @@ class Robot():
         city_location = self.evaluate_city_locations()
         destination = self.find_road_destination()
         path = None
+        
         self.planned_settlement = self.evaluate_settlement_locations()
 
         if self.planned_settlement and settlement_distance > -2:
-            if sum(list(self.distance_from_price_absolute(SETTLEMENT_COST).values())) < 3:
-                for resource in SETTLEMENT_COST.keys():
-                    if self.resource_types_weights[resource.value] == 0:
-                        self.four_for_one(SETTLEMENT_COST, resource)
             self.actions.append([Moves.BUILD_SETTLEMENT, self.planned_settlement])
 
         if self.player.can_build_road():
@@ -150,13 +151,58 @@ class Robot():
                 self.actions.append([Moves.TRADE, SETTLEMENT_COST])
             elif self.actions[0][0] == Moves.BUILD_ROAD:
                 self.actions.append([Moves.TRADE, ROAD_COST])
-        self.actions.append([Moves.WAIT, None])
+        else:
+            if self.turn_since_settlement > 5:
+                #self.force_settlement()
+                pass
+            if self.turns_since_road > 3:
+                self.force_road()
+
+        if len(self.player.get_roads()) == self.last_road_list_size:
+            self.turns_since_road += 1
+        if len(self.settlements) == self.last_settlement_list_size:
+            self.turn_since_settlement += 1
+        
+        self.last_road_list_size = len(self.player.get_roads())
+        self.last_settlement_list_size = len(self.settlements)
+        
 
     def force_settlement(self):
-        pass
+        print("forced settlement")
+        build_location = self.evaluate_settlement_locations()
+        
+        if self.player.can_build_settlement():
+            self.build_settlement()
+        elif sum(list(self.distance_from_price_absolute(SETTLEMENT_COST).values())) < 3:
+            for resource in SETTLEMENT_COST.keys():
+                if self.player.return_inventory()[resource] < 1:
+                    self.four_for_one(SETTLEMENT_COST, resource)
+            self.build_settlement(self.evaluate_settlement_locations())
+        else:
+            return False
+        
 
     def force_road(self):
-        pass
+        best_edge = None
+        best_eval = 0
+        for node in self.player.get_roads():
+                this_node_eval = self.evaluate_node(node)
+                for neighbor in node.get_connections():
+                    if self.board.get_edge(node, neighbor).get_road() or (neighbor.get_building() and neighbor.get_building() != self.player):
+                        continue
+                    this_eval = max(this_node_eval, self.evaluate_node(neighbor))
+                    if this_eval > best_eval:
+                        best_eval = this_eval
+                        best_edge = [node,neighbor]
+        best_edge = self.board.get_edge(best_edge[0], best_edge[1])
+        if self.player.can_build_road():
+            self.build_road(best_edge)
+        elif sum(list(self.distance_from_price_absolute(ROAD_COST).values())) < 3:
+            for resource in ROAD_COST.keys():
+                if self.player.return_inventory()[resource] < 1:
+                    self.four_for_one(ROAD_COST, resource)
+            self.build_road(best_edge)
+        print("forced road")
 
 
     def evaluate_city_locations(self):
@@ -181,14 +227,14 @@ class Robot():
                     best_node = node
         return best_node
                 
-
-    
     def find_path_to_destination(self, destination):
         end_points = self.board.find_endpoints(self.player)
+        backup_path = None
         for node in end_points:
             for neighbor in node.get_connections():
                 if self.board.get_edge(node, neighbor).get_road():
                     continue
+                backup_path = [node, neighbor]
                 for degree_2_neighbor in neighbor.get_connections():
                     if degree_2_neighbor.get_building():
                         continue
@@ -199,7 +245,7 @@ class Robot():
                             continue
                         elif degree_3_neighbor == destination:
                             return [node, neighbor, degree_2_neighbor, degree_3_neighbor]
-        return
+        return backup_path
                         
     def find_path_to_resource(self, resource):
         best_node = None
@@ -424,8 +470,8 @@ class Robot():
         return distance_dict
     
     def four_for_one(self, cost, goal):
-        for value, key in self.player.return_inventory():
-            if value >= 4 and key not in cost.keys:
+        for key, value in self.player.return_inventory().items():
+            if value >= 4 and key not in cost.keys():
                 self.player.use_resources({key:4})
                 self.player.add_resources({goal:1})
                 print("this actually worked")
@@ -438,9 +484,13 @@ class Robot():
         return False
 
     def build_road(self, edge, start_turn=False):
+        if edge.get_road():
+            return
         self.board.bot_build_road(edge, self.player, start_turn=start_turn)
 
     def build_settlement(self, node, start_turn=False):
+        if not self.player.can_build_settlement() and not start_turn:
+            return
         tiles = node.get_adjacent_tiles()
         for tile in tiles:
             if tile.get_resource() != "desert":
