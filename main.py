@@ -16,6 +16,7 @@ from dice import Dice
 from robot import Robot
 from robot import Moves
 import arcade
+from gameobjects import Resource
 
 
 screen_width, screen_height = arcade.get_display_size()
@@ -286,6 +287,8 @@ class GameView(arcade.View):
 
             self.players.append(p)
 
+        Player.bank = Bank()
+        Player.game_dev_cards = DevCardStack()
         # gameplay fields
         self.current_state = GameState.START_TURN
         self.active_player_index = -1
@@ -410,6 +413,18 @@ class GameView(arcade.View):
         self.update_player_states()
 
 
+    def execute_monopoly(self, resource):
+        total_gained = 0
+        for player in self.players:
+            if not player.active_player:
+                player_inventory = player.return_inventory()
+                player_has = player_inventory[resource]
+                total_gained += player_has
+                player.use_resources({resource:player_has})
+        self.active_player.add_resources({resource:total_gained})
+        self.active_player.set_state(self.current_state)
+
+
     # checks for a winner
     def check_winner(self):
         for p in self.players:
@@ -471,7 +486,6 @@ class GameView(arcade.View):
             self.play_again_button.on_draw()
 
         else:
-            self.board.draw()
             if self.current_state in INSTRUCTIONS and not self.active_player.is_bot():
                 arcade.draw_text(
                     INSTRUCTIONS[self.current_state],
@@ -486,9 +500,17 @@ class GameView(arcade.View):
                     font_name="Bavex"
                 )
 
+            state_number = self.active_player.get_state()
+            if state_number.value < 6:
+                self.board.draw()
+            if self.active_player.get_state() == PlayerState.MONOPOLY_CONCLUSION:
+                self.execute_monopoly(self.active_player.get_monopoly_selection())
+            #print(self.current_state)
             if self.current_state != GameState.START_TURN:
                 self.dice.on_draw()
 
+            #bank won't be drawn, only dev card stack
+            arcade.draw_lrbt_rectangle_filled(WINDOW_WIDTH - self.component_width, WINDOW_WIDTH, WINDOW_HEIGHT - self.component_height, WINDOW_HEIGHT, arcade.color.GRAY)
             arcade.draw_sprite(self.dev_card_sprite)
             for p in self.players:
                 p.on_draw()
@@ -526,7 +548,7 @@ class GameView(arcade.View):
                         victim = self.active_player.get_robot().place_robber()
                         if victim:
                             self.execute_rob(victim)
-                        
+
                     self.active_player.get_robot().play_turn()
                     self.next_player_turn()
 
