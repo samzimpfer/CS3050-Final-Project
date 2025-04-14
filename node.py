@@ -87,7 +87,7 @@ class Node:
             if start_turn:
                 player.add_building(self)
             else:
-                player.build_settlement()
+                player.build_settlement(self)
 
             return True
         return False
@@ -96,7 +96,7 @@ class Node:
     def build_city(self,player):
         if (player.can_build_city() and self.building == player and not self.city):
             self.city = True
-            player.build_city()
+            player.build_city(self)
             return True
         return False
     

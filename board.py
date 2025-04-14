@@ -362,13 +362,8 @@ class Board:
                 if node in roads and node != start:
                     new_next = node
             return self.path_length(next, new_next, nodes_of_importance, roads, path)
-        
-    def rob_tile(self, player, tile):
-        for node in tile.get_nodes():
-            if node.get_buidling() and node.get_building() != player:
-                node.get_building().remove_resources(1)
-                # TODO: figure out the resource transfer
-    
+
+
     # returns the edge with the matching start_node and end_node
     def get_edge(self, start_node, end_node):
         for edge in self.edges:
@@ -438,7 +433,8 @@ class Board:
         for n in self.tile_nodes:
             n.draw()
             if n.get_resource() != 'desert':
-                arcade.draw_text(str(n.get_number()), n.get_x() - 10, n.get_y() - 10,arcade.color.BLACK, 20)
+                arcade.draw_text(str(n.get_number()), n.get_x(), n.get_y(),arcade.color.BLACK,
+                                 20, anchor_x='center', anchor_y='center')
 
     def get_nodes(self):
         return self.nodes
@@ -446,8 +442,10 @@ class Board:
     def get_tiles(self):
         return self.tile_nodes
     
-    def bot_build_settlement(self, node, player, start_turn):
+    def bot_build_settlement(self, node, player, start_turn, is_first=False):
         node.build_settlement(player, self, start_turn=start_turn)
+        if start_turn and is_first:
+            self.allocate_resources_start(player)
 
     def bot_build_road(self, edge, player, start_turn):
         edge.build_road(player, start_turn=start_turn)
