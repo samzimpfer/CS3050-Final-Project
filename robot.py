@@ -153,9 +153,9 @@ class Robot():
                 self.actions.append([Moves.TRADE, ROAD_COST])
         else:
             if self.turn_since_settlement > 5:
-                #self.force_settlement()
+                self.force_settlement()
                 pass
-            if self.turns_since_road > 3:
+            if self.turns_since_road > 4:
                 self.force_road()
 
         if len(self.player.get_roads()) == self.last_road_list_size:
@@ -170,16 +170,15 @@ class Robot():
     def force_settlement(self):
         print("forced settlement")
         build_location = self.evaluate_settlement_locations()
-        
-        if self.player.can_build_settlement():
-            self.build_settlement()
-        elif sum(list(self.distance_from_price_absolute(SETTLEMENT_COST).values())) < 3:
-            for resource in SETTLEMENT_COST.keys():
-                if self.player.return_inventory()[resource] < 1:
-                    self.four_for_one(SETTLEMENT_COST, resource)
-            self.build_settlement(self.evaluate_settlement_locations())
-        else:
-            return False
+        if build_location:
+            if self.player.can_build_settlement():
+                self.build_settlement()
+            elif sum(list(self.distance_from_price_absolute(SETTLEMENT_COST).values())) < 3:
+                for resource in SETTLEMENT_COST.keys():
+                    if self.player.return_inventory()[resource] < 1:
+                        self.four_for_one(SETTLEMENT_COST, resource)
+                self.build_settlement(self.evaluate_settlement_locations())
+        return 
         
 
     def force_road(self):
@@ -283,12 +282,9 @@ class Robot():
             return degree_3_path
         else:
             return degree_2_path
-
                         
     def get_value_score(self, n):
         return 7 - abs(7 - n)
-
-
 
     def find_road_destination(self):
         best_degree_2_node = None
