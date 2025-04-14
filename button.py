@@ -3,7 +3,7 @@ import arcade
 
 class Button:
 
-    def __init__(self, text):
+    def __init__(self, text, clear=False):
         self.x = 0
         self.y = 0
         self.width = 0
@@ -11,10 +11,17 @@ class Button:
         self.hover_width = 0
         self.hover_height = 0
         self.hover_expand_amt = 3
-
+        self.color = BUTTON_COLOR
+        self.is_clear = clear
+        if self.is_clear:
+            self.color = (0, 0, 0, 0)
         self.sprites = arcade.SpriteList()
-        self.box = arcade.SpriteSolidColor(10, 10, 0, 0, BUTTON_COLOR)
+
+        self.box = arcade.SpriteSolidColor(10, 10, 0, 0, self.color)
         self.sprites.append(self.box)
+
+        self.og_color = BUTTON_COLOR
+        self.hover_transparent_shade = (0, 0, 0, 50)
 
         self.text = text
 
@@ -56,6 +63,9 @@ class Button:
         if self.show and self.box.collides_with_point((x, y)):
             self.box.width = self.hover_width
             self.box.height = self.hover_height
+            if self.is_clear:
+                self.box.color = self.hover_transparent_shade
         else:
             self.box.width = self.width
             self.box.height = self.height
+            self.box.color = self.color

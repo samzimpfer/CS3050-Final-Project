@@ -409,9 +409,6 @@ class Board:
                     self.robber_tile = robber_location
                     return True
 
-        if start_turn == 0 and did_build_settlement:
-            self.allocate_resources_start(player)
-
         return did_build_settlement or did_build_road
 
     # calls on_mouse_motion on all objects that should have a hover effect
@@ -444,9 +441,15 @@ class Board:
     
     def bot_build_settlement(self, node, player, start_turn, is_first=False):
         node.build_settlement(player, self, start_turn=start_turn)
-        if start_turn and is_first:
-            self.allocate_resources_start(player)
 
     def bot_build_road(self, edge, player, start_turn):
         edge.build_road(player, start_turn=start_turn)
-        
+
+    def bot_build_city(self, node, player):
+        node.build_city(player)
+
+    def bot_place_robber(self, tile):
+        if self.robber_tile:
+            self.robber_tile.set_robber(False)
+        tile.set_robber
+

@@ -72,7 +72,6 @@ class ResourceGraphic:
         else:
             self.amount = amt
 
-
     # changes the amount of this resource by a specified amount
     def change_amount(self, change):
         if change < 0:

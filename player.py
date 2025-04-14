@@ -16,6 +16,7 @@ from button import Button
 from inventory import Inventory
 import arcade
 import math
+from menu_support import *
 #from main import WINDOW_WIDTH, WINDOW_HEIGHT
 
 class PlayerState(Enum):
@@ -23,9 +24,14 @@ class PlayerState(Enum):
     START_TURN = 2
     ROLL = 3
     TRADE_OR_BUILD = 4
-    OPEN_TRADE = 5
-    ROBBER = 6
-    MENU = 7
+    ROBBER = 5
+    OPEN_TRADE = 6
+    DEVCARD_MENU = 7
+    SINGLE_CARD_MENU = 8
+    YOP_MENU = 9
+    MONOPOLY_MENU = 10
+    MONOPOLY_CONCLUSION = 11
+
 
 # TODO: convert all camelcase to snakecase for pep 8 purposes
 class Player:
@@ -51,7 +57,14 @@ class Player:
 
     game_state = None
 
+
     def __init__(self, color, robot=None):
+        # robot
+        self.robot = robot
+        self.robot_sprite = arcade.Sprite("sprites/robot.png")
+        self.sprites = arcade.SpriteList()
+        self.sprites.append(self.robot_sprite)
+
         # inventory
         self.roads = []  # used for calculating longest road is a list of nodes
         self.buildings = [] # used primarily for start turns
@@ -59,8 +72,12 @@ class Player:
 
         self.knight_card_count = 0
         # add other dev card fields here
+        self.YOP_first_selection = None
+        self.YOP_second_selection = None
+        self.monopoly_selection = None
 
         self.player_dev_cards = []
+
 
         self.settlement_count = 0
         self.city_count = 0
@@ -73,8 +90,7 @@ class Player:
 
         self.victory_points = 0
 
-        self.visible_points = 0
-        self.hidden_points = 0
+        self.dev_card_victory_points = 0
 
         # UI positional fields
         self.left = 0
@@ -90,15 +106,17 @@ class Player:
 
         self.active_player = False
         self.player_state = PlayerState.DEFAULT
+        self.can_trade = False
 
         # UI elements
         self.show_resources = True # TODO: change this to False when done testing
         self.main_inventory = Inventory(False)
         self.main_inventory.reset()
         self.main_inventory.reset_limits()
-        self.main_inventory.set_amounts(Inventory.PRELOADED_RESOURCES) # TODO: take this out
-        self.give_inventory = Inventory(True)
-        self.get_inventory = Inventory(True, self.relay_inventory)
+        self.main_inventory.set_amounts(Inventory.DEFAULT_AMOUNTS) # TODO: take this out
+        #self.main_inventory.set_amounts(Inventory.PRELOADED_RESOURCES) # TODO: take this out
+        self.get_inventory = Inventory(not self.is_bot(), self.relay_inventory)
+        self.give_inventory = Inventory(not self.is_bot())
 
         self.finish_turn_button = Button("Finish turn")
         self.trade_button = Button("Trade")
@@ -108,7 +126,12 @@ class Player:
         self.rob_button = Button("Rob")
 
         self.view_dev_cards_button = Button("Show dev cards")
-        self.view_dev_cards_button.on_click = Player.draw_view_dev_cards
+        self.view_dev_cards_button.on_click = lambda: self.handle_state(PlayerState.DEVCARD_MENU)
+
+        self.dev_card_stack_button = Button("", (255, 255, 255, 255))
+        # 'visible' so button can be pressed
+        # self.dev_card_stack_button.on_click = lambda: self.set_player_state(PlayerState.DRAWN_CARD_MENU)
+        self.dev_card_stack_button.on_click = self.buy_dev_card
 
         self.view_resources_button = Button("View resources")
         self.view_resources_button.on_click = Player.draw_player_resources
@@ -123,19 +146,23 @@ class Player:
 
         self.dev_card_stack_button_params = []
 
-        self.dev_card_stack_button = Button("")
-        # 'visible' so button can be pressed
-        self.dev_card_stack_button.set_visible(True)
 
         #universal close menu button, put in main?
         self.close_menu_button = Button("Close")
         self.close_menu_button.set_position_and_size((4*self.WINDOW_WIDTH) / 5, self.WINDOW_HEIGHT / 2, 200, 100)
-        self.close_menu_button.on_click = Player.close_menu
+        self.close_menu_button.on_click = self.close_menu
 
-        self.robot = robot
-        self.robot_sprite = arcade.Sprite("sprites/robot.png")
-        self.sprites = arcade.SpriteList()
-        self.sprites.append(self.robot_sprite)
+        self.resource_select_buttons = create_resource_select_buttons()
+        for button in self.resource_select_buttons:
+            button.on_click = lambda but=button: self.select_YOP_resource(but)
+
+        self.devcard_buttons = create_devcard_select_buttons()
+        for button in self.devcard_buttons:
+            button.on_click = lambda but=button: self.use_devcard(but)
+
+
+
+
 
     def set_longest_road_value(self, longest_road):
         self.longest_road = longest_road
@@ -185,6 +212,15 @@ class Player:
         self.rob_nobody_button.set_visible(False)
         self.accept_trade_button.set_visible(False)
         self.rob_button.set_visible(False)
+        self.dev_card_stack_button.set_visible(False)
+
+        #set all devcard and resource select buttons to not visible
+        set_buttons_not_visible(self.devcard_buttons)
+        set_buttons_not_visible(self.resource_select_buttons)
+        #set close menu button not visible
+        self.close_menu_button.set_visible(False)
+        if self.active_player:
+            self.dev_card_stack_button.set_visible(True)
 
         if self.player_state == PlayerState.START_TURN or self.is_bot():
             self.view_dev_cards_button.set_visible(False)
@@ -195,36 +231,49 @@ class Player:
 
         if set_to is not None:
             self.player_state = set_to
-
+        #if this is an actual player
         if not self.is_bot():
-            if self.player_state == PlayerState.TRADE_OR_BUILD:
-                self.trade_button.set_visible(True)
-                self.finish_turn_button.set_visible(True)
 
-            elif self.player_state == PlayerState.OPEN_TRADE:
-                if self.active_player:
-                    self.cancel_trade_button.set_visible(True)
-                    self.give_inventory.set_limits(self.main_inventory.get_amounts())
-                else:
-                    self.accept_trade_button.set_visible(True)
-
-            elif self.player_state == PlayerState.ROBBER:
-                if self.active_player:
-                    if Player.can_rob_function():
-                        self.rob_nobody_button.set_visible(False)
+            match self.player_state:
+                case PlayerState.TRADE_OR_BUILD:
+                    self.trade_button.set_visible(True)
+                    self.finish_turn_button.set_visible(True)
+                    self.view_dev_cards_button.set_visible(True)
+                    self.YOP_first_selection = None
+                    self.YOP_second_selection = None
+                    self.monopoly_selection = None
+                case PlayerState.OPEN_TRADE:
+                    if self.active_player:
+                        self.cancel_trade_button.set_visible(True)
+                        self.give_inventory.set_limits(self.main_inventory.get_amounts())
                     else:
-                        self.rob_nobody_button.set_visible(True)
+                        self.accept_trade_button.set_visible(True)
+                case PlayerState.ROBBER:
+                    if self.active_player:
+                        if Player.can_rob_function():
+                            self.rob_nobody_button.set_visible(False)
+                        else:
+                            self.rob_nobody_button.set_visible(True)
 
-            elif self.player_state == PlayerState.MENU:
-                self.close_menu_button.set_visible(True)
+                    else:
+                        if self.is_next_to_robber() and not self.main_inventory.is_empty():
+                            self.rob_button.set_visible(True)
+                case PlayerState.DEVCARD_MENU:
+                    set_buttons_visible(self.devcard_buttons)
+                    self.close_menu_button.set_visible(True)
+                case PlayerState.SINGLE_CARD_MENU:
+                    self.close_menu_button.set_visible(True)
+                case PlayerState.YOP_MENU:
+                    set_buttons_visible(self.resource_select_buttons)
+                case PlayerState.MONOPOLY_MENU:
+                    set_buttons_visible(self.resource_select_buttons)
+                case PlayerState.MONOPOLY_CONCLUSION:
+                    pass
+                case PlayerState.DEFAULT:
+                    self.finish_turn_button.set_visible(True)
 
-            elif self.player_state == PlayerState.DEFAULT:
-                self.finish_turn_button.set_visible(True)
-
-        if self.player_state == PlayerState.ROBBER and not self.active_player:
-            if self.is_next_to_robber() and not self.main_inventory.is_empty():
-                self.rob_button.set_visible(True)
-
+    def get_state(self):
+        return self.player_state
 
     # positions the player representation UI and it's components on the screen
     def set_position_and_size(self, l, r, b, t):
@@ -263,11 +312,11 @@ class Player:
 
             self.trading_title_height = (self.top - self.bottom) * 0.1
             self.trading_panel_width = (self.right - self.left) * self.trading_panel_width_ratio
-            self.give_inventory.set_position_and_size(self.right + (self.trading_panel_width / 2),
+            self.get_inventory.set_position_and_size(self.right + (self.trading_panel_width / 2),
                                                       (self.top - self.trading_title_height
                                                        - self.trading_panel_width / 8),
                                                       self.trading_panel_width)
-            self.get_inventory.set_position_and_size(self.right + (self.trading_panel_width / 2),
+            self.give_inventory.set_position_and_size(self.right + (self.trading_panel_width / 2),
                                                       (self.center_y - self.trading_title_height
                                                        - self.trading_panel_width / 8),
                                                       self.trading_panel_width)
@@ -303,8 +352,10 @@ class Player:
     def update_can_trade(self, inventory):
         if self.main_inventory.contains(inventory.get_amounts()):
             self.accept_trade_button.set_visible(True)
+            self.can_trade = True
         else:
             self.accept_trade_button.set_visible(False)
+            self.can_trade = False
 
 
     # adds a set of resources to the player's inventory
@@ -344,7 +395,6 @@ class Player:
             self.use_resources(random_resource)
 
         return random_resource
-
 
     def add_road(self,start_node, end_node):
         if start_node not in self.roads:
@@ -429,30 +479,14 @@ class Player:
     def buy_dev_card(self):
         if self.can_buy_dev_card():
             self.use_resources(DEV_CARD_COST)
+            drawn_dev_card = self.game_dev_cards.DrawCard()
+            print(drawn_dev_card)
+            self.player_dev_cards.append(drawn_dev_card)
+            self.handle_state(PlayerState.SINGLE_CARD_MENU)
             return True
         return False
 
 
-    def BuyDevCard(self):
-        if self.use_resources(DEV_CARD_COST):
-            drawn_dev_card = self.game_dev_cards.DrawCard()
-            self.render_single_card(drawn_dev_card)
-            #print(f"{drawn_dev_card.name}: {drawn_dev_card.description}")
-            match drawn_dev_card:
-                case Knight():
-                    #note, unused knight cards do not count towards largest army
-                    self.knight_card_count += 1
-                case YearOfPlenty():
-
-                    pass
-                case RoadBuilding():
-                    #TODO: add building function in directly
-                    pass
-                case Monopoly():
-                    pass
-                case _:
-                    pass
-            self.player_dev_cards.append(drawn_dev_card)
 
 
     # sets the value of has_longest_road for this player
@@ -472,6 +506,7 @@ class Player:
             total += 2
         if self.has_largest_army:
             total += 2
+        total += self.dev_card_victory_points
         # add in victory card points
 
         return total
@@ -499,38 +534,65 @@ class Player:
             self.view_dev_cards_button.on_draw()
             self.view_resources_button.on_draw()
 
-            if self.player_state == PlayerState.OPEN_TRADE:
-                arcade.draw_lrbt_rectangle_filled(self.right, self.right + self.trading_panel_width,
-                                                  self.bottom, self.top, UI_COLOR)
-                arcade.draw_lrbt_rectangle_outline(self.right, (self.right
-                                                                + self.trading_panel_width),
-                                                   self.bottom, self.top, UI_OUTLINE_COLOR, 6)
+            match self.player_state:
+                case PlayerState.OPEN_TRADE:
+                    arcade.draw_lrbt_rectangle_filled(self.right, self.right + self.trading_panel_width,
+                                                      self.bottom, self.top, UI_COLOR)
+                    arcade.draw_lrbt_rectangle_outline(self.right, (self.right
+                                                                    + self.trading_panel_width),
+                                                       self.bottom, self.top, UI_OUTLINE_COLOR, 6)
 
-                arcade.draw_lrbt_rectangle_filled(self.right, self.right + self.trading_panel_width,
-                                                  self.top - self.trading_title_height, self.top,
-                                                  UI_OUTLINE_COLOR)
-                arcade.draw_lrbt_rectangle_filled(self.right, self.right + self.trading_panel_width,
-                                                  self.center_y - self.trading_title_height,
-                                                  self.center_y, UI_OUTLINE_COLOR)
+                    arcade.draw_lrbt_rectangle_filled(self.right, self.right + self.trading_panel_width,
+                                                      self.top - self.trading_title_height, self.top,
+                                                      UI_OUTLINE_COLOR)
+                    arcade.draw_lrbt_rectangle_filled(self.right, self.right + self.trading_panel_width,
+                                                      self.center_y - self.trading_title_height,
+                                                      self.center_y, UI_OUTLINE_COLOR)
 
-                arcade.draw_text("Give", self.right + (self.trading_panel_width / 2),
-                                 self.top - (self.trading_title_height / 2), arcade.color.BLACK,
-                                 self.trading_title_height / 2, anchor_x="center", anchor_y="center")
-                arcade.draw_text("Get", self.right + (self.trading_panel_width / 2),
-                                 self.center_y - (self.trading_title_height / 2), arcade.color.BLACK,
-                                 self.trading_title_height / 2, anchor_x="center", anchor_y="center")
+                    arcade.draw_text("Get", self.right + (self.trading_panel_width / 2),
+                                     self.top - (self.trading_title_height / 2), arcade.color.BLACK,
+                                     self.trading_title_height / 2, anchor_x="center", anchor_y="center")
+                    arcade.draw_text("Give", self.right + (self.trading_panel_width / 2),
+                                     self.center_y - (self.trading_title_height / 2), arcade.color.BLACK,
+                                     self.trading_title_height / 2, anchor_x="center", anchor_y="center")
 
-                self.give_inventory.on_draw()
-                self.get_inventory.on_draw()
+                    self.give_inventory.on_draw()
+                    self.get_inventory.on_draw()
+                case PlayerState.ROBBER:
+                    self.rob_nobody_button.on_draw()
+                case PlayerState.DEVCARD_MENU:
+                    set_buttons_visible(self.devcard_buttons)
+                    self.draw_view_dev_cards()
+                    for button in self.devcard_buttons:
+                        button.on_draw()
+                    self.close_menu_button.on_draw()
+                case PlayerState.SINGLE_CARD_MENU:
+                    self.render_single_card(self.player_dev_cards[-1])
+                    self.close_menu_button.on_draw()
+                case PlayerState.YOP_MENU:
+                    draw_default_resource_view()
+                    self.draw_YOP_selection()
+                    for button in self.resource_select_buttons:
+                        button.on_draw()
+                case PlayerState.MONOPOLY_MENU:
+                    draw_default_resource_view()
+                    self.draw_monopoly_selection()
+                    for button in self.resource_select_buttons:
+                        button.on_draw()
 
-            elif self.player_state == PlayerState.ROBBER:
-                self.rob_nobody_button.on_draw()
+
+
+
+
 
         else:
             if self.player_state == PlayerState.OPEN_TRADE:
                 self.accept_trade_button.on_draw()
             elif self.player_state == PlayerState.ROBBER:
                 self.rob_button.on_draw()
+
+
+
 
         if self.is_bot():
             self.sprites.draw()
@@ -554,6 +616,18 @@ class Player:
 
         self.close_menu_button.on_mouse_press(x, y)
 
+        self.dev_card_stack_button.on_mouse_press(x, y)
+
+        if self.player_state == PlayerState.DEVCARD_MENU:
+            for button in self.devcard_buttons:
+                button.on_mouse_press(x, y)
+        if self.player_state == PlayerState.YOP_MENU:
+            for button in self.resource_select_buttons:
+                button.on_mouse_press(x, y)
+        if self.player_state == PlayerState.MONOPOLY_MENU:
+            for button in self.resource_select_buttons:
+                button.on_mouse_press(x, y)
+
     def on_mouse_motion(self, x, y):
         self.finish_turn_button.on_mouse_motion(x, y)
         self.trade_button.on_mouse_motion(x, y)
@@ -572,8 +646,22 @@ class Player:
 
         self.close_menu_button.on_mouse_motion(x, y)
 
+        if self.player_state == PlayerState.DEVCARD_MENU:
+            for button in self.devcard_buttons:
+                button.on_mouse_motion(x, y)
+        if self.player_state == PlayerState.YOP_MENU:
+            for button in self.resource_select_buttons:
+                button.on_mouse_motion(x, y)
+        if self.player_state == PlayerState.MONOPOLY_MENU:
+            for button in self.resource_select_buttons:
+                button.on_mouse_motion(x, y)
+
     def draw_view_dev_cards(self):
-        #just gonna hope no one draws more than 10 dev cards for now, scaling lowkey a pita
+        # self.close_menu_button.on_draw()
+        # just gonna hope no one draws more than 10 dev cards for now, scaling lowkey a pita
+
+        self.close_menu_button.set_visible(True)
+        draw_devcard_backing()
         l = self.WINDOW_WIDTH / 4
         r = (3 * self.WINDOW_WIDTH) / 4
         b = self.WINDOW_HEIGHT / 4
@@ -586,56 +674,42 @@ class Player:
         sprite_height = display_height / 2
         sprite_y_offset = sprite_height / 2
 
-        arcade.draw_lrbt_rectangle_filled(self.WINDOW_WIDTH / 4, (3 * self.WINDOW_WIDTH) / 4, self.WINDOW_HEIGHT / 4, (3 * self.WINDOW_HEIGHT) / 4, arcade.color.GRAY)
+        arcade.draw_lrbt_rectangle_filled(self.WINDOW_WIDTH / 4, (3 * self.WINDOW_WIDTH) / 4, self.WINDOW_HEIGHT / 4,
+                                          (3 * self.WINDOW_HEIGHT) / 4, arcade.color.GRAY)
 
         colCount = 1
-        #this just draws the array of dev cards
+        # this just draws the array of dev cards
         for card in self.player_dev_cards:
             dev_sprite = arcade.Sprite(card.pathname)
             dev_sprite.center_x = l + ((colCount * display_width) / 5) - sprite_x_offset
             if colCount > 5:
-                dev_sprite.center_y = b + (3 * (display_height / 4))
-            else:
+                dev_sprite.center_x = l + (((colCount - 5) * display_width) / 5) - sprite_x_offset
                 dev_sprite.center_y = b + (display_height / 4)
+            else:
+                dev_sprite.center_y = b + (3 * (display_height / 4))
             dev_sprite.width = sprite_width
             dev_sprite.height = sprite_height
             # unsure where to add the drawing at this point, but this should be scaled properly and work. sprite path stored
             # in class instances
             arcade.draw_sprite(dev_sprite)
             colCount += 1
-        #I will probably need some help getting this to work properly, but the idea is switch to menu state when viewing
+        for i in range(len(self.player_dev_cards)):
+            self.devcard_buttons[i].set_visible(True)
+            self.devcard_buttons[i].on_draw()
+        # I will probably need some help getting this to work properly, but the idea is switch to menu state when viewing
         # cards so that the close menu button will appear
-        self.set_state(PlayerState.MENU)
+        self.handle_state(PlayerState.DEVCARD_MENU)
 
     def render_single_card(self, dev_card):
         single_sprite = arcade.Sprite(dev_card.pathname)
         single_sprite.center_x = self.WINDOW_WIDTH / 2
         single_sprite.center_y = self.WINDOW_HEIGHT / 2
         single_sprite.width = self.WINDOW_WIDTH / 5
-        single_sprite.height = (3.5 * ((self.WINDOW_WIDTH / 5) * 2.5))
+        single_sprite.height = (3.5 * ((self.WINDOW_WIDTH / 5) / 2.5))
         arcade.draw_sprite(single_sprite)
+        self.handle_state(PlayerState.SINGLE_CARD_MENU)
 
-        self.set_state(PlayerState.MENU)
 
-    #this is for monopoly and YOP
-    #TODO: add buttons and functions
-    def draw_resource_select(self):
-        l = self.WINDOW_WIDTH / 4
-        r = (3 * self.WINDOW_WIDTH) / 4
-        b = (2 * self.WINDOW_HEIGHT) / 5
-        t = (3 * self.WINDOW_HEIGHT) / 5
-        r_select_width = r - l
-        r_select_height = t - b
-        r_select_section = r_select_width / 5
-        center_align_offset = r_select_height / 2
-        arcade.draw_lrbt_rectangle_filled(l, r, b, t, arcade.color.GRAY)
-        for i, e in self.resource_sprites.values():
-            select_sprite = e
-            select_sprite.center_x = (l + (i * r_select_section)) - center_align_offset
-            select_sprite.center_y = self.WINDOW_HEIGHT / 2
-            select_sprite.width = r_select_section
-            select_sprite.height = r_select_height
-            arcade.draw_sprite(select_sprite)
 
     #TODO: this correctly displays player resource count, it just needs to be properly implemented into the draw flow
     def draw_player_resources(self):
@@ -661,7 +735,79 @@ class Player:
             arcade.draw_text(f"x{self.resources[k]}", l + ((i+1) * r_select_section) - (r_select_section / 3), b, arcade.color.BLACK, self.resource_sprite_width / 2)
         self.set_state(PlayerState.MENU)
 
+    def use_devcard(self, button):
+        devcard_index = self.get_buttonarray_index(button, "devcards")
+        print(devcard_index)
+        devcard = self.player_dev_cards.pop(devcard_index)
+        print(devcard)
+        print(type(devcard))
+        match devcard:
+            case Knight():
+                self.handle_state(PlayerState.ROBBER)
+                self.knight_card_count += 1
+            case RoadBuilding():
+                #self.handle_state(PlayerState.ROADBUILDING_MENU)
+                pass
+            case Monopoly():
+                self.handle_state(PlayerState.MONOPOLY_MENU)
+            case YearOfPlenty():
+                self.handle_state(PlayerState.YOP_MENU)
+            case _:
+                self.dev_card_victory_points += 1
+                self.player_dev_cards.pop(devcard_index)
+                self.handle_state(PlayerState.DEFAULT)
+                self.close_menu()
+
+
+    #return the index of the button which corresponds to the actual card object
+    def get_buttonarray_index(self, button, flag):
+        if flag == "devcards":
+            return self.devcard_buttons.index(button)
+        else:
+            #print(self.resource_select_buttons.index(button))
+            return self.resource_select_buttons.index(button)
+
     #hopefully this just resets the screen
     def close_menu(self):
-        self.set_state(PlayerState.DEFAULT)
-        self.on_draw()
+        self.set_state(GameState.TRADE)
+        #self.on_draw()
+
+
+    def draw_YOP_selection(self):
+        draw_YOP_selection_backing()
+        if self.YOP_first_selection:
+            sprite = get_YOP_selection_sprite(SPRITE_PATHS[self.YOP_first_selection], 1)
+            arcade.draw_sprite(sprite)
+        if self.YOP_second_selection:
+            sprite2 = get_YOP_selection_sprite(SPRITE_PATHS[self.YOP_second_selection], 2)
+            arcade.draw_sprite(sprite2)
+            #TODO: somehow sleep this, not working for some reason
+            #time.sleep(1)
+        if self.YOP_first_selection and self.YOP_second_selection:
+            self.add_resources({Resource(self.YOP_first_selection):2, Resource(self.YOP_second_selection):2})
+            self.YOP_first_selection = None
+            self.YOP_second_selection = None
+            self.handle_state(GameState.TRADE)
+
+    def select_YOP_resource(self, button):
+        if not self.YOP_first_selection:
+            print(f"first selection index: {self.get_buttonarray_index(button, 'resource')}")
+            resource_index = self.get_buttonarray_index(button, "resource")
+            self.YOP_first_selection = resource_index
+        else:
+            resource_index = self.get_buttonarray_index(button, "resource")
+            self.YOP_second_selection = resource_index
+
+    def draw_monopoly_selection(self):
+        draw_single_selection_backing()
+        if self.YOP_first_selection:
+            print(self.YOP_first_selection)
+            sprite = get_single_selection_sprite(SPRITE_PATHS[self.YOP_first_selection])
+            arcade.draw_sprite(sprite)
+            #sleep 1
+            self.monopoly_selection = Resource(self.YOP_first_selection)
+            self.YOP_first_selection = None
+            self.handle_state(PlayerState.MONOPOLY_CONCLUSION)
+
+    def get_monopoly_selection(self):
+        return self.monopoly_selection

@@ -13,6 +13,7 @@ class GameState(Enum):
     TRADE = 4
     BUILD = 5
     ROBBER = 6
+    WINNER = 7
 
 INSTRUCTIONS = {
     GameState.START_TURN: "Place a settlement and then a road",
@@ -35,30 +36,41 @@ UI_OUTLINE_COLOR = (40, 80, 140)
 BUTTON_COLOR = (40, 80, 140)
 TEXT_COLOR = (255, 200, 10)
 
-PLAYER_COLORS = [arcade.color.BLUE, arcade.color.GREEN, arcade.color.RED, arcade.color.YELLOW, arcade.color.ORANGE]
+PLAYER_COLORS = [arcade.color.BLUE, arcade.color.GREEN, arcade.color.RED, arcade.color.YELLOW]
+PLAYER_COLOR_NAMES = ["Blue", "Green", "Red", "Yellow"]
 
 ROAD_COST = {
     Resource.BRICK:1,
+    Resource.SHEEP:0,
+    Resource.STONE:0,
+    Resource.WHEAT:0,
     Resource.WOOD:1
 }
 
 SETTLEMENT_COST = {
     Resource.BRICK:1,
     Resource.SHEEP:1,
+    Resource.STONE:0,
     Resource.WHEAT:1,
     Resource.WOOD:1
 }
 
 CITY_COST = {
+    Resource.BRICK:0,
+    Resource.SHEEP:0,
+    Resource.STONE:3,
     Resource.WHEAT:2,
-    Resource.STONE:3
+    Resource.WOOD:0
 }
 
 DEV_CARD_COST = {
-    Resource.WHEAT:1,
-    Resource.STONE:1,
+    Resource.BRICK:0,
     Resource.SHEEP:1,
+    Resource.STONE:1,
+    Resource.WHEAT:1,
+    Resource.WOOD:0
 }
+
 
 # All dev card types, basically structs.  Subclasses of DevCard.  Each has the number of them(amt), name, and description.
 # functions like "show type" and "print description" can be added to the parent DevCard function.  May be best to remove
@@ -72,65 +84,99 @@ class DevCard:
     pass
 
 @dataclass(frozen=True)
-class Knight:
+class Knight(DevCard):
     amt = 14
     name = "Knight"
     description = "Move the robber. Steal one resource from the owner of a settlement or city adjacent to the robber’s new hex."
     pathname = "sprites/catan_knight_card.png"
+    def __init__(self):
+        super().__init__(Knight.amt, Knight.name, Knight.description, Knight.pathname)
+
 
 @dataclass(frozen=True)
-class RoadBuilding:
+class RoadBuilding(DevCard):
     amt = 2
     name = "Road Building"
     description = "Place two new roads as if you had just built them."
     pathname = "sprites/road_building_card.png"
+    def __init__(self):
+        super().__init__(RoadBuilding.amt, RoadBuilding.name, RoadBuilding.description, RoadBuilding.pathname)
+
 
 @dataclass(frozen=True)
-class YearOfPlenty:
+class YearOfPlenty(DevCard):
     amt = 2
     name = "Year of Plenty"
     description = "Take any two resources from the bank. Add them to your hand. They can be two of the same resource or two different resources."
     pathname = "sprites/yearofplenty_card.jpeg"
+    def __init__(self):
+        super().__init__(YearOfPlenty.amt, YearOfPlenty.name, YearOfPlenty.description, YearOfPlenty.pathname)
+
+
+
 
 @dataclass(frozen=True)
-class Monopoly:
+class Monopoly(DevCard):
     amt = 2
     name = "Monopoly"
     description = "When you play this card, announce one type of resource. All other players must give you all of their resources of that type."
     pathname = "sprites/monopoly_card.png"
+    def __init__(self):
+        super().__init__(Monopoly.amt, Monopoly.name, Monopoly.description, Monopoly.pathname)
+
+
 
 @dataclass(frozen=True)
-class University:
+class University(DevCard):
     amt = 1
     name = "University"
     description = "One victory point. Reveal this card on your turn if, with it, you reach the number of points required for victory."
     pathname = "sprites/university_card.png"
+    def __init__(self):
+        super().__init__(University.amt, University.name, University.description, University.pathname)
+
+
 
 @dataclass(frozen=True)
-class Market:
+class Market(DevCard):
     amt = 1
     name = "Market"
     description = "One victory point. Reveal this card on your turn if, with it, you reach the number of points required for victory."
     pathname = "sprites/market_card.png"
+    def __init__(self):
+        super().__init__(Market.amt, Market.name, Market.description, Market.pathname)
+
+
 
 @dataclass(frozen=True)
-class GreatHall:
+class GreatHall(DevCard):
     amt = 1
     name = "Great Hall"
     description = "One victory point. Reveal this card on your turn if, with it, you reach the number of points required for victory."
+    pathname = "sprites/greathall_card.jpeg"
+    def __init__(self):
+        super().__init__(GreatHall.amt, GreatHall.name, GreatHall.description, GreatHall.pathname)
+
 
 @dataclass(frozen=True)
-class Chapel:
+class Chapel(DevCard):
     amt = 1
     name = "Chapel"
     description = "One victory point. Reveal this card on your turn if, with it, you reach the number of points required for victory."
+    pathname = "sprites/chapel_card.jpg"
+    def __init__(self):
+        super().__init__(Chapel.amt, Chapel.name, Chapel.description, Chapel.pathname)
+
+
 
 @dataclass(frozen=True)
-class Library:
+class Library(DevCard):
     amt = 1
     name = "Library"
     description = "One victory point. Reveal this card on your turn if, with it, you reach the number of points required for victory."
     pathname = "sprites/library_card.png"
+    def __init__(self):
+        super().__init__(Library.amt, Library.name, Library.description, Library.pathname)
 
 # Resource bank, mostly necessary because resources can and do run out during the game
 class Bank:
@@ -184,6 +230,9 @@ class DevCardStack:
         for card in DevCard.__subclasses__():
             self.stack += [card()] * card.amt
         random.shuffle(self.stack)
+        self.stack.append(Monopoly())
+        self.stack.append(YearOfPlenty())
+        self.stack.append(Knight())
 
     # draw card pops from stack and returns an instance of a dev card.  For example each player class instance can use
     # "draw_new_dev_card = DevCardStack.DrawCard()" to give the player a new dev card while also updating what's left in
