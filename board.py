@@ -444,6 +444,7 @@ class Board:
 
     def bot_build_road(self, edge, player, start_turn):
         edge.build_road(player, start_turn=start_turn)
+        self.find_longest_road()
 
     def bot_build_city(self, node, player):
         node.build_city(player)
